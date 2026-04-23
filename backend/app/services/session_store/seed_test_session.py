@@ -9,9 +9,9 @@ Dùng đúng Pydantic models từ debate.py:
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 
-from database import create_tables
+from .database import create_tables
 from app.schemas.debate import StartSessionRequest, DebateTurnRequest
-from repository import (
+from .repository import (
     start_session, get_session_info, end_session,
     process_turn, save_cer_score, save_feedback,
     save_content_flag, get_progress_summary,

@@ -13,7 +13,7 @@ import uuid, json
 from datetime import datetime, timezone
 from typing import Optional
 
-from database import get_connection
+from .database import get_connection
 from app.schemas.debate import (
     StartSessionRequest, StartSessionResponse,
     DebateTurnRequest, DebateTurnResponse,
