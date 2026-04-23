@@ -1,71 +1,84 @@
-from google import genai
+import httpx
 from app.core.config import settings
 
 
 def build_prompt(topic: str, stance: str, difficulty: str, user_argument: str) -> str:
     return f"""
-Bạn là đối thủ tranh biện trong hệ thống AI Debate Trainer.
+Bạn là đối thủ tranh biện.
 
-Yêu cầu:
-- Luôn trả lời bằng tiếng Việt.
-- Phản biện ngắn gọn, rõ ràng, không lan man.
-- Tối đa khoảng 120-180 từ.
-- Tập trung phản biện trực tiếp vào lập luận của người dùng.
-- Không dùng ngôn ngữ xúc phạm.
+Trả lời bằng tiếng Việt.
+Viết đúng 1 đoạn phản biện ngắn, rõ ràng, dưới 120 từ.
+Không lan man, không xúc phạm.
 
 Chủ đề: {topic}
 Lập trường người dùng: {stance}
 Độ khó: {difficulty}
+Lập luận của người dùng: {user_argument}
 
-Lập luận của người dùng:
-{user_argument}
-
-Hãy viết đúng 1 đoạn phản biện đối lập.
+Hãy phản biện trực tiếp.
 """.strip()
 
 
-def generate_rebuttal(topic: str, stance: str, difficulty: str, user_argument: str) -> dict:
-    if settings.DEMO_MODE:
-        return {
-            "ok": True,
-            "text": "Đây là phản biện mẫu trong demo mode. Hệ thống đang dùng dữ liệu dự phòng.",
-            "error": ""
-        }
+def extract_text_from_ollama(data: dict) -> str:
+    # /api/chat -> message.content
+    message = data.get("message")
+    if isinstance(message, dict):
+        content = message.get("content")
+        if isinstance(content, str) and content.strip():
+            return content.strip()
 
-    if not settings.GEMINI_API_KEY:
-        return {
-            "ok": False,
-            "text": "Thiếu GEMINI_API_KEY trong file .env",
-            "error": "missing_api_key"
-        }
+    # /api/generate -> response
+    response_text = data.get("response")
+    if isinstance(response_text, str) and response_text.strip():
+        return response_text.strip()
+
+    return ""
+
+
+def generate_rebuttal(topic: str, stance: str, difficulty: str, user_argument: str) -> dict:
+    prompt = build_prompt(topic, stance, difficulty, user_argument)
 
     try:
-        prompt = build_prompt(topic, stance, difficulty, user_argument)
-
-        client = genai.Client(api_key=settings.GEMINI_API_KEY)
-
-        response = client.models.generate_content(
-            model=settings.GEMINI_MODEL,
-            contents=prompt,
+        response = httpx.post(
+            f"{settings.OLLAMA_BASE_URL}/api/chat",
+            json={
+                "model": settings.OLLAMA_MODEL,
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ],
+                "stream": False,
+                "think": False,
+                "options": {
+                    "num_predict": 120,
+                    "temperature": 0.7
+                }
+            },
+            timeout=180.0
         )
 
-        text = getattr(response, "text", None)
-        if text:
+        response.raise_for_status()
+        data = response.json()
+
+        print("OLLAMA RAW RESPONSE:", data)
+
+        text = extract_text_from_ollama(data)
+
+        if not text:
             return {
-                "ok": True,
-                "text": text.strip(),
-                "error": ""
+                "ok": False,
+                "text": "Ollama không trả về nội dung hợp lệ.",
+                "error": str(data)
             }
 
         return {
-            "ok": False,
-            "text": "Gemini không trả về nội dung hợp lệ.",
-            "error": "empty_output"
+            "ok": True,
+            "text": text,
+            "error": ""
         }
 
     except Exception as e:
         return {
             "ok": False,
-            "text": f"Gemini lỗi: {str(e)}",
+            "text": f"Ollama local lỗi: {str(e)}",
             "error": str(e)
         }
