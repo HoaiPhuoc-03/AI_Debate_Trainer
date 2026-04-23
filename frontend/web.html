@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Debate Trainer Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-main: #0F172A;
+    --surface: #1E293B;
+    --surface-hover: #334155;
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --accent: #3B82F6;
+    --accent-glow: rgba(59, 130, 246, 0.5);
+    --accent-hover: #2563EB;
+    --success: #10B981;
+    --danger: #EF4444;
+    --border: #334155;
+    --radius: 12px;
+    --radius-lg: 20px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-main);
+    background-image: radial-gradient(circle at top right, #80dff9, transparent 40%),
+                      radial-gradient(circle at bottom left, #6b9bf4, transparent 40%);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    overflow-x: hidden;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes popIn {
+    0% { opacity: 0; transform: scale(0.95) translateY(20px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+    50% { box-shadow: 0 0 15px 5px var(--accent-glow); }
+  }
+
+  /* ── MODAL ── */
+  #modal-screen {
+    width: 100%;
+    max-width: 600px;
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  }
+
+  .brand-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 2rem;
+    animation: float 4s ease-in-out infinite;
+  }
+  .brand-icon {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, var(--accent), #60A5FA);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 15px var(--accent-glow);
+  }
+  .brand-icon svg { width: 24px; height: 24px; fill: #fff; }
+  .brand-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    background: linear-gradient(to right, #fff, #94A3B8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .modal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+  .modal-header {
+    padding: 2.5rem 2rem 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+  .modal-header p {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .modal-body { padding: 2rem; }
+  .step-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .step-label::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .topic-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 2rem;
+  }
+
+  .topic-card {
+    background: var(--bg-main);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 16px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .topic-card:hover {
+    border-color: #ebf593;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  }
+  .topic-card.selected {
+    border-color: var(--accent);
+    background: rgba(111, 232, 201, 0.403);
+    animation: pulseGlow 2s infinite;
+  }
+  
+  .topic-badge {
+    position: absolute;
+    top: 12px; right: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+  .badge-easy { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+  .badge-hard { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+
+  .topic-icon { font-size: 28px; margin-bottom: 12px; display: block; }
+  .topic-label { font-size: 15px; font-weight: 700; }
+  .topic-desc { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+  #start-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  #start-btn:hover:not(:disabled) {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px var(--accent-glow);
+  }
+  #start-btn:disabled {
+    background: var(--surface-hover);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+  }
+
+  /* ── MAIN VIEW ── */
+  #main-screen {
+    display: none;
+    width: 100%;
+    max-width: 800px;
+    animation: popIn 0.4s ease both;
+  }
+
+  /* Game-like Top Bar */
+  .game-hud {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  
+  .hud-left { display: flex; align-items: center; gap: 16px; }
+  .back-btn {
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: all 0.2s;
+  }
+  .back-btn:hover { color: white; border-color: white; }
+  .back-btn svg { width: 14px; height: 14px; }
+
+  .momentum-container {
+    flex: 1;
+    max-width: 300px;
+    margin: 0 20px;
+  }
+  .momentum-label {
+    font-size: 11px; font-weight: 700; color: var(--text-secondary);
+    margin-bottom: 6px; display: flex; justify-content: space-between;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .momentum-track {
+    width: 100%; height: 8px; background: var(--bg-main);
+    border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .momentum-fill {
+    height: 100%; width: 50%; /* Starts neutral */
+    background: linear-gradient(90deg, var(--danger), var(--accent), var(--success));
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .round-counter {
+    background: rgba(248, 227, 145, 0.921);
+    color: var(--accent);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    border: 1px solid var(--accent-glow);
+  }
+
+  /* Arena Layout */
+  .arena {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  }
+
+  .section-label {
+    font-size: 13px; font-weight: 700; color: var(--accent);
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+
+  #user-input {
+    width: 100%; min-height: 140px; resize: vertical;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.6;
+    padding: 16px; border: 2px solid var(--border);
+    border-radius: var(--radius); background: var(--bg-main);
+    color: var(--text-primary); outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    margin-bottom: 16px;
+  }
+  #user-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-glow); }
+  
+  .input-footer { display: flex; align-items: center; justify-content: space-between; }
+  .char-count { font-size: 13px; color: var(--text-secondary); }
+
+  #debate-btn {
+    padding: 12px 24px; font-size: 14px; font-weight: 700;
+    background: var(--accent); color: white; border: none;
+    border-radius: var(--radius); cursor: pointer;
+    transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+  }
+  #debate-btn:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-2px); }
+  #debate-btn:disabled { background: var(--surface-hover); color: var(--text-secondary); cursor: not-allowed; }
+
+  /* AI Response Area */
+  .ai-status-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--text-secondary); transition: all 0.3s;
+  }
+  .ai-status-dot.active { background: var(--accent); box-shadow: 0 0 10px var(--accent); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } }
+
+  #ai-output {
+    font-size: 15px; line-height: 1.8; color: var(--text-primary);
+    min-height: 100px; background: var(--bg-main);
+    padding: 20px; border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+  #ai-output .placeholder { color: var(--text-secondary); font-style: italic; }
+  
+  .thinking { display: flex; gap: 6px; align-items: center; }
+  .thinking span {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+    animation: bounce 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+  .thinking span:nth-child(2) { animation-delay: 0.15s; }
+  .thinking span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+  .history-divider { margin: 2rem 0; border: none; border-top: 1px dashed var(--border); }
+  .history-entry { margin-bottom: 1.5rem; padding-left: 16px; border-left: 2px solid var(--border); }
+  .history-you { font-size: 14px; color: var(--text-secondary); margin-bottom: 8px; }
+  .history-ai { font-size: 15px; color: var(--text-primary); line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div id="modal-screen">
+  <div class="brand-row">
+    <div class="brand-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <span class="brand-name">Debate Pro</span>
+  </div>
+
+  <div class="modal-card">
+    <div class="modal-header">
+      <h1>Chọn Đấu Trường</h1>
+      <p>Hệ thống AI đã sẵn sàng thách thức lập luận của bạn.</p>
+    </div>
+    <div class="modal-body">
+      <div class="step-label">Lĩnh vực tranh biện</div>
+      <div class="topic-grid">
+        <button class="topic-card" data-topic="Kinh tế - Xã hội" onclick="selectTopic(this)">
+          <span class="topic-badge badge-easy">Dễ</span>
+          <span class="topic-icon">📈</span>
+          <div class="topic-label">Kinh tế & Xã hội</div>
+          <div class="topic-desc">Các vấn đề đời sống, vĩ mô</div>
+        </button>
+        <button class="topic-card" data-topic="Công nghệ - AI" onclick="selectTopic(this)">
+          <span class="topic-badge badge-hard">Khó</span>
+          <span class="topic-icon">🤖</span>
+          <div class="topic-label">Công nghệ & AI</div>
+          <div class="topic-desc">Tương lai và đạo đức máy móc</div>
+        </button>
+        <button class="topic-card" data-topic="Môi trường" onclick="selectTopic(this)">
+          <span class="topic-badge badge-easy">Dễ</span>
+          <span class="topic-icon">🌿</span>
+          <div class="topic-label">Môi trường</div>
+          <div class="topic-desc">Biến đổi khí hậu, năng lượng</div>
+        </button>
+        <button class="topic-card" data-topic="Giáo dục" onclick="selectTopic(this)">
+          <span class="topic-badge badge-hard">Khó</span>
+          <span class="topic-icon">🎓</span>
+          <div class="topic-label">Giáo dục</div>
+          <div class="topic-desc">Triết lý và phương pháp học</div>
+        </button>
+      </div>
+      <button id="start-btn" disabled onclick="startDebate()">Vào Đấu Trường ⚡</button>
+    </div>
+  </div>
+</div>
+
+<div id="main-screen">
+  <div class="game-hud">
+    <div class="hud-left">
+      <button class="back-btn" onclick="goBack()">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2L4 6l4 4"/></svg>
+        Rời đi
+      </button>
+      <span style="font-weight: 700; color: white;" id="topic-pill"></span>
+    </div>
+    
+    <div class="momentum-container">
+      <div class="momentum-label"><span>Bạn</span><span>AI Thắng thế</span></div>
+      <div class="momentum-track"><div class="momentum-fill" id="momentum-bar"></div></div>
+    </div>
+
+    <span class="round-counter" id="round-counter">Vòng 0</span>
+  </div>
+
+  <div class="arena">
+    <div class="card">
+      <div class="section-label">Lượt của bạn</div>
+      <textarea id="user-input" placeholder="Tung ra lập luận của bạn tại đây..." oninput="updateCharCount(this)"></textarea>
+      <div class="input-footer">
+        <span class="char-count" id="char-count">0 / 1000</span>
+        <button id="debate-btn" onclick="submitArgument()">
+          Phản đòn ⚔️
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">
+        <div class="ai-status-dot" id="ai-dot"></div>
+        AI Phản biện
+      </div>
+      <div id="ai-output">
+        <span class="placeholder">Chờ đợi đối thủ ra đòn...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── CONFIG ──
+  const BACKEND_API_URL = "https://slouchy-defiant-prowler.ngrok-free.dev.ngrok.io/api/chat";
+
+  let selectedTopic = null;
+  let roundCount = 0;
+  let history = [];
+  let typewriterTimeout = null;
+
+  // ── MODAL ──
+  function selectTopic(el) {
+    document.querySelectorAll('.topic-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedTopic = el.dataset.topic;
+    const btn = document.getElementById('start-btn');
+    btn.disabled = false;
+  }
+
+  function startDebate() {
+    if (!selectedTopic) return;
+    document.getElementById('modal-screen').style.display = 'none';
+    document.getElementById('main-screen').style.display = 'block';
+    document.getElementById('topic-pill').textContent = selectedTopic;
+    roundCount = 0;
+    history = [];
+    updateRoundCounter();
+    updateMomentum(50); // Reset momentum
+  }
+
+  function goBack() {
+    document.getElementById('main-screen').style.display = 'none';
+    document.getElementById('modal-screen').style.display = 'block';
+    document.getElementById('user-input').value = '';
+    document.getElementById('char-count').textContent = '0 / 1000';
+    document.getElementById('ai-output').innerHTML = '<span class="placeholder">Chờ đợi đối thủ ra đòn...</span>';
+    clearTimeout(typewriterTimeout);
+  }
+
+  // ── UI UPDATES ──
+  function updateCharCount(el) {
+    document.getElementById('char-count').textContent = `${el.value.length} / 1000`;
+  }
+
+  function updateRoundCounter() {
+    document.getElementById('round-counter').textContent = `Vòng ${roundCount}`;
+  }
+  
+  function updateMomentum(percentage) {
+    document.getElementById('momentum-bar').style.width = percentage + '%';
+  }
+
+  function setDot(active) {
+    document.getElementById('ai-dot').className = 'ai-status-dot' + (active ? ' active' : '');
+  }
+
+  // ── TYPEWRITER EFFECT ──
+  function typeWriterEffect(elementId, text, speed = 15) {
+    const el = document.getElementById(elementId);
+    el.innerHTML = '';
+    let i = 0;
+    
+    function type() {
+      if (i < text.length) {
+        // Handle basic HTML breaks for formatting
+        if (text.slice(i, i+4) === '<br>') {
+          el.innerHTML += '<br>';
+          i += 4;
+        } else {
+          el.innerHTML += text.charAt(i);
+          i++;
+        }
+        typewriterTimeout = setTimeout(type, speed);
+      }
+    }
+    type();
+  }
+
+  // ── MAIN LOGIC ──
+  async function submitArgument() {
+    const msg = document.getElementById('user-input').value.trim();
+    if (!msg) return;
+
+    const btn = document.getElementById('debate-btn');
+    btn.disabled = true;
+    setDot(true);
+    
+    // Show AI Thinking Animation
+    document.getElementById('ai-output').innerHTML = '<div class="thinking"><span></span><span></span><span></span></div>';
+
+    try {
+      const response = await fetch(BACKEND_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic: selectedTopic, message: msg })
+      });
+
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const data = await response.json();
+      const reply = data.reply || 'Không có dữ liệu trả về.';
+
+      roundCount++;
+      updateRoundCounter();
+      
+      // Randomize momentum slightly just for visual game-feel (can replace with actual backend score)
+      let newMomentum = 30 + Math.random() * 40; 
+      updateMomentum(newMomentum);
+
+      // Render the response using the typewriter effect
+      const formattedReply = escapeHtml(reply);
+      typeWriterEffect('ai-output', formattedReply, 10);
+
+      document.getElementById('user-input').value = '';
+      document.getElementById('char-count').textContent = '0 / 1000';
+
+    } catch (e) {
+      document.getElementById('ai-output').innerHTML = `<span style="color:var(--danger);">Lỗi kết nối. Vui lòng kiểm tra server ngrok.</span>`;
+    } finally {
+      btn.disabled = false;
+      setDot(false);
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/\n/g,'<br>');
+  }
+</script>
+</body>
+</html>
