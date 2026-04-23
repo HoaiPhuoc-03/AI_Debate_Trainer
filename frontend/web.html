@@ -424,9 +424,12 @@
 
 <script>
   // ── CONFIG ──
-  const BACKEND_API_URL = "https://slouchy-defiant-prowler.ngrok-free.dev.ngrok.io/api/chat";
+  const BACKEND_API_URL = "http://localhost:8000"; // Change to your backend URL
 
   let selectedTopic = null;
+  let selectedStance = "FOR";
+  let selectedDifficulty = "medium";
+  let sessionId = null;
   let roundCount = 0;
   let history = [];
   let typewriterTimeout = null;
@@ -440,15 +443,35 @@
     btn.disabled = false;
   }
 
-  function startDebate() {
+  async function startDebate() {
     if (!selectedTopic) return;
-    document.getElementById('modal-screen').style.display = 'none';
-    document.getElementById('main-screen').style.display = 'block';
-    document.getElementById('topic-pill').textContent = selectedTopic;
-    roundCount = 0;
-    history = [];
-    updateRoundCounter();
-    updateMomentum(50); // Reset momentum
+    
+    try {
+      const response = await fetch(`${BACKEND_API_URL}/api/v1/debate/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic: selectedTopic,
+          stance: selectedStance,
+          difficulty: selectedDifficulty,
+          input_mode: "text"
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to start session');
+      const data = await response.json();
+      sessionId = data.session_id;
+
+      document.getElementById('modal-screen').style.display = 'none';
+      document.getElementById('main-screen').style.display = 'block';
+      document.getElementById('topic-pill').textContent = selectedTopic;
+      roundCount = 0;
+      history = [];
+      updateRoundCounter();
+      updateMomentum(50); // Reset momentum
+    } catch (error) {
+      alert('Lỗi kết nối backend: ' + error.message);
+    }
   }
 
   function goBack() {
@@ -502,7 +525,7 @@
   // ── MAIN LOGIC ──
   async function submitArgument() {
     const msg = document.getElementById('user-input').value.trim();
-    if (!msg) return;
+    if (!msg || !sessionId) return;
 
     const btn = document.getElementById('debate-btn');
     btn.disabled = true;
@@ -512,15 +535,18 @@
     document.getElementById('ai-output').innerHTML = '<div class="thinking"><span></span><span></span><span></span></div>';
 
     try {
-      const response = await fetch(BACKEND_API_URL, {
+      const response = await fetch(`${BACKEND_API_URL}/api/v1/debate/turn`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ topic: selectedTopic, message: msg })
+        body: JSON.stringify({
+          session_id: sessionId,
+          user_argument: msg
+        })
       });
 
       if (!response.ok) throw new Error('HTTP ' + response.status);
       const data = await response.json();
-      const reply = data.reply || 'Không có dữ liệu trả về.';
+      const reply = data.ai_rebuttal || 'Không có dữ liệu trả về.';
 
       roundCount++;
       updateRoundCounter();
@@ -537,7 +563,7 @@
       document.getElementById('char-count').textContent = '0 / 1000';
 
     } catch (e) {
-      document.getElementById('ai-output').innerHTML = `<span style="color:var(--danger);">Lỗi kết nối. Vui lòng kiểm tra server ngrok.</span>`;
+      document.getElementById('ai-output').innerHTML = `<span style="color:var(--danger);">Lỗi kết nối: ${e.message}</span>`;
     } finally {
       btn.disabled = false;
       setDot(false);
