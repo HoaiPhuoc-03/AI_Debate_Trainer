@@ -1,0 +1,652 @@
+[
+  {
+    "id": "EDU_001",
+    "category": "education",
+    "topic": "Học sinh có nên dùng AI để hỗ trợ học tập?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "EDU_002",
+    "category": "education",
+    "topic": "Có nên cấm điện thoại trong lớp học?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "EDU_003",
+    "category": "education",
+    "topic": "Trường học có nên cho phép học online nhiều hơn?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "EDU_004",
+    "category": "education",
+    "topic": "Có nên bỏ bài tập về nhà ở bậc phổ thông?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "EDU_005",
+    "category": "education",
+    "topic": "Học sinh có nên được chọn môn học theo sở thích?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "EDU_006",
+    "category": "education",
+    "topic": "Có nên chấm điểm bằng nhận xét thay vì điểm số?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "EDU_007",
+    "category": "education",
+    "topic": "Đại học có nên ưu tiên kỹ năng thực hành hơn lý thuyết?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "EDU_008",
+    "category": "education",
+    "topic": "Có nên đưa kỹ năng tranh biện vào chương trình học?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "EDU_009",
+    "category": "education",
+    "topic": "Giáo viên có nên dùng AI để chấm bài?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "EDU_010",
+    "category": "education",
+    "topic": "Có nên cho học sinh dùng mạng xã hội cho mục đích học tập?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "TECH_001",
+    "category": "technology_ai",
+    "topic": "Có nên sử dụng AI trong tuyển dụng?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "TECH_002",
+    "category": "technology_ai",
+    "topic": "AI có nên được dùng để hỗ trợ bác sĩ chẩn đoán bệnh?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "TECH_003",
+    "category": "technology_ai",
+    "topic": "Có nên dùng chatbot AI trong dịch vụ khách hàng?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "TECH_004",
+    "category": "technology_ai",
+    "topic": "Học sinh có nên dùng công cụ AI để viết bài luận?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "TECH_005",
+    "category": "technology_ai",
+    "topic": "Doanh nghiệp có nên tự động hóa nhiều công việc bằng AI?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "TECH_006",
+    "category": "technology_ai",
+    "topic": "Có nên yêu cầu minh bạch khi dùng nội dung do AI tạo?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "TECH_007",
+    "category": "technology_ai",
+    "topic": "AI có làm giảm khả năng sáng tạo của con người không?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "TECH_008",
+    "category": "technology_ai",
+    "topic": "Có nên dùng camera AI để giám sát nơi công cộng?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "TECH_009",
+    "category": "technology_ai",
+    "topic": "Người lao động có nên học kỹ năng AI để thích nghi?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "TECH_010",
+    "category": "technology_ai",
+    "topic": "Có nên giới hạn độ tuổi sử dụng một số công cụ AI?",
+    "recommended_age_groups": [
+      "teen",
+      "adult"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "SOC_001",
+    "category": "society",
+    "topic": "Có nên khuyến khích người trẻ tham gia hoạt động cộng đồng?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "SOC_002",
+    "category": "society",
+    "topic": "Mạng xã hội có làm con người ít giao tiếp trực tiếp hơn không?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "SOC_003",
+    "category": "society",
+    "topic": "Có nên áp dụng làm việc từ xa rộng rãi hơn?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "SOC_004",
+    "category": "society",
+    "topic": "Người lớn tuổi có nên học sử dụng công nghệ mới?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "SOC_005",
+    "category": "society",
+    "topic": "Có nên tăng cường giáo dục kỹ năng sống trong trường học?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "SOC_006",
+    "category": "society",
+    "topic": "Có nên hạn chế nội dung tiêu cực trên mạng xã hội?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "SOC_007",
+    "category": "society",
+    "topic": "Thanh thiếu niên có nên được tham gia quyết định các vấn đề cộng đồng?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "SOC_008",
+    "category": "society",
+    "topic": "Có nên khuyến khích đọc sách thay vì chỉ xem video ngắn?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "SOC_009",
+    "category": "society",
+    "topic": "Gia đình có nên đặt quy tắc sử dụng thiết bị số?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "SOC_010",
+    "category": "society",
+    "topic": "Có nên mở rộng các lớp học miễn phí cho người lớn tuổi?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "basic",
+      "intermediate"
+    ]
+  },
+  {
+    "id": "ENV_001",
+    "category": "environment",
+    "topic": "Có nên cấm túi nhựa dùng một lần?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ENV_002",
+    "category": "environment",
+    "topic": "Có nên khuyến khích đi xe buýt và phương tiện công cộng?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ENV_003",
+    "category": "environment",
+    "topic": "Trường học có nên bắt buộc phân loại rác?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ENV_004",
+    "category": "environment",
+    "topic": "Có nên đánh thuế cao với sản phẩm gây ô nhiễm?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ENV_005",
+    "category": "environment",
+    "topic": "Thành phố có nên mở rộng không gian xanh?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ENV_006",
+    "category": "environment",
+    "topic": "Có nên hạn chế xe cá nhân ở trung tâm thành phố?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ENV_007",
+    "category": "environment",
+    "topic": "Doanh nghiệp có nên bắt buộc công bố tác động môi trường?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ENV_008",
+    "category": "environment",
+    "topic": "Có nên dùng năng lượng tái tạo nhiều hơn dù chi phí ban đầu cao?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ENV_009",
+    "category": "environment",
+    "topic": "Có nên cấm ống hút nhựa trong quán ăn?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ENV_010",
+    "category": "environment",
+    "topic": "Người dân có nên trả phí cao hơn để xử lý rác tốt hơn?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ECO_001",
+    "category": "economy",
+    "topic": "Có nên khuyến khích thanh toán không tiền mặt?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ECO_002",
+    "category": "economy",
+    "topic": "Sinh viên có nên đi làm thêm trong thời gian học?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ECO_003",
+    "category": "economy",
+    "topic": "Có nên hỗ trợ tài chính cho startup của sinh viên?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ECO_004",
+    "category": "economy",
+    "topic": "Doanh nghiệp nhỏ có nên chuyển sang bán hàng online?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ECO_005",
+    "category": "economy",
+    "topic": "Có nên tăng lương tối thiểu hằng năm?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ECO_006",
+    "category": "economy",
+    "topic": "Có nên dạy kiến thức tài chính cá nhân từ phổ thông?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ECO_007",
+    "category": "economy",
+    "topic": "Người trẻ có nên đầu tư sớm?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ECO_008",
+    "category": "economy",
+    "topic": "Có nên ưu tiên mua hàng Việt Nam?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ECO_009",
+    "category": "economy",
+    "topic": "Chính phủ có nên hỗ trợ mạnh cho kinh tế xanh?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  },
+  {
+    "id": "ECO_010",
+    "category": "economy",
+    "topic": "Có nên áp dụng thuế với các nền tảng số xuyên biên giới?",
+    "recommended_age_groups": [
+      "adult",
+      "senior"
+    ],
+    "difficulty_levels": [
+      "intermediate",
+      "advanced"
+    ]
+  }
+]

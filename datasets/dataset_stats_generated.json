@@ -1,0 +1,56 @@
+{
+  "total_samples": 1000,
+  "by_topic_category": {
+    "environment": 150,
+    "society": 200,
+    "economy": 150,
+    "education": 250,
+    "technology_ai": 250
+  },
+  "by_age_group": {
+    "adult": 500,
+    "senior": 200,
+    "teen": 300
+  },
+  "by_difficulty": {
+    "basic": 326,
+    "advanced": 355,
+    "intermediate": 319
+  },
+  "by_debate_level": {
+    "basic": 310,
+    "intermediate": 335,
+    "advanced": 355
+  },
+  "by_argument_quality": {
+    "weak_evidence": 200,
+    "weak_reasoning": 180,
+    "medium": 250,
+    "too_short": 60,
+    "strong": 120,
+    "vague_claim": 120,
+    "off_topic": 40,
+    "unsafe": 30
+  },
+  "by_main_weakness": {
+    "evidence": 389,
+    "reasoning": 361,
+    "claim": 220,
+    "safety": 30
+  },
+  "by_safety_label": {
+    "safe": 930,
+    "needs_review": 40,
+    "unsafe": 30
+  },
+  "avg_cer": {
+    "avg_claim": 5.85,
+    "avg_evidence": 3.49,
+    "avg_reasoning": 4.46,
+    "avg_total": 4.6
+  },
+  "min_max_cer": {
+    "min_total": 0.0,
+    "max_total": 9.0
+  }
+}

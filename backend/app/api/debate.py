@@ -1,39 +1,64 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+
 from app.schemas.debate import (
+    DebateTurnRequest,
+    DebateTurnResponseV2,
+    ProgressOverviewResponse,
+    SessionInfoResponse,
+    SessionSummaryResponse,
     StartSessionRequest,
     StartSessionResponse,
-    DebateTurnRequest,
-    DebateTurnResponse,
-    SessionInfoResponse,
 )
-from app.services.ai_service import generate_rebuttal
-from app.services.session_store import create_session, get_session
+from app.services import ai_service
+from app.services.auth_service import get_debate_user
+from app.services.normalization import normalize_session_payload, normalize_status
+from app.services.session_store import (
+    create_session,
+    end_session,
+    get_progress_overview,
+    get_session,
+    get_session_summary,
+    save_debate_turn,
+)
 
 router = APIRouter()
 
 
+def _session_response(session: dict) -> dict:
+    return {
+        "session_id": session["session_id"],
+        "topic": session["topic"],
+        "topic_category": session.get("topic_category"),
+        "custom_topic": session.get("custom_topic"),
+        "stance": session["stance"],
+        "difficulty": session["difficulty"],
+        "input_mode": session["input_mode"],
+        "age_group": session.get("age_group") or "adult",
+        "debate_level": session.get("debate_level") or "intermediate",
+        "language": session.get("language") or "vi",
+        "response_time": session.get("response_time"),
+        "max_turns": int(session.get("max_turns") or 0),
+        "turn_count": int(session.get("turn_count") or 0),
+        "status": normalize_status(session.get("status")),
+    }
+
+
 @router.post("/session", response_model=StartSessionResponse)
-def start_session(payload: StartSessionRequest):
-    session = create_session(
-        topic=payload.topic,
-        stance=payload.stance,
-        difficulty=payload.difficulty,
-        input_mode=payload.input_mode,
-    )
-
-    return StartSessionResponse(
-        session_id=session["session_id"],
-        topic=session["topic"],
-        stance=session["stance"],
-        difficulty=session["difficulty"],
-        input_mode=session["input_mode"],
-        status="ready",
-    )
+def start_session(
+    payload: StartSessionRequest,
+    current_user: dict = Depends(get_debate_user),
+):
+    normalized = normalize_session_payload(payload)
+    session = create_session(user_id=current_user["id"], **normalized)
+    return _session_response(session)
 
 
-@router.post("/turn", response_model=DebateTurnResponse)
-def debate_turn(payload: DebateTurnRequest):
-    session = get_session(payload.session_id)
+@router.post("/turn", response_model=DebateTurnResponseV2)
+def debate_turn(
+    payload: DebateTurnRequest,
+    current_user: dict = Depends(get_debate_user),
+):
+    session = get_session(payload.session_id, user_id=current_user["id"])
 
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -41,31 +66,83 @@ def debate_turn(payload: DebateTurnRequest):
     if not payload.user_argument.strip():
         raise HTTPException(status_code=400, detail="user_argument is empty")
 
-    result = generate_rebuttal(
+    if normalize_status(session["status"]) == "completed":
+        raise HTTPException(status_code=400, detail="Session is already completed")
+
+    result = ai_service.generate_debate_analysis(
         topic=session["topic"],
         stance=session["stance"],
         difficulty=session["difficulty"],
         user_argument=payload.user_argument,
+        age_group=session.get("age_group"),
+        debate_level=session.get("debate_level"),
+        language=session.get("language"),
+        input_mode=session.get("input_mode"),
     )
 
-    return DebateTurnResponse(
+    saved = save_debate_turn(
+        session=session,
+        user_argument=payload.user_argument,
+        ai_rebuttal=result["rebuttal"],
+        cer=result["cer"],
+        feedback=result["feedback"],
+        content_flags=result.get("content_flags", []),
+        status="active" if result["ok"] else "error",
+        count_for_completion=result["ok"],
+    )
+    response_status = saved["session"]["status"] if result["ok"] else "error"
+
+    return DebateTurnResponseV2(
         session_id=payload.session_id,
         user_argument=payload.user_argument,
-        ai_rebuttal=result["text"],
-        status="success" if result["ok"] else "error",
+        ai_rebuttal=result["rebuttal"],
+        turn_number=int(saved["turn_number"]),
+        max_turns=int(saved["session"].get("max_turns") or session["max_turns"]),
+        status=normalize_status(response_status),
+        cer=result["cer"],
+        feedback=result["feedback"],
     )
+
+
 @router.get("/session/{session_id}", response_model=SessionInfoResponse)
-def get_session_info(session_id: str):
-    session = get_session(session_id)
+def get_session_info(
+    session_id: str,
+    current_user: dict = Depends(get_debate_user),
+):
+    session = get_session(session_id, user_id=current_user["id"])
 
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    return SessionInfoResponse(
-        session_id=session["session_id"],
-        topic=session["topic"],
-        stance=session["stance"],
-        difficulty=session["difficulty"],
-        input_mode=session["input_mode"],
-        status="found"
-    )
+    return _session_response(session)
+
+
+@router.post("/session/{session_id}/end", response_model=SessionInfoResponse)
+def end_session_route(
+    session_id: str,
+    current_user: dict = Depends(get_debate_user),
+):
+    session = end_session(session_id, user_id=current_user["id"])
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return _session_response(session)
+
+
+@router.get("/session/{session_id}/summary", response_model=SessionSummaryResponse)
+def get_session_summary_route(
+    session_id: str,
+    current_user: dict = Depends(get_debate_user),
+):
+    summary = get_session_summary(session_id, user_id=current_user["id"])
+
+    if not summary:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return summary
+
+
+@router.get("/progress/overview", response_model=ProgressOverviewResponse)
+def get_progress_overview_route(current_user: dict = Depends(get_debate_user)):
+    return get_progress_overview(user_id=current_user["id"])

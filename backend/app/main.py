@@ -1,5 +1,7 @@
 from fastapi import FastAPI
+from app.api.auth import router as auth_router
 from app.api.debate import router as debate_router
+from app.services.session_store import init_db
 
 app = FastAPI(
     title="AI Debate Trainer API",
@@ -11,6 +13,11 @@ app = FastAPI(
 def health_check():
     return {"status": "ok"}
 
+@app.on_event("startup")
+def startup():
+    init_db()
+
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(debate_router, prefix="/api/v1/debate", tags=["Debate"])
 
 
