@@ -1964,7 +1964,7 @@
           <div class="chips" id="session-chips"></div>
           <div class="chips">
             <span class="coach-pill"><span class="dot"></span> Huấn luyện viên đang hoạt động</span>
-            <button class="danger-btn" onclick="leaveSession()">↪ Rời phiên</button>
+            <button class="danger-btn" onclick="finishSession()">↪ Kết thúc phiên</button>
           </div>
         </div>
 
@@ -2764,10 +2764,13 @@
     renderFeedback(null);
   }
 
-  async function leaveSession() {
+  async function finishSession() {
     if (state.sessionId) {
       try {
-        await apiRequest(`/api/v1/debate/session/${encodeURIComponent(state.sessionId)}/end`, { method: "POST" });
+        const data = await apiRequest(`/api/v1/debate/session/${encodeURIComponent(state.sessionId)}/end`, { method: "POST" });
+        state.sessionStatus = normalizeStatus(data.status);
+        state.roundCount = Number(data.turn_count ?? state.roundCount) || state.roundCount;
+        renderSessionChips();
       } catch (error) {
         console.warn("Không thể kết thúc phiên:", error);
       }

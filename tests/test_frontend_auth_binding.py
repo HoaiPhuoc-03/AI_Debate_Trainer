@@ -57,6 +57,14 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertNotIn("const topics = [", html)
         self.assertNotIn("custom_topic:", html)
 
+    def test_frontend_ends_session_from_arena(self):
+        html = read_frontend()
+
+        self.assertIn("Kết thúc phiên", html)
+        self.assertIn("finishSession()", html)
+        self.assertIn("/end", html)
+        self.assertNotIn("Rời phiên", html)
+
 
 if __name__ == "__main__":
     unittest.main()
