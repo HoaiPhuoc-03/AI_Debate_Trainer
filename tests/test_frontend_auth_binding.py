@@ -47,6 +47,16 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn("recent_topics", html)
         self.assertNotIn("const data = [", html)
 
+    def test_frontend_requires_single_session_topic_input(self):
+        html = read_frontend()
+
+        self.assertIn("session-topic-input", html)
+        self.assertIn("validateSessionTopic", html)
+        self.assertIn("setSessionTopic", html)
+        self.assertNotIn("topic-options", html)
+        self.assertNotIn("const topics = [", html)
+        self.assertNotIn("custom_topic:", html)
+
 
 if __name__ == "__main__":
     unittest.main()

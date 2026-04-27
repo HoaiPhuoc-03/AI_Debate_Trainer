@@ -1,3 +1,4 @@
+import re
 import unicodedata
 
 from app.core.config import settings
@@ -44,16 +45,109 @@ def optional_text(value) -> str | None:
     return text or None
 
 
+def validate_debate_topic(topic: str | None) -> dict:
+    text = " ".join(_clean_text(topic).split())
+    key = _key(text)
+    words = re.findall(r"\w+", text, flags=re.UNICODE)
+    unique_words = {word.casefold() for word in words}
+
+    if not text:
+        return {
+            "is_valid": False,
+            "topic": text,
+            "reason": "empty",
+            "message": "Vui lòng nhập topic chính của phiên tranh biện.",
+        }
+    if len(text) < 12 or len(words) < 4:
+        return {
+            "is_valid": False,
+            "topic": text,
+            "reason": "too_short",
+            "message": "Topic quá ngắn. Hãy nhập một chủ đề/mệnh đề tranh biện rõ hơn.",
+        }
+    if len(text) > 180:
+        return {
+            "is_valid": False,
+            "topic": text,
+            "reason": "too_long",
+            "message": "Topic quá dài. Hãy rút gọn dưới 180 ký tự.",
+        }
+    if len(unique_words) <= 2 or re.search(r"([a-zA-ZÀ-ỹ])\1{3,}", text, flags=re.UNICODE):
+        return {
+            "is_valid": False,
+            "topic": text,
+            "reason": "typo_or_repetition",
+            "message": "Topic có dấu hiệu gõ lỗi hoặc lặp từ. Vui lòng nhập lại rõ ràng.",
+        }
+    if re.search(r"\b(k|ko|khum|hok|j|z)\b", key):
+        return {
+            "is_valid": False,
+            "topic": text,
+            "reason": "shorthand",
+            "message": "Vui lòng tránh viết tắt hoặc gõ lỗi trong topic.",
+        }
+    vowel_stripped = re.sub(r"[aeiouyăâêôơưáàảãạắằẳẵặấầẩẫậéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]", "", key)
+    if re.search(r"[a-z]{7,}", vowel_stripped):
+        return {
+            "is_valid": False,
+            "topic": text,
+            "reason": "spelling",
+            "message": "Topic có vẻ sai chính tả hoặc khó đọc. Vui lòng kiểm tra lại.",
+        }
+
+    unsafe_terms = [
+        "do ngu",
+        "cam mieng",
+        "chet di",
+        "tu tu",
+        "giet",
+        "khieu dam",
+        "ma tuy",
+        "khung bo",
+    ]
+    if any(term in key for term in unsafe_terms):
+        return {
+            "is_valid": False,
+            "topic": text,
+            "reason": "unsafe",
+            "message": "Topic có nội dung vi phạm an toàn. Vui lòng nhập chủ đề khác.",
+        }
+
+    debate_cues = [
+        "co nen",
+        "nen",
+        "should",
+        "ban",
+        "allow",
+        "cam",
+        "cho phep",
+        "bat buoc",
+        "thay the",
+        "anh huong",
+        "tot hon",
+        "quyen",
+        "chinh sach",
+        "luat",
+        "trach nhiem",
+        "hoc sinh",
+        "sinh vien",
+        "ai",
+    ]
+    if "?" not in text and not any(cue in key for cue in debate_cues):
+        return {
+            "is_valid": False,
+            "topic": text,
+            "reason": "not_debatable",
+            "message": "Topic cần là một vấn đề có thể tranh biện, ví dụ bắt đầu bằng 'Có nên...'.",
+        }
+
+    return {"is_valid": True, "topic": text, "reason": "", "message": ""}
+
+
 def normalize_topic(topic: str | None, topic_category: str | None, custom_topic: str | None) -> str:
-    custom = optional_text(custom_topic)
-    if custom:
-        return custom
     selected_topic = optional_text(topic)
     if selected_topic:
         return selected_topic
-    selected_category = optional_text(topic_category)
-    if selected_category:
-        return selected_category
     return "General Debate"
 
 
@@ -240,10 +334,11 @@ def normalize_max_turns(value) -> int:
 def normalize_session_payload(payload) -> dict:
     debate_level = normalize_debate_level(payload.debate_level)
     difficulty = normalize_difficulty(payload.difficulty) if payload.difficulty else difficulty_label_from_level(debate_level)
+    topic = normalize_topic(payload.topic, payload.topic_category, payload.custom_topic)
     return {
-        "topic": normalize_topic(payload.topic, payload.topic_category, payload.custom_topic),
-        "topic_category": optional_text(payload.topic_category),
-        "custom_topic": optional_text(payload.custom_topic),
+        "topic": topic,
+        "topic_category": None,
+        "custom_topic": None,
         "stance": normalize_stance(payload.stance),
         "difficulty": difficulty,
         "input_mode": normalize_input_mode(payload.input_mode),

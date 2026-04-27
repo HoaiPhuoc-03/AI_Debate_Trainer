@@ -15,7 +15,7 @@ from app.schemas.debate import (
 from app.services import ai_service
 from app.services.auth_service import get_debate_user
 from app.services.cer_scorer import normalize_cer_to_100
-from app.services.normalization import normalize_session_payload, normalize_status
+from app.services.normalization import normalize_session_payload, normalize_status, validate_debate_topic
 from app.services.session_store import (
     create_session,
     end_session,
@@ -54,6 +54,9 @@ def start_session(
     payload: StartSessionRequest,
     current_user: dict = Depends(get_debate_user),
 ):
+    topic_validation = validate_debate_topic(payload.topic)
+    if not topic_validation["is_valid"]:
+        raise HTTPException(status_code=400, detail=topic_validation["message"])
     normalized = normalize_session_payload(payload)
     session = create_session(user_id=current_user["id"], **normalized)
     return _session_response(session)

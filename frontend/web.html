@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Debate Trainer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #070c18;
@@ -74,7 +74,9 @@
   body {
     min-height: 100vh;
     color: var(--text);
-    font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
     overflow: hidden;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
@@ -580,6 +582,36 @@
     padding: 36px;
     margin-bottom: 30px;
   }
+  .topic-heading {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .battle-icon {
+    width: 46px;
+    height: 46px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 15px;
+    color: var(--cyan);
+    background: rgba(32, 231, 209, 0.1);
+    border: 1px solid rgba(32, 231, 209, 0.24);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+  .battle-icon svg {
+    width: 28px;
+    height: 28px;
+    display: block;
+  }
+  .battle-icon .sword-blade {
+    stroke: currentColor;
+  }
+  .battle-icon .sword-hilt {
+    stroke: var(--yellow);
+  }
+  .battle-icon .sword-grip {
+    stroke: var(--pink);
+  }
   .topic-row {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -597,6 +629,19 @@
     font-size: 20px;
     font-weight: 800;
     margin-bottom: 14px;
+  }
+  .topic-input {
+    min-height: 132px;
+    resize: vertical;
+    line-height: 1.45;
+    padding-top: 18px;
+    padding-bottom: 18px;
+  }
+  .topic-guidance {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
+    margin-top: 12px;
   }
   .text-input {
     width: 100%;
@@ -1306,6 +1351,21 @@
     color: #111827;
   }
 
+  body[data-theme="blue-pastel"] .battle-icon {
+    color: #3f91d9;
+    background: #eef6ff;
+    border-color: #c7e4fa;
+    box-shadow: 0 8px 18px rgba(79, 158, 232, 0.12);
+  }
+
+  body[data-theme="blue-pastel"] .battle-icon .sword-hilt {
+    stroke: #d97706;
+  }
+
+  body[data-theme="blue-pastel"] .battle-icon .sword-grip {
+    stroke: #b76b43;
+  }
+
   body[data-theme="blue-pastel"] .text-input:focus,
   body[data-theme="blue-pastel"] .arena-textarea:focus {
     border-color: #72b6ea;
@@ -1480,6 +1540,9 @@
   .page-title { font-size: 29px; margin-bottom: 13px; }
   .page-copy { font-size: 16px; line-height: 1.5; max-width: 690px; margin-bottom: 30px; }
   .section-title { font-size: 18px; margin: 30px 0 16px; }
+  .topic-heading { gap: 10px; }
+  .battle-icon { width: 34px; height: 34px; border-radius: 11px; }
+  .battle-icon svg { width: 21px; height: 21px; }
 
   .choice-grid { gap: 12px; }
   .choice-card { min-height: 82px; padding: 16px 20px; gap: 14px; border-radius: 14px; }
@@ -1498,6 +1561,8 @@
   .topic-row { gap: 12px; }
   .custom-topic { margin-top: 18px; padding: 16px; }
   .custom-topic label { font-size: 15px; margin-bottom: 10px; }
+  .topic-input { min-height: 96px; }
+  .topic-guidance { font-size: 12px; }
   .text-input { min-height: 48px; padding: 0 16px; font-size: 15px; border-radius: 12px; }
   .config-grid { gap: 16px; margin-top: 20px; }
   .config-panel { min-height: 255px; padding: 18px; }
@@ -1851,13 +1916,24 @@
 
         <div class="panel session-card">
           <div class="panel-head">
-            <h2 class="section-title" style="margin:0">Chủ đề tranh biện</h2>
-            <span class="soft-pill">5 nhóm chủ đề</span>
+            <h2 class="section-title topic-heading" style="margin:0">
+              <span class="battle-icon" aria-hidden="true">
+                <svg viewBox="0 0 32 32" fill="none">
+                  <path class="sword-blade" d="M7 4l9 9M25 4l-9 9" stroke-width="4" stroke-linecap="round"/>
+                  <path class="sword-hilt" d="M9 20l-4 4M23 20l4 4M7 18l5 5M25 18l-5 5" stroke-width="3" stroke-linecap="round"/>
+                  <path class="sword-grip" d="M4 25l3 3M28 25l-3 3" stroke-width="4" stroke-linecap="round"/>
+                  <circle class="sword-hilt" cx="14" cy="15" r="2.4" stroke-width="2"/>
+                  <circle class="sword-hilt" cx="18" cy="15" r="2.4" stroke-width="2"/>
+                </svg>
+              </span>
+              <span>Chủ đề tranh biện</span>
+            </h2>
+            <span class="soft-pill">Bắt buộc</span>
           </div>
-          <div class="topic-row" id="topic-options"></div>
           <div class="custom-topic">
-            <label for="custom-topic-input">✚ Chủ đề riêng (không bắt buộc)</label>
-            <input class="text-input" id="custom-topic-input" placeholder="Ví dụ: Có nên cho học sinh dùng AI trong học tập?" oninput="setCustomTopic(this.value)">
+            <label for="session-topic-input">Topic chính của phiên tranh biện</label>
+            <textarea class="text-input topic-input" id="session-topic-input" maxlength="180" placeholder="Ví dụ: Có nên cho học sinh dùng AI trong học tập?" oninput="setSessionTopic(this.value)"></textarea>
+            <div class="topic-guidance">Nhập một mệnh đề/chủ đề có thể tranh biện rõ ràng. Hệ thống sẽ từ chối nội dung quá ngắn, sai định dạng, gõ lỗi nặng hoặc vi phạm an toàn.</div>
           </div>
         </div>
 
@@ -2058,8 +2134,7 @@
     age: "Adult",
     level: "Intermediate",
     inputMode: "Text",
-    topic: "Technology & AI",
-    customTopic: "",
+    topic: "",
     stance: "Ủng hộ",
     difficulty: "Intermediate",
     responseTime: "90 sec",
@@ -2084,13 +2159,6 @@
   const modes = [
     ["Text", "Gõ lập luận bằng văn bản", "T"],
     ["Voice", "Nói tự nhiên, tự động chuyển thành chữ", "🎙"],
-  ];
-  const topics = [
-    ["Education", "Thi cử, học trực tuyến, trường học", "🎓"],
-    ["Technology & AI", "Đạo đức AI, tự động hóa, quyền riêng tư", "🤖"],
-    ["Society", "Mạng xã hội, văn hóa, chính sách", "☷"],
-    ["Environment", "Khí hậu, năng lượng, bảo tồn", "◒"],
-    ["Economy", "Việc làm, thu nhập, toàn cầu hóa", "⌁"],
   ];
   const stances = [["Ủng hộ", "👍"], ["Phản đối", "👎"], ["Trung lập", "⚖"]];
   const difficulties = [["Basic", "●○○"], ["Intermediate", "●●○"], ["Advanced", "●●●"]];
@@ -2468,13 +2536,6 @@
   }
 
   function renderSessionOptions() {
-    document.getElementById("topic-options").innerHTML = topics.map(([name, desc, icon]) => `
-      <button class="choice-card ${state.topic === name && !state.customTopic ? "selected" : ""}" onclick="selectValue('topic', '${escapeAttr(name)}')">
-        <span class="icon-box">${icon}</span>
-        <span><span class="choice-name">${displayValue(name)}</span><span class="choice-desc">${desc}</span></span>
-      </button>
-    `).join("");
-
     document.getElementById("stance-options").innerHTML = stances.map(([name, icon]) => lineChoice("stance", name, icon)).join("");
     document.getElementById("difficulty-options").innerHTML = difficulties.map(([name, dots]) => lineChoice("difficulty", name, dots)).join("");
     document.getElementById("time-options").innerHTML = times.map(([name, desc]) => lineChoice("responseTime", name, desc)).join("");
@@ -2507,20 +2568,16 @@
 
   function selectValue(key, value) {
     state[key] = value;
-    if (key === "topic") {
-      state.customTopic = "";
-      document.getElementById("custom-topic-input").value = "";
-    }
     renderProfileOptions();
     renderSessionOptions();
     updateProfileSummary();
     updateSessionSummary();
   }
 
-  function setCustomTopic(value) {
-    state.customTopic = value.trim();
+  function setSessionTopic(value) {
+    state.topic = normalizeTopicText(value);
+    hideError("start-error");
     updateSessionSummary();
-    renderSessionOptions();
   }
 
   function updateProfileSummary() {
@@ -2529,7 +2586,7 @@
 
   function updateSessionSummary() {
     const topic = getTopic();
-    document.getElementById("session-ready").textContent = `Phiên sẵn sàng · ${displayValue(topic)} · ${displayValue(state.stance)} · ${displayValue(state.difficulty)}`;
+    document.getElementById("session-ready").textContent = `${topic ? "Phiên sẵn sàng" : "Cần nhập chủ đề"} · ${topic ? displayValue(topic) : "Chưa có topic"} · ${displayValue(state.stance)} · ${displayValue(state.difficulty)}`;
   }
 
   function goToView(view) {
@@ -2545,18 +2602,56 @@
     if (view === "progress") renderProgressTopics();
   }
 
+  function normalizeTopicText(value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
+  }
+
+  function validateSessionTopic(topic) {
+    const clean = normalizeTopicText(topic);
+    const words = clean.match(/[\p{L}\p{N}]+/gu) || [];
+    const uniqueWords = new Set(words.map(word => word.toLocaleLowerCase()));
+    const lower = clean.toLocaleLowerCase();
+    const unsafeTerms = [
+      "đồ ngu", "do ngu", "câm miệng", "cam mieng", "chết đi", "chet di",
+      "tự tử", "tu tu", "giết", "giet", "khiêu dâm", "khieu dam"
+    ];
+    const debateCues = [
+      "có nên", "co nen", "nên", "nen", "should", "ban", "allow", "cấm", "cam",
+      "cho phép", "cho phep", "bắt buộc", "bat buoc", "thay thế", "thay the",
+      "ảnh hưởng", "anh huong", "tốt hơn", "tot hon", "quyền", "quyen", "chính sách", "chinh sach"
+    ];
+
+    if (!clean) return "Vui lòng nhập topic chính của phiên tranh biện.";
+    if (clean.length < 12 || words.length < 4) return "Topic quá ngắn. Hãy nhập một chủ đề/mệnh đề tranh biện rõ hơn.";
+    if (clean.length > 180) return "Topic quá dài. Hãy rút gọn dưới 180 ký tự.";
+    if (/([a-zA-ZÀ-ỹ])\1{3,}/u.test(clean) || uniqueWords.size <= 2) return "Topic có dấu hiệu gõ lỗi hoặc lặp từ. Vui lòng nhập lại rõ ràng.";
+    if (/[\p{L}]{7,}/u.test(clean.replace(/[aeiouyăâêôơưáàảãạắằẳẵặấầẩẫậéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]/giu, ""))) {
+      return "Topic có vẻ sai chính tả hoặc khó đọc. Vui lòng kiểm tra lại.";
+    }
+    if (/\b(k|ko|khum|hok|j|z)\b/iu.test(lower)) return "Vui lòng tránh viết tắt hoặc gõ lỗi trong topic.";
+    if (unsafeTerms.some(term => lower.includes(term))) return "Topic có nội dung vi phạm an toàn. Vui lòng nhập chủ đề khác.";
+    if (!debateCues.some(cue => lower.includes(cue)) && !clean.includes("?")) {
+      return "Topic cần là một vấn đề có thể tranh biện, ví dụ bắt đầu bằng 'Có nên...'.";
+    }
+    return "";
+  }
+
   async function startDebate() {
     const button = document.getElementById("start-btn");
-    setLoading(button, true, "Đang tạo phiên...");
     hideError("start-error");
+    const topicError = validateSessionTopic(state.topic);
+    if (topicError) {
+      showError("start-error", topicError);
+      document.getElementById("session-topic-input")?.focus();
+      return;
+    }
+    setLoading(button, true, "Đang tạo phiên...");
 
     try {
       const data = await apiRequest("/api/v1/debate/session", {
         method: "POST",
         body: {
           topic: getTopic(),
-          topic_category: state.customTopic ? state.topic : state.topic,
-          custom_topic: state.customTopic || null,
           stance: state.stance,
           difficulty: state.difficulty,
           input_mode: state.inputMode.toLowerCase(),
@@ -2577,7 +2672,9 @@
       goToView("arena");
       await syncSessionStatus();
     } catch (error) {
-      showError("start-error", "Không thể tạo phiên tranh biện. Hãy kiểm tra backend rồi thử lại. " + error.message);
+      const message = error.message || "";
+      const isTopicError = /topic|vui lòng|chủ đề/i.test(message);
+      showError("start-error", isTopicError ? message : "Không thể tạo phiên tranh biện. Hãy kiểm tra backend rồi thử lại. " + message);
     } finally {
       setLoading(button, false);
     }
@@ -2688,8 +2785,10 @@
   }
 
   function newTopic() {
-    state.customTopic = "";
-    document.getElementById("custom-topic-input").value = "";
+    state.topic = "";
+    const input = document.getElementById("session-topic-input");
+    if (input) input.value = "";
+    updateSessionSummary();
     practiceAgain();
   }
 
@@ -2945,7 +3044,7 @@
   }
 
   function getTopic() {
-    return state.customTopic || state.topic;
+    return normalizeTopicText(state.topic);
   }
 
   function getAverageCER() {

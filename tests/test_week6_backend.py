@@ -79,11 +79,9 @@ class Week6BackendTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         return response.json()
 
-    def new_session_payload(self, max_turns=2, custom_topic="Should AI tutors replace homework?"):
+    def new_session_payload(self, max_turns=2, topic="Should AI tutors replace homework?"):
         return {
-            "topic": "Technology & AI",
-            "topic_category": "Technology & AI",
-            "custom_topic": custom_topic,
+            "topic": topic,
             "stance": "Support",
             "difficulty": "Advanced",
             "input_mode": "Voice",
@@ -217,8 +215,8 @@ class Week6BackendTests(unittest.TestCase):
 
         self.assertTrue(data["session_id"])
         self.assertEqual(data["topic"], "Should AI tutors replace homework?")
-        self.assertEqual(data["topic_category"], "Technology & AI")
-        self.assertEqual(data["custom_topic"], "Should AI tutors replace homework?")
+        self.assertIsNone(data["topic_category"])
+        self.assertIsNone(data["custom_topic"])
         self.assertEqual(data["stance"], "support")
         self.assertEqual(data["difficulty"], "Nâng cao")
         self.assertEqual(data["input_mode"], "voice")
@@ -252,6 +250,37 @@ class Week6BackendTests(unittest.TestCase):
         self.assertEqual(data["coach_model"], "socratic_v3")
         self.assertEqual(data["language"], "vi")
         self.assertEqual(data["max_turns"], 5)
+
+    def test_create_session_rejects_invalid_topic(self):
+        response = self.client.post(
+            "/api/v1/debate/session",
+            json={
+                "topic": "ok k",
+                "stance": "Support",
+                "difficulty": "Medium",
+                "input_mode": "text",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Topic", response.json()["detail"])
+        self.assertEqual(self.count_rows("debate_sessions"), 0)
+
+    def test_create_session_ignores_legacy_custom_topic_override(self):
+        data = self.create_session(
+            {
+                "topic": "Should phones be allowed in class?",
+                "topic_category": "Technology & AI",
+                "custom_topic": "Should AI tutors replace homework?",
+                "stance": "Support",
+                "difficulty": "Medium",
+                "input_mode": "text",
+            }
+        )
+
+        self.assertEqual(data["topic"], "Should phones be allowed in class?")
+        self.assertIsNone(data["topic_category"])
+        self.assertIsNone(data["custom_topic"])
 
     def test_create_session_maps_missing_difficulty_from_profile_modes(self):
         adult = self.create_session(
@@ -482,11 +511,11 @@ class Week6BackendTests(unittest.TestCase):
         user_a = self.register_user(email="progress-a@example.com")
         user_b = self.register_user(email="progress-b@example.com")
         session_a = self.create_session(
-            self.new_session_payload(max_turns=1, custom_topic="Topic A"),
+            self.new_session_payload(max_turns=1, topic="Should students debate Topic A?"),
             token=user_a["token"],
         )
         session_b = self.create_session(
-            self.new_session_payload(max_turns=1, custom_topic="Topic B"),
+            self.new_session_payload(max_turns=1, topic="Should students debate Topic B?"),
             token=user_b["token"],
         )
         self.assertEqual(self.submit_turn(session_a["session_id"], "Argument A", token=user_a["token"]).status_code, 200)
@@ -501,7 +530,7 @@ class Week6BackendTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data["total_sessions"], 1)
         self.assertEqual(data["completed_sessions"], 1)
-        self.assertEqual(data["recent_topics"], ["Topic A"])
+        self.assertEqual(data["recent_topics"], ["Should students debate Topic A?"])
 
     @mock.patch("app.api.debate.ai_service.generate_debate_analysis")
     def test_new_user_progress_is_empty_even_when_other_users_have_data(self, mocked_ai):
@@ -509,7 +538,7 @@ class Week6BackendTests(unittest.TestCase):
         existing_user = self.register_user(email="existing@example.com")
         new_user = self.register_user(email="new@example.com")
         session = self.create_session(
-            self.new_session_payload(max_turns=1, custom_topic="Existing Topic"),
+            self.new_session_payload(max_turns=1, topic="Should schools keep an existing topic?"),
             token=existing_user["token"],
         )
         self.assertEqual(self.submit_turn(session["session_id"], "Argument", token=existing_user["token"]).status_code, 200)
