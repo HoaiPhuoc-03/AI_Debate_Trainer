@@ -24,8 +24,11 @@ class FrontendAuthBindingTests(unittest.TestCase):
 
         self.assertIn("/api/v1/auth/login", html)
         self.assertIn("/api/v1/auth/me", html)
-        self.assertIn("applyAuthSession(data)", html)
-        self.assertIn("localStorage.setItem(AUTH_TOKEN_KEY, token)", html)
+        self.assertIn("applyAuthSession(data", html)
+        self.assertIn("sessionStorage.getItem(AUTH_TOKEN_KEY)", html)
+        self.assertIn("const storage = persist ? localStorage : sessionStorage", html)
+        self.assertIn("storage.setItem(AUTH_TOKEN_KEY, token)", html)
+        self.assertIn("remember-login", html)
         self.assertIn("request.headers.Authorization", html)
 
     def test_frontend_logout_clears_auth_state_and_stored_token(self):
@@ -34,6 +37,7 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn("/api/v1/auth/logout", html)
         self.assertIn("clearAuthState()", html)
         self.assertIn("localStorage.removeItem(AUTH_TOKEN_KEY)", html)
+        self.assertIn("sessionStorage.removeItem(AUTH_TOKEN_KEY)", html)
         self.assertIn("state.currentUser = null", html)
 
     def test_frontend_progress_uses_backend_current_user_data(self):

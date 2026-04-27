@@ -21,10 +21,16 @@ def fake_analysis():
         "ok": True,
         "rebuttal": "AI rebuttal",
         "cer": {
-            "claim": 7.0,
-            "evidence": 5.0,
-            "reasoning": 6.0,
-            "total": 6.0,
+            "claim": 70.0,
+            "evidence": 50.0,
+            "reasoning": 60.0,
+            "overall": 60.0,
+            "total": 60.0,
+        },
+        "cer_breakdown": {
+            "claim": {"clarity": 30.0, "relevance": 25.0, "specificity": 15.0},
+            "evidence": {"presence": 20.0, "specificity": 15.0, "relevance": 15.0},
+            "reasoning": {"logical_connection": 25.0, "causal_explanation": 25.0, "fallacy_control": 10.0},
         },
         "feedback": {
             "strengths": ["Clear claim"],
@@ -32,6 +38,8 @@ def fake_analysis():
             "suggestions": ["Add one concrete example"],
         },
         "content_flags": [],
+        "is_valid": True,
+        "status": "success",
         "error": "",
     }
 
@@ -212,10 +220,11 @@ class Week6BackendTests(unittest.TestCase):
         self.assertEqual(data["topic_category"], "Technology & AI")
         self.assertEqual(data["custom_topic"], "Should AI tutors replace homework?")
         self.assertEqual(data["stance"], "support")
-        self.assertEqual(data["difficulty"], "advanced")
+        self.assertEqual(data["difficulty"], "Nâng cao")
         self.assertEqual(data["input_mode"], "voice")
         self.assertEqual(data["age_group"], "teen")
         self.assertEqual(data["debate_level"], "advanced")
+        self.assertEqual(data["coach_model"], "socratic_v3")
         self.assertEqual(data["language"], "en")
         self.assertEqual(data["response_time"], "90 sec")
         self.assertEqual(data["max_turns"], 2)
@@ -236,12 +245,62 @@ class Week6BackendTests(unittest.TestCase):
         self.assertEqual(data["topic"], "Should phones be allowed in class?")
         self.assertIsNone(data["topic_category"])
         self.assertEqual(data["stance"], "support")
-        self.assertEqual(data["difficulty"], "intermediate")
+        self.assertEqual(data["difficulty"], "Trung bình")
         self.assertEqual(data["input_mode"], "text")
         self.assertEqual(data["age_group"], "adult")
         self.assertEqual(data["debate_level"], "intermediate")
+        self.assertEqual(data["coach_model"], "socratic_v3")
         self.assertEqual(data["language"], "vi")
         self.assertEqual(data["max_turns"], 5)
+
+    def test_create_session_maps_missing_difficulty_from_profile_modes(self):
+        adult = self.create_session(
+            {
+                "topic": "Sinh viên có nên đi làm thêm năm nhất?",
+                "stance": "support",
+                "age_group": "adult",
+                "debate_level": "intermediate",
+                "input_mode": "text",
+                "coach_model": "socratic_v3",
+                "language": "vi",
+                "max_turns": 5,
+            }
+        )
+        teen = self.create_session(
+            {
+                "topic": "Học sinh có nên dùng AI để học tập?",
+                "stance": "support",
+                "age_group": "teen",
+                "debate_level": "basic",
+                "input_mode": "voice",
+            }
+        )
+
+        self.assertEqual(adult["age_group"], "adult")
+        self.assertEqual(adult["debate_level"], "intermediate")
+        self.assertEqual(adult["input_mode"], "text")
+        self.assertEqual(adult["difficulty"], "Trung bình")
+        self.assertEqual(teen["age_group"], "teen")
+        self.assertEqual(teen["debate_level"], "basic")
+        self.assertEqual(teen["input_mode"], "voice")
+        self.assertEqual(teen["difficulty"], "Cơ bản")
+
+    def test_create_session_normalizes_vietnamese_profile_values(self):
+        data = self.create_session(
+            {
+                "topic": "Sinh viên có nên đi làm thêm năm nhất?",
+                "stance": "Ủng hộ",
+                "age_group": "Người lớn",
+                "debate_level": "Trung cấp",
+                "input_mode": "Văn bản",
+            }
+        )
+
+        self.assertEqual(data["stance"], "support")
+        self.assertEqual(data["age_group"], "adult")
+        self.assertEqual(data["debate_level"], "intermediate")
+        self.assertEqual(data["input_mode"], "text")
+        self.assertEqual(data["difficulty"], "Trung bình")
 
     def test_get_session_reads_new_session_information(self):
         session = self.create_session()
@@ -253,7 +312,7 @@ class Week6BackendTests(unittest.TestCase):
         self.assertEqual(data["session_id"], session["session_id"])
         self.assertEqual(data["topic"], "Should AI tutors replace homework?")
         self.assertEqual(data["stance"], "support")
-        self.assertEqual(data["difficulty"], "advanced")
+        self.assertEqual(data["difficulty"], "Nâng cao")
         self.assertEqual(data["max_turns"], 2)
         self.assertEqual(data["turn_count"], 0)
         self.assertEqual(data["status"], "active")
@@ -298,7 +357,9 @@ class Week6BackendTests(unittest.TestCase):
         self.assertEqual(data["ai_rebuttal"], "AI rebuttal")
         self.assertEqual(data["turn_number"], 1)
         self.assertEqual(data["max_turns"], 2)
-        self.assertEqual(data["cer"]["total"], 6.0)
+        self.assertEqual(data["cer"]["total"], 60.0)
+        self.assertEqual(data["cer"]["overall"], 60.0)
+        self.assertEqual(data["cer_breakdown"]["claim"]["clarity"], 30.0)
         self.assertEqual(data["feedback"]["strengths"], ["Clear claim"])
         self.assertEqual(data["status"], "active")
         self.assertEqual(self.count_rows("debate_turns"), 1)
@@ -307,6 +368,8 @@ class Week6BackendTests(unittest.TestCase):
         mocked_ai.assert_called_once()
         self.assertEqual(mocked_ai.call_args.kwargs["age_group"], "teen")
         self.assertEqual(mocked_ai.call_args.kwargs["debate_level"], "advanced")
+        self.assertEqual(mocked_ai.call_args.kwargs["input_mode"], "voice")
+        self.assertEqual(mocked_ai.call_args.kwargs["coach_model"], "socratic_v3")
         self.assertEqual(mocked_ai.call_args.kwargs["language"], "en")
 
     @mock.patch("app.api.debate.ai_service.generate_debate_analysis")
@@ -334,6 +397,20 @@ class Week6BackendTests(unittest.TestCase):
         response = self.submit_turn(session["session_id"], "   ")
 
         self.assertEqual(response.status_code, 400)
+
+    def test_debate_turn_invalid_argument_returns_zero_cer_without_ai_call(self):
+        session = self.create_session()
+
+        response = self.submit_turn(session["session_id"], "ok tùy")
+        data = response.json()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(data["status"], "invalid")
+        self.assertFalse(data["is_valid"])
+        self.assertEqual(data["cer"]["claim"], 0.0)
+        self.assertEqual(data["cer"]["evidence"], 0.0)
+        self.assertEqual(data["cer"]["reasoning"], 0.0)
+        self.assertEqual(data["cer"]["overall"], 0.0)
 
     @mock.patch("app.api.debate.ai_service.generate_debate_analysis")
     def test_session_completed_after_max_turns(self, mocked_ai):
@@ -369,10 +446,10 @@ class Week6BackendTests(unittest.TestCase):
         self.assertEqual(data["topic"], "Should AI tutors replace homework?")
         self.assertEqual(data["turn_count"], 1)
         self.assertEqual(data["max_turns"], 2)
-        self.assertEqual(data["avg_claim_score"], 7.0)
-        self.assertEqual(data["avg_evidence_score"], 5.0)
-        self.assertEqual(data["avg_reasoning_score"], 6.0)
-        self.assertEqual(data["overall_score"], 6.0)
+        self.assertEqual(data["avg_claim_score"], 70.0)
+        self.assertEqual(data["avg_evidence_score"], 50.0)
+        self.assertEqual(data["avg_reasoning_score"], 60.0)
+        self.assertEqual(data["overall_score"], 60.0)
         self.assertEqual(data["strength_summary"], ["Clear claim"])
         self.assertEqual(data["weakness_summary"], ["Needs stronger evidence"])
         self.assertEqual(data["next_steps"], ["Add one concrete example"])
@@ -390,10 +467,10 @@ class Week6BackendTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data["total_sessions"], 1)
         self.assertEqual(data["completed_sessions"], 1)
-        self.assertEqual(data["avg_claim_score"], 7.0)
-        self.assertEqual(data["avg_evidence_score"], 5.0)
-        self.assertEqual(data["avg_reasoning_score"], 6.0)
-        self.assertEqual(data["overall_score"], 6.0)
+        self.assertEqual(data["avg_claim_score"], 70.0)
+        self.assertEqual(data["avg_evidence_score"], 50.0)
+        self.assertEqual(data["avg_reasoning_score"], 60.0)
+        self.assertEqual(data["overall_score"], 60.0)
         self.assertIsInstance(data["streak_days"], int)
         self.assertEqual(data["recent_topics"], ["Should AI tutors replace homework?"])
         self.assertEqual(data["skill_strength"], "claim")

@@ -22,7 +22,7 @@ def _key(value) -> str:
     text = text.replace("\u0111", "d").replace("\u0110", "d")
     text = unicodedata.normalize("NFKD", text)
     text = "".join(character for character in text if not unicodedata.combining(character))
-    for separator in ("_", "-", "/", "."):
+    for separator in ("_", "-", "–", "—", "/", "."):
         text = text.replace(separator, " ")
     return " ".join(text.split())
 
@@ -80,6 +80,28 @@ def normalize_stance(value) -> str:
 
 
 def normalize_difficulty(value) -> str:
+    level = _lookup(
+        value,
+        {
+            "basic": "basic",
+            "easy": "basic",
+            "beginner": "basic",
+            "co ban": "basic",
+            "medium": "intermediate",
+            "intermediate": "intermediate",
+            "trung cap": "intermediate",
+            "trung binh": "intermediate",
+            "advanced": "advanced",
+            "hard": "advanced",
+            "expert": "advanced",
+            "nang cao": "advanced",
+        },
+        "intermediate",
+    )
+    return difficulty_label_from_level(level)
+
+
+def normalize_debate_level(value) -> str:
     return _lookup(
         value,
         {
@@ -89,6 +111,7 @@ def normalize_difficulty(value) -> str:
             "co ban": "basic",
             "medium": "intermediate",
             "intermediate": "intermediate",
+            "trung cap": "intermediate",
             "trung binh": "intermediate",
             "advanced": "advanced",
             "hard": "advanced",
@@ -99,19 +122,37 @@ def normalize_difficulty(value) -> str:
     )
 
 
+def difficulty_label_from_level(level: str) -> str:
+    return {
+        "basic": "Cơ bản",
+        "intermediate": "Trung bình",
+        "advanced": "Nâng cao",
+    }.get(level, "Trung bình")
+
+
 def normalize_age_group(value) -> str:
     return _lookup(
         value,
         {
             "teen": "teen",
             "teenager": "teen",
+            "thanh thieu nien": "teen",
+            "thieu nien": "teen",
             "13": "teen",
             "17": "teen",
+            "13 17": "teen",
+            "13 17 tuoi": "teen",
             "adult": "adult",
+            "nguoi lon": "adult",
             "18": "adult",
             "40": "adult",
+            "18 40": "adult",
+            "18 40 tuoi": "adult",
             "senior": "senior",
+            "nguoi cao tuoi": "senior",
+            "cao tuoi": "senior",
             "41": "senior",
+            "41 tuoi": "senior",
             "older": "senior",
         },
         "adult",
@@ -125,9 +166,12 @@ def normalize_input_mode(value) -> str:
             "text": "text",
             "type": "text",
             "typing": "text",
+            "van ban": "text",
             "voice": "voice",
             "speech": "voice",
             "audio": "voice",
+            "giong noi": "voice",
+            "noi": "voice",
         },
         "text",
     )
@@ -162,8 +206,22 @@ def normalize_status(value) -> str:
             "done": "completed",
             "error": "error",
             "failed": "error",
+            "invalid": "invalid",
         },
         "active",
+    )
+
+
+def normalize_coach_model(value) -> str:
+    return _lookup(
+        value,
+        {
+            "socratic v3": "socratic_v3",
+            "socratic_v3": "socratic_v3",
+            "socratic": "socratic_v3",
+            "coach": "socratic_v3",
+        },
+        "socratic_v3",
     )
 
 
@@ -174,19 +232,24 @@ def normalize_max_turns(value) -> int:
         turns = int(settings.DEFAULT_MAX_TURNS)
     if turns < 1:
         return int(settings.DEFAULT_MAX_TURNS)
+    if turns > 10:
+        return 10
     return turns
 
 
 def normalize_session_payload(payload) -> dict:
+    debate_level = normalize_debate_level(payload.debate_level)
+    difficulty = normalize_difficulty(payload.difficulty) if payload.difficulty else difficulty_label_from_level(debate_level)
     return {
         "topic": normalize_topic(payload.topic, payload.topic_category, payload.custom_topic),
         "topic_category": optional_text(payload.topic_category),
         "custom_topic": optional_text(payload.custom_topic),
         "stance": normalize_stance(payload.stance),
-        "difficulty": normalize_difficulty(payload.difficulty),
+        "difficulty": difficulty,
         "input_mode": normalize_input_mode(payload.input_mode),
         "age_group": normalize_age_group(payload.age_group),
-        "debate_level": normalize_difficulty(payload.debate_level),
+        "debate_level": debate_level,
+        "coach_model": normalize_coach_model(getattr(payload, "coach_model", None)),
         "language": normalize_language(payload.language),
         "response_time": optional_text(payload.response_time),
         "max_turns": normalize_max_turns(payload.max_turns),

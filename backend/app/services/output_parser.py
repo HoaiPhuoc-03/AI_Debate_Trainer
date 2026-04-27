@@ -5,6 +5,7 @@ DEFAULT_CER = {
     "claim": 0.0,
     "evidence": 0.0,
     "reasoning": 0.0,
+    "overall": 0.0,
     "total": 0.0,
 }
 DEFAULT_FEEDBACK = {
@@ -62,6 +63,7 @@ def _build_cer(cer_text: str) -> dict:
         "claim": claim,
         "evidence": evidence,
         "reasoning": reasoning,
+        "overall": round((claim + evidence + reasoning) / 3, 2),
         "total": round((claim + evidence + reasoning) / 3, 2),
     }
 

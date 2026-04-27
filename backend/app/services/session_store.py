@@ -5,6 +5,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from app.core.config import settings
+from app.services.cer_scorer import normalize_cer_to_100
 
 
 SESSION_MIGRATIONS = {
@@ -13,6 +14,7 @@ SESSION_MIGRATIONS = {
     "custom_topic": "TEXT",
     "age_group": "TEXT NOT NULL DEFAULT 'adult'",
     "debate_level": "TEXT NOT NULL DEFAULT 'intermediate'",
+    "coach_model": "TEXT NOT NULL DEFAULT 'socratic_v3'",
     "language": "TEXT NOT NULL DEFAULT 'vi'",
     "response_time": "TEXT",
     "display_name": "TEXT",
@@ -101,7 +103,14 @@ def _migrate_debate_sessions(connection):
             input_mode = COALESCE(NULLIF(input_mode, ''), 'text'),
             age_group = COALESCE(NULLIF(age_group, ''), 'adult'),
             debate_level = COALESCE(NULLIF(debate_level, ''), 'intermediate'),
+            coach_model = COALESCE(NULLIF(coach_model, ''), 'socratic_v3'),
             language = COALESCE(NULLIF(language, ''), 'vi'),
+            difficulty = CASE
+                WHEN lower(COALESCE(difficulty, '')) IN ('basic', 'easy', 'beginner') THEN 'Cơ bản'
+                WHEN lower(COALESCE(difficulty, '')) IN ('intermediate', 'medium') THEN 'Trung bình'
+                WHEN lower(COALESCE(difficulty, '')) IN ('advanced', 'hard', 'expert') THEN 'Nâng cao'
+                ELSE COALESCE(NULLIF(difficulty, ''), 'Trung bình')
+            END,
             max_turns = CASE WHEN max_turns < 1 THEN ? ELSE max_turns END
         """,
         (settings.DEFAULT_MAX_TURNS,),
@@ -152,12 +161,13 @@ def init_db():
                 input_mode TEXT NOT NULL,
                 age_group TEXT NOT NULL DEFAULT 'adult',
                 debate_level TEXT NOT NULL DEFAULT 'intermediate',
+                coach_model TEXT NOT NULL DEFAULT 'socratic_v3',
                 language TEXT NOT NULL DEFAULT 'vi',
                 response_time TEXT,
                 display_name TEXT,
                 status TEXT NOT NULL,
                 turn_count INTEGER NOT NULL DEFAULT 0,
-                max_turns INTEGER NOT NULL DEFAULT 3,
+                max_turns INTEGER NOT NULL DEFAULT 5,
                 average_score REAL,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -351,6 +361,7 @@ def create_session(
     custom_topic: str | None = None,
     age_group: str = "adult",
     debate_level: str = "intermediate",
+    coach_model: str = "socratic_v3",
     language: str = "vi",
     response_time: str | None = None,
     max_turns: int | None = None,
@@ -374,13 +385,14 @@ def create_session(
                 input_mode,
                 age_group,
                 debate_level,
+                coach_model,
                 language,
                 response_time,
                 display_name,
                 status,
                 max_turns
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 session_id,
@@ -393,6 +405,7 @@ def create_session(
                 input_mode,
                 age_group,
                 debate_level,
+                coach_model,
                 language,
                 response_time,
                 display_name,
@@ -497,6 +510,7 @@ def save_debate_turn(
     turn_id = str(uuid4())
     session_id = session["session_id"]
     turn_number = int(session.get("turn_count", 0)) + 1
+    cer = normalize_cer_to_100(cer)
     total_score = float(cer.get("total", 0.0))
     flags = content_flags or []
 
@@ -645,12 +659,12 @@ def get_session_turns(session_id: str):
             feedback_by_turn[row["turn_id"]][category].append(row["message"])
 
     for turn in turns:
-        turn["cer"] = {
+        turn["cer"] = normalize_cer_to_100({
             "claim": float(turn.pop("claim")),
             "evidence": float(turn.pop("evidence")),
             "reasoning": float(turn.pop("reasoning")),
             "total": float(turn.pop("total")),
-        }
+        })
         turn["feedback"] = feedback_by_turn[turn["turn_id"]]
 
     return turns
@@ -682,7 +696,7 @@ def get_session_summary(session_id: str, user_id: str | None = None):
         return None
 
     turns = get_session_turns(session_id)
-    scored_turns = [turn for turn in turns if turn["status"] != "error"]
+    scored_turns = [turn for turn in turns if turn["status"] not in ("error", "invalid")]
     cer_scores = [turn["cer"] for turn in scored_turns]
     strengths = []
     weaknesses = []
@@ -753,14 +767,14 @@ def get_progress_overview(user_id: str | None = None):
         averages = connection.execute(
             f"""
             SELECT
-                AVG(cer_scores.claim) AS avg_claim_score,
-                AVG(cer_scores.evidence) AS avg_evidence_score,
-                AVG(cer_scores.reasoning) AS avg_reasoning_score,
-                AVG(cer_scores.total) AS overall_score
+                AVG(CASE WHEN cer_scores.claim > 0 AND cer_scores.claim <= 1 THEN cer_scores.claim * 100.0 ELSE cer_scores.claim END) AS avg_claim_score,
+                AVG(CASE WHEN cer_scores.evidence > 0 AND cer_scores.evidence <= 1 THEN cer_scores.evidence * 100.0 ELSE cer_scores.evidence END) AS avg_evidence_score,
+                AVG(CASE WHEN cer_scores.reasoning > 0 AND cer_scores.reasoning <= 1 THEN cer_scores.reasoning * 100.0 ELSE cer_scores.reasoning END) AS avg_reasoning_score,
+                AVG(CASE WHEN cer_scores.total > 0 AND cer_scores.total <= 1 THEN cer_scores.total * 100.0 ELSE cer_scores.total END) AS overall_score
             FROM cer_scores
             JOIN debate_turns ON debate_turns.turn_id = cer_scores.turn_id
             JOIN debate_sessions ON debate_sessions.session_id = debate_turns.session_id
-            WHERE debate_turns.status != 'error'
+            WHERE debate_turns.status NOT IN ('error', 'invalid')
             {"AND debate_sessions.user_id = ?" if user_id is not None else ""}
             """,
             params,

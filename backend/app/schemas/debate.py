@@ -6,13 +6,14 @@ class StartSessionRequest(BaseModel):
     topic_category: str | None = Field(default=None, example="Education")
     custom_topic: str | None = Field(default=None, example="Should AI tutors replace homework?")
     stance: str = Field(..., example="support")
-    difficulty: str = Field(..., example="intermediate")
+    difficulty: str | None = Field(default=None, example="intermediate")
     input_mode: str = Field(default="text", example="text")
     age_group: str = Field(default="adult", example="adult")
     debate_level: str = Field(default="intermediate", example="intermediate")
+    coach_model: str = Field(default="socratic_v3", example="socratic_v3")
     language: str = Field(default="vi", example="vi")
     response_time: str | None = Field(default=None, example="90 sec")
-    max_turns: int | None = Field(default=5, example=5)
+    max_turns: int | None = Field(default=5, ge=1, le=10, example=5)
     display_name: str | None = Field(default=None, example="Minh Nguyen")
 
 
@@ -26,6 +27,7 @@ class StartSessionResponse(BaseModel):
     input_mode: str
     age_group: str
     debate_level: str
+    coach_model: str
     language: str
     response_time: str | None = None
     max_turns: int
@@ -42,7 +44,32 @@ class CERScoreResponse(BaseModel):
     claim: float
     evidence: float
     reasoning: float
+    overall: float = 0.0
     total: float
+
+
+class ClaimBreakdownResponse(BaseModel):
+    clarity: float = 0.0
+    relevance: float = 0.0
+    specificity: float = 0.0
+
+
+class EvidenceBreakdownResponse(BaseModel):
+    presence: float = 0.0
+    specificity: float = 0.0
+    relevance: float = 0.0
+
+
+class ReasoningBreakdownResponse(BaseModel):
+    logical_connection: float = 0.0
+    causal_explanation: float = 0.0
+    fallacy_control: float = 0.0
+
+
+class CERBreakdownResponse(BaseModel):
+    claim: ClaimBreakdownResponse
+    evidence: EvidenceBreakdownResponse
+    reasoning: ReasoningBreakdownResponse
 
 
 class FeedbackResponse(BaseModel):
@@ -55,7 +82,9 @@ class DebateTurnResponse(BaseModel):
     session_id: str
     user_argument: str
     ai_rebuttal: str
+    is_valid: bool | None = None
     cer: CERScoreResponse | None = None
+    cer_breakdown: CERBreakdownResponse | None = None
     feedback: FeedbackResponse | None = None
     turn_number: int | None = None
     max_turns: int | None = None
@@ -79,6 +108,7 @@ class SessionInfoResponse(BaseModel):
     input_mode: str
     age_group: str
     debate_level: str
+    coach_model: str
     language: str
     response_time: str | None = None
     max_turns: int

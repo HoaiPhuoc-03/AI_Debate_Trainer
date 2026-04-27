@@ -29,18 +29,67 @@
     --sidebar: 390px;
   }
 
+  /* Dark Theme */
+  body[data-theme="dark"] {
+    --bg: #070c18;
+    --panel: #0d1526;
+    --panel-2: #111a2e;
+    --panel-3: #182235;
+    --line: #243047;
+    --line-soft: rgba(148, 163, 184, 0.18);
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --muted-2: #64748b;
+    --cyan: #20e7d1;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+    --yellow: #facc15;
+    --pink: #fb7185;
+    --danger: #ef4444;
+    --success: #10b981;
+  }
+
+  /* Blue Pastel Theme */
+  body[data-theme="blue-pastel"] {
+    --bg: #f3f8ff;
+    --panel: #ffffff;
+    --panel-2: #f8fbff;
+    --panel-3: #f0f8ff;
+    --line: #d7e6f5;
+    --line-soft: #d7e6f5;
+    --text: #0f172a;
+    --muted: #506680;
+    --muted-2: #60758f;
+    --cyan: #7bbcf0;
+    --blue: #7bbcf0;
+    --purple: #9f7deb;
+    --yellow: #ffc107;
+    --pink: #ff7da8;
+    --danger: #ff6b7a;
+    --success: #2eb896;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     min-height: 100vh;
+    color: var(--text);
+    font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    overflow: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  body[data-theme="dark"] {
     background:
       radial-gradient(circle at 52% 0%, rgba(72, 92, 190, 0.24), transparent 24%),
       radial-gradient(circle at 92% 28%, rgba(7, 116, 118, 0.28), transparent 34%),
       radial-gradient(circle at 45% 78%, rgba(75, 40, 128, 0.28), transparent 30%),
       var(--bg);
-    color: var(--text);
-    font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    overflow: hidden;
+  }
+
+  body[data-theme="blue-pastel"] {
+    background:
+      linear-gradient(135deg, #f7fbff 0%, #eef7ff 45%, #eaf5ff 100%);
   }
 
   button, textarea, input { font: inherit; }
@@ -60,6 +109,11 @@
     display: flex;
     flex-direction: column;
     gap: 34px;
+  }
+
+  body[data-theme="blue-pastel"] .sidebar {
+    background: #ffffff;
+    border-right: 1px solid #d7e6f5;
   }
 
   .brand {
@@ -84,6 +138,11 @@
     color: white;
     font-size: 28px;
     box-shadow: 0 20px 40px rgba(32, 231, 209, 0.18);
+  }
+
+  body[data-theme="blue-pastel"] .brand-mark {
+    background: linear-gradient(135deg, #7bbcf0, #5da8e8);
+    box-shadow: 0 12px 28px rgba(79, 158, 232, 0.22);
   }
 
   .brand-title { font-size: 25px; font-weight: 800; letter-spacing: -0.02em; }
@@ -124,6 +183,11 @@
     font-weight: 800;
   }
 
+  body[data-theme="blue-pastel"] .flow-index {
+    background: #f0f8ff;
+    color: #60758f;
+  }
+
   .flow-icon { font-size: 20px; }
   .flow-title { font-size: 20px; font-weight: 800; }
   .flow-item.active {
@@ -132,6 +196,17 @@
     outline: 1px solid rgba(59, 130, 246, 0.48);
   }
   .flow-item.active .flow-index { background: rgba(59, 130, 246, 0.54); color: white; }
+
+  body[data-theme="blue-pastel"] .flow-item.active {
+    color: #0f172a;
+    background: #d8ecff;
+    outline: 1px solid #a8d4f6;
+    box-shadow: 0 8px 16px rgba(79, 158, 232, 0.12);
+  }
+  body[data-theme="blue-pastel"] .flow-item.active .flow-index {
+    background: #7bbcf0;
+    color: white;
+  }
 
   .streak-card {
     margin-top: auto;
@@ -143,6 +218,21 @@
   .streak-label { color: var(--cyan); font-size: 17px; }
   .streak-value { font-size: 38px; font-weight: 800; margin: 14px 0 10px; }
   .streak-copy { color: var(--muted-2); }
+
+  body[data-theme="blue-pastel"] .streak-card {
+    background: linear-gradient(135deg, #e9f6ff, #f0f8ff);
+    border: 1px solid #c7e4fa;
+    box-shadow: 0 8px 16px rgba(79, 158, 232, 0.10);
+  }
+  body[data-theme="blue-pastel"] .streak-label {
+    color: #2f8edb;
+  }
+  body[data-theme="blue-pastel"] .streak-value {
+    color: #0f172a;
+  }
+  body[data-theme="blue-pastel"] .streak-copy {
+    color: #60758f;
+  }
 
   .main {
     min-width: 0;
@@ -162,6 +252,12 @@
     backdrop-filter: blur(14px);
     position: relative;
     z-index: 40;
+  }
+
+  body[data-theme="blue-pastel"] .topbar {
+    background: #ffffff;
+    border-bottom: 1px solid #d7e6f5;
+    backdrop-filter: none;
   }
 
   .breadcrumb {
@@ -191,11 +287,22 @@
     border-radius: 999px;
     font-size: 17px;
   }
+
+  body[data-theme="blue-pastel"] .coach-pill,
+  body[data-theme="blue-pastel"] .soft-pill {
+    color: #506680;
+    background: #ffffff;
+    border: 1px solid #d7e6f5;
+  }
   .dot {
     width: 9px;
     height: 9px;
     border-radius: 999px;
     background: var(--cyan);
+  }
+
+  body[data-theme="blue-pastel"] .dot {
+    background: #4f9ee8;
   }
   .avatar {
     width: 54px;
@@ -204,6 +311,10 @@
     background: linear-gradient(135deg, #8b5cf6, #3b82f6);
     font-size: 22px;
     font-weight: 800;
+  }
+
+  body[data-theme="blue-pastel"] .avatar {
+    background: linear-gradient(135deg, #8fc8f4, #7bbcf0);
   }
   .user-menu-button {
     min-height: 56px;
@@ -218,9 +329,22 @@
     cursor: pointer;
     text-align: left;
   }
+
+  body[data-theme="blue-pastel"] .user-menu-button {
+    background: #ffffff;
+    border: 1px solid #d7e6f5;
+    color: #0f172a;
+  }
   .user-menu-button .avatar { width: 44px; height: 44px; border-radius: 15px; }
   .user-name { display: block; font-size: 17px; font-weight: 800; }
   .user-detail { display: block; color: var(--muted-2); font-size: 13px; font-weight: 800; }
+
+  body[data-theme="blue-pastel"] .user-name {
+    color: #0f172a;
+  }
+  body[data-theme="blue-pastel"] .user-detail {
+    color: #60758f;
+  }
   .user-caret { color: var(--muted); margin-left: 4px; }
   .user-menu {
     display: none;
@@ -267,6 +391,49 @@
   }
   .menu-item:hover, .menu-item.active { background: rgba(148, 163, 184, 0.1); }
   .menu-item.danger { color: #fda4af; border-top: 1px solid var(--line-soft); border-radius: 0; margin-top: 8px; }
+
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    color: var(--text);
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--line-soft);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--blue);
+    background: rgba(15, 23, 42, 0.8);
+  }
+
+  .theme-toggle:active {
+    transform: scale(0.98);
+  }
+
+  .theme-icon {
+    font-size: 18px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  body[data-theme="blue-pastel"] .theme-toggle {
+    background: rgba(219, 234, 254, 0.6);
+    border-color: rgba(77, 163, 255, 0.28);
+  }
+
+  body[data-theme="blue-pastel"] .theme-toggle:hover {
+    background: rgba(219, 234, 254, 0.8);
+    border-color: #4da3ff;
+  }
 
   .content {
     flex: 1;
@@ -686,12 +853,24 @@
     display: grid;
     place-items: start center;
     padding: 22px 20px 28px;
+    overflow: auto;
+    transition: background-color 0.3s ease;
+  }
+
+  body[data-theme="dark"] .auth-shell {
     background:
       radial-gradient(circle at 18% 2%, rgba(59, 130, 246, 0.24), transparent 28%),
       radial-gradient(circle at 82% 62%, rgba(6, 95, 89, 0.34), transparent 32%),
       radial-gradient(circle at 48% 78%, rgba(88, 28, 135, 0.22), transparent 28%),
       var(--bg);
-    overflow: auto;
+  }
+
+  body[data-theme="blue-pastel"] .auth-shell {
+    background:
+      radial-gradient(circle at 18% 2%, rgba(77, 163, 255, 0.1), transparent 28%),
+      radial-gradient(circle at 82% 62%, rgba(31, 181, 255, 0.06), transparent 32%),
+      radial-gradient(circle at 48% 78%, rgba(159, 125, 235, 0.06), transparent 28%),
+      var(--bg);
   }
   .auth-view {
     display: none;
@@ -1030,6 +1209,230 @@
   }
   .topic-progress-row header { display: flex; justify-content: space-between; margin-bottom: 14px; font-size: 19px; }
 
+  body[data-theme="blue-pastel"] {
+    --bg: #f3f8ff;
+    --panel: #ffffff;
+    --panel-2: #f8fbff;
+    --panel-3: #edf7ff;
+    --line: #d8e7f5;
+    --line-soft: #d8e7f5;
+    --text: #111827;
+    --muted: #475569;
+    --muted-2: #64748b;
+    --cyan: #74b9ed;
+    --blue: #72b6ea;
+    --purple: #7c6fe8;
+    --yellow: #d97706;
+    --pink: #e85d8c;
+    --danger: #e11d48;
+    --success: #059669;
+  }
+
+  body[data-theme="blue-pastel"] .main {
+    background: linear-gradient(135deg, #f8fbff 0%, #eef7ff 48%, #f7fbff 100%);
+  }
+
+  body[data-theme="blue-pastel"] .user-menu,
+  body[data-theme="blue-pastel"] .choice-card,
+  body[data-theme="blue-pastel"] .panel,
+  body[data-theme="blue-pastel"] .summary-card,
+  body[data-theme="blue-pastel"] .progress-card,
+  body[data-theme="blue-pastel"] .setup-footer,
+  body[data-theme="blue-pastel"] .auth-success-card {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: #d8e7f5;
+    box-shadow: 0 14px 34px rgba(64, 113, 168, 0.08);
+  }
+
+  body[data-theme="blue-pastel"] .choice-card {
+    color: #111827;
+  }
+
+  body[data-theme="blue-pastel"] .choice-card.selected,
+  body[data-theme="blue-pastel"] .auth-segment.active,
+  body[data-theme="blue-pastel"] .line-choice.selected {
+    background: #dceeff;
+    border-color: #8fc8f4;
+    box-shadow: 0 10px 24px rgba(79, 158, 232, 0.12);
+  }
+
+  body[data-theme="blue-pastel"] .choice-card.selected.teal,
+  body[data-theme="blue-pastel"] .choice-card.selected.purple,
+  body[data-theme="blue-pastel"] .choice-card.selected.yellow {
+    border-color: #8fc8f4;
+  }
+
+  body[data-theme="blue-pastel"] .choice-card.selected .choice-radio {
+    border-color: #4da3ff;
+    box-shadow: inset 0 0 0 5px #dceeff;
+  }
+
+  body[data-theme="blue-pastel"] .icon-box,
+  body[data-theme="blue-pastel"] .panel-title .icon-box {
+    background: #eef6ff !important;
+    color: #3f83c8 !important;
+  }
+
+  body[data-theme="blue-pastel"] .selected .icon-box,
+  body[data-theme="blue-pastel"] .auth-success-icon {
+    background: #9dcdf2 !important;
+    color: #ffffff !important;
+  }
+
+  body[data-theme="blue-pastel"] .choice-meta,
+  body[data-theme="blue-pastel"] .eyebrow,
+  body[data-theme="blue-pastel"] .auth-kicker,
+  body[data-theme="blue-pastel"] .auth-check-row a,
+  body[data-theme="blue-pastel"] .auth-inline-link,
+  body[data-theme="blue-pastel"] .score-total,
+  body[data-theme="blue-pastel"] .score-tile span {
+    color: #3f91d9;
+  }
+
+  body[data-theme="blue-pastel"] .custom-topic,
+  body[data-theme="blue-pastel"] .text-input,
+  body[data-theme="blue-pastel"] .arena-textarea,
+  body[data-theme="blue-pastel"] .line-choice,
+  body[data-theme="blue-pastel"] .auth-input-wrap,
+  body[data-theme="blue-pastel"] .auth-segment,
+  body[data-theme="blue-pastel"] .auth-feature,
+  body[data-theme="blue-pastel"] .recommendation,
+  body[data-theme="blue-pastel"] .topic-progress-row,
+  body[data-theme="blue-pastel"] .score-tile,
+  body[data-theme="blue-pastel"] .bubble,
+  body[data-theme="blue-pastel"] .empty-message {
+    background: #f8fbff;
+    border-color: #d8e7f5;
+    color: #111827;
+  }
+
+  body[data-theme="blue-pastel"] .text-input:focus,
+  body[data-theme="blue-pastel"] .arena-textarea:focus {
+    border-color: #72b6ea;
+    box-shadow: 0 0 0 4px rgba(114, 182, 234, 0.14);
+  }
+
+  body[data-theme="blue-pastel"] .auth-copy,
+  body[data-theme="blue-pastel"] .auth-link-button,
+  body[data-theme="blue-pastel"] .auth-back,
+  body[data-theme="blue-pastel"] .rebuttal-text,
+  body[data-theme="blue-pastel"] .feedback-list,
+  body[data-theme="blue-pastel"] .score-line,
+  body[data-theme="blue-pastel"] .bubble {
+    color: #475569;
+  }
+
+  body[data-theme="blue-pastel"] .primary-btn,
+  body[data-theme="blue-pastel"] .auth-button {
+    background: #7dbbef;
+    color: #0f172a;
+    box-shadow: 0 14px 28px rgba(79, 158, 232, 0.22);
+  }
+
+  body[data-theme="blue-pastel"] .secondary-btn,
+  body[data-theme="blue-pastel"] .auth-ghost {
+    background: #ffffff;
+    border: 1px solid #d8e7f5;
+    color: #111827;
+  }
+
+  body[data-theme="blue-pastel"] .danger-btn {
+    background: #fff1f2;
+    border-color: #fecdd3;
+    color: #be123c;
+  }
+
+  body[data-theme="blue-pastel"] .chip {
+    color: #334155;
+    background: #f8fbff;
+    border-color: #d8e7f5;
+  }
+
+  body[data-theme="blue-pastel"] .chip.teal,
+  body[data-theme="blue-pastel"] .feedback-label {
+    color: #059669;
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+  }
+
+  body[data-theme="blue-pastel"] .chip.purple {
+    color: #5b54c9;
+    background: #f1f0ff;
+    border-color: #d8d4ff;
+  }
+
+  body[data-theme="blue-pastel"] .chip.yellow {
+    color: #c75a00;
+    background: #fff7db;
+    border-color: #f6d57a;
+  }
+
+  body[data-theme="blue-pastel"] .feedback-label.weak,
+  body[data-theme="blue-pastel"] .screen-error {
+    color: #e11d48;
+    background: #fff1f2;
+    border-color: #fecdd3;
+  }
+
+  body[data-theme="blue-pastel"] .speaker {
+    background: #dceeff;
+    color: #2f72bd;
+  }
+
+  body[data-theme="blue-pastel"] .speaker.ai {
+    background: #e5fbf4;
+    color: #059669;
+  }
+
+  body[data-theme="blue-pastel"] .bar,
+  body[data-theme="blue-pastel"] .auth-strength span {
+    background: #dce8f4;
+  }
+
+  body[data-theme="blue-pastel"] .bar-fill {
+    background: linear-gradient(90deg, #72b6ea, #4f9ee8);
+  }
+
+  body[data-theme="blue-pastel"] .bar-fill.evidence {
+    background: linear-gradient(90deg, #74b9ed, #22c55e);
+  }
+
+  body[data-theme="blue-pastel"] .bar-fill.reasoning {
+    background: linear-gradient(90deg, #9aa5ff, #5b67e8);
+  }
+
+  body[data-theme="blue-pastel"] .chart {
+    background:
+      linear-gradient(to top, transparent 24%, rgba(123, 156, 190, 0.16) 25%, transparent 26%),
+      linear-gradient(160deg, rgba(220, 238, 255, 0.95), rgba(248, 251, 255, 0.95));
+  }
+
+  body[data-theme="blue-pastel"] .menu-item {
+    color: #111827;
+  }
+
+  body[data-theme="blue-pastel"] .menu-item:hover,
+  body[data-theme="blue-pastel"] .menu-item.active {
+    background: #edf7ff;
+  }
+
+  body[data-theme="blue-pastel"] .menu-item.danger {
+    color: #be123c;
+    border-top-color: #d8e7f5;
+  }
+
+  body[data-theme="blue-pastel"] .auth-logo,
+  body[data-theme="blue-pastel"] .brand-mark,
+  body[data-theme="blue-pastel"] .avatar {
+    background: #9dcdf2;
+    color: #ffffff;
+    box-shadow: 0 12px 28px rgba(79, 158, 232, 0.2);
+  }
+
+  body[data-theme="blue-pastel"] .auth-input-wrap input::placeholder {
+    color: #8aa0b8;
+  }
+
   /* Compact desktop sizing to keep the local page close to the Figma viewport scale. */
   :root {
     --sidebar: 260px;
@@ -1056,6 +1459,8 @@
   .topbar { height: 69px; padding: 0 32px; }
   .breadcrumb { font-size: 15px; }
   .coach-pill, .soft-pill { padding: 7px 12px; font-size: 13px; }
+  .theme-toggle { min-height: 38px; padding: 6px 10px; font-size: 12px; }
+  .theme-label { display: none; }
   .avatar { width: 36px; height: 36px; border-radius: 13px; font-size: 16px; }
   .user-menu-button { min-height: 46px; padding: 5px 10px 5px 5px; border-radius: 14px; gap: 9px; }
   .user-menu-button .avatar { width: 36px; height: 36px; border-radius: 12px; }
@@ -1217,6 +1622,8 @@
     .choice-grid.three, .choice-grid.five, .topic-row, .config-grid, .arena-layout, .summary-layout, .progress-layout, .summary-grid, .metric-grid {
       grid-template-columns: 1fr;
     }
+    .theme-toggle { padding: 6px 8px; }
+    .top-actions { gap: 12px; }
     .auth-shell { padding: 28px 18px; }
     .auth-view { min-height: auto; align-content: start; }
     .auth-title { font-size: 36px; }
@@ -1232,35 +1639,35 @@
 <div class="auth-shell" id="auth-shell">
   <section class="auth-view auth-home active" id="auth-home">
     <div class="auth-logo">&#10022;</div>
-    <div class="auth-kicker">Arena &middot; Coach</div>
+    <div class="auth-kicker">Đấu trường &middot; Huấn luyện viên</div>
     <h1 class="auth-title">AI Debate Trainer</h1>
-    <p class="auth-copy">Train your argument, receive AI counterarguments, and improve your logic with structured CER scoring and a personal debate coach.</p>
+    <p class="auth-copy">Luyện lập luận, nhận phản biện từ AI và cải thiện tư duy logic với điểm CER cùng huấn luyện viên tranh biện cá nhân.</p>
     <div class="auth-actions">
-      <button class="auth-button" onclick="goToAuthView('login')">Log in &rarr;</button>
-      <button class="auth-ghost" onclick="goToAuthView('signup')">Create account</button>
-      <button class="auth-link-button" onclick="enterGuestMode()">Continue as guest &rarr;</button>
+      <button class="auth-button" onclick="goToAuthView('login')">Đăng nhập &rarr;</button>
+      <button class="auth-ghost" onclick="goToAuthView('signup')">Tạo tài khoản</button>
+      <button class="auth-link-button" onclick="enterGuestMode()">Tiếp tục với chế độ khách &rarr;</button>
     </div>
     <div class="auth-feature-row">
-      <div class="auth-feature"><span>CER scoring</span><strong>C &middot; E &middot; R</strong></div>
-      <div class="auth-feature"><span>Coach</span><strong>Live</strong></div>
-      <div class="auth-feature"><span>Progress</span><strong>Tracked</strong></div>
+      <div class="auth-feature"><span>Chấm CER</span><strong>C &middot; E &middot; R</strong></div>
+      <div class="auth-feature"><span>Huấn luyện</span><strong>Trực tiếp</strong></div>
+      <div class="auth-feature"><span>Tiến bộ</span><strong>Theo dõi</strong></div>
     </div>
   </section>
 
   <section class="auth-view" id="auth-signup">
     <div class="auth-page">
-      <button class="auth-back" onclick="goToAuthView('home')">&larr; Back</button>
+      <button class="auth-back" onclick="goToAuthView('home')">&larr; Quay lại</button>
       <div class="auth-heading-row">
         <div>
-          <h1 class="auth-title">Create your account</h1>
-          <p class="auth-copy" style="margin-bottom:0">Your progress, streaks, and session history will be saved across devices.</p>
+          <h1 class="auth-title">Tạo tài khoản</h1>
+          <p class="auth-copy" style="margin-bottom:0">Tiến độ, chuỗi luyện tập và lịch sử phiên tranh biện của bạn sẽ được lưu lại.</p>
         </div>
         <div class="auth-step"><span class="active"></span><span></span></div>
       </div>
       <div class="auth-form">
         <div class="auth-field">
-          <label for="auth-name">Full name</label>
-          <div class="auth-input-wrap"><span>ID</span><input id="auth-name" placeholder="Your full name"></div>
+          <label for="auth-name">Họ tên</label>
+          <div class="auth-input-wrap"><span>ID</span><input id="auth-name" placeholder="Nhập họ tên của bạn"></div>
         </div>
         <div class="auth-field">
           <label for="auth-email">Email</label>
@@ -1268,50 +1675,50 @@
         </div>
         <div class="auth-two-col">
           <div class="auth-field">
-            <label for="auth-password">Password</label>
-            <div class="auth-input-wrap"><span>&#9633;</span><input id="auth-password" type="password" placeholder="8+ characters"></div>
+            <label for="auth-password">Mật khẩu</label>
+            <div class="auth-input-wrap"><span>&#9633;</span><input id="auth-password" type="password" placeholder="Tối thiểu 8 ký tự"></div>
           </div>
           <div class="auth-field">
-            <label for="auth-confirm">Confirm</label>
-            <div class="auth-input-wrap"><span>&#9633;</span><input id="auth-confirm" type="password" placeholder="Repeat"></div>
+            <label for="auth-confirm">Xác nhận</label>
+            <div class="auth-input-wrap"><span>&#9633;</span><input id="auth-confirm" type="password" placeholder="Nhập lại mật khẩu"></div>
           </div>
         </div>
         <div>
           <div class="auth-strength"><span></span><span></span><span></span><span></span></div>
-          <div class="auth-helper">Strength: Good &middot; Add a symbol for stronger</div>
+          <div class="auth-helper">Độ mạnh: Tốt &middot; Thêm ký tự đặc biệt để an toàn hơn</div>
         </div>
-        <label class="auth-check-row"><input id="auth-terms" type="checkbox" checked> I agree to the <a href="#" onclick="return false">Terms and Privacy Policy.</a></label>
+        <label class="auth-check-row"><input id="auth-terms" type="checkbox" checked> Tôi đồng ý với <a href="#" onclick="return false">Điều khoản và Chính sách bảo mật.</a></label>
         <div id="auth-signup-error" class="screen-error"></div>
-        <button class="auth-button" onclick="continueSignup()">Continue &rarr;</button>
-        <div class="auth-footer-link">Already a member? <button class="auth-small-action auth-inline-link" onclick="goToAuthView('login')">Log in</button></div>
+        <button class="auth-button" onclick="continueSignup()">Tiếp tục &rarr;</button>
+        <div class="auth-footer-link">Đã có tài khoản? <button class="auth-small-action auth-inline-link" onclick="goToAuthView('login')">Đăng nhập</button></div>
       </div>
     </div>
   </section>
 
   <section class="auth-view" id="auth-preferences">
     <div class="auth-page">
-      <button class="auth-back" onclick="goToAuthView('signup')">&larr; Back</button>
+      <button class="auth-back" onclick="goToAuthView('signup')">&larr; Quay lại</button>
       <div class="auth-heading-row">
         <div>
-          <h1 class="auth-title">Debate preferences</h1>
-          <p class="auth-copy" style="margin-bottom:0">Used by the Coach to calibrate tone, vocabulary, and difficulty.</p>
+          <h1 class="auth-title">Thiết lập tranh biện</h1>
+          <p class="auth-copy" style="margin-bottom:0">Huấn luyện viên AI dùng thông tin này để điều chỉnh giọng điệu, từ vựng và độ khó.</p>
         </div>
         <div class="auth-step"><span class="active"></span><span class="active"></span></div>
       </div>
       <div class="auth-form">
         <div>
-          <div class="auth-section-label">Age group</div>
+          <div class="auth-section-label">Nhóm tuổi</div>
           <div class="auth-segment-grid" id="auth-age-options"></div>
         </div>
         <div>
-          <div class="auth-section-label">Preferred debate level</div>
+          <div class="auth-section-label">Trình độ tranh biện</div>
           <div class="auth-segment-grid" id="auth-level-options"></div>
         </div>
         <div>
-          <div class="auth-section-label">Preferred language</div>
+          <div class="auth-section-label">Ngôn ngữ ưu tiên</div>
           <div class="auth-segment-grid" id="auth-language-options"></div>
         </div>
-        <button class="auth-button" onclick="finishSignup()">Create account &rarr;</button>
+        <button class="auth-button" onclick="finishSignup()">Tạo tài khoản &rarr;</button>
       </div>
     </div>
   </section>
@@ -1319,39 +1726,39 @@
   <section class="auth-view" id="auth-success">
     <div class="auth-success-card">
       <div class="auth-success-icon">&#10003;</div>
-      <h1 class="auth-title" style="font-size:32px">Account created</h1>
-      <p class="auth-copy" style="margin-bottom:34px">Your debate profile is ready. Let's run through a quick preference setup.</p>
-      <button class="auth-button" onclick="enterApp('account', 'profile')">Continue to Profile Setup &rarr;</button>
+      <h1 class="auth-title" style="font-size:32px">Tài khoản đã được tạo</h1>
+      <p class="auth-copy" style="margin-bottom:34px">Hồ sơ tranh biện của bạn đã sẵn sàng. Hãy kiểm tra nhanh các tùy chọn cá nhân.</p>
+      <button class="auth-button" onclick="enterApp('account', 'profile')">Tiếp tục tới hồ sơ &rarr;</button>
     </div>
   </section>
 
   <section class="auth-view" id="auth-login">
     <div class="auth-page">
-      <button class="auth-back" onclick="goToAuthView('home')">&larr; Back</button>
-      <h1 class="auth-title">Welcome back</h1>
-      <p class="auth-copy">Log in to resume your debate sessions and progress.</p>
+      <button class="auth-back" onclick="goToAuthView('home')">&larr; Quay lại</button>
+      <h1 class="auth-title">Chào mừng trở lại</h1>
+      <p class="auth-copy">Đăng nhập để tiếp tục phiên tranh biện và xem tiến độ luyện tập.</p>
       <div class="auth-form">
         <div class="auth-field">
           <label for="login-email">Email</label>
           <div class="auth-input-wrap"><span>@</span><input id="login-email" type="email" placeholder="you@domain.com"></div>
         </div>
         <div class="auth-field">
-          <label for="login-password">Password</label>
-          <div class="auth-input-wrap"><span>&#9633;</span><input id="login-password" type="password" placeholder="Password"><span>&#9673;</span></div>
+          <label for="login-password">Mật khẩu</label>
+          <div class="auth-input-wrap"><span>&#9633;</span><input id="login-password" type="password" placeholder="Mật khẩu"><span>&#9673;</span></div>
         </div>
         <div class="panel-head" style="margin-bottom:0">
-          <label class="auth-check-row"><input id="remember-login" type="checkbox"> Remember me</label>
-          <button class="auth-small-action auth-inline-link">Forgot password?</button>
+          <label class="auth-check-row"><input id="remember-login" type="checkbox"> Ghi nhớ đăng nhập</label>
+          <button class="auth-small-action auth-inline-link">Quên mật khẩu?</button>
         </div>
         <div id="auth-login-error" class="screen-error"></div>
-        <button class="auth-button" onclick="loginUser()">Log in &rarr;</button>
-        <button class="auth-small-action" onclick="showAuthError('auth-login-error', 'Preview: invalid login details. Try continuing as guest for the demo.')">&middot; preview error state &middot;</button>
-        <div class="auth-divider">or continue with</div>
+        <button class="auth-button" onclick="loginUser()">Đăng nhập &rarr;</button>
+        <button class="auth-small-action" onclick="showAuthError('auth-login-error', 'Xem thử lỗi: thông tin đăng nhập chưa hợp lệ. Bạn có thể tiếp tục với chế độ khách để xem bản demo trên máy này.')">&middot; xem thử trạng thái lỗi &middot;</button>
+        <div class="auth-divider">hoặc tiếp tục với</div>
         <div class="auth-socials">
-          <button class="auth-ghost" onclick="showAuthError('auth-login-error', 'Social login is not configured for this local demo.')">Google</button>
-          <button class="auth-ghost" onclick="showAuthError('auth-login-error', 'Social login is not configured for this local demo.')">Microsoft</button>
+          <button class="auth-ghost" onclick="showAuthError('auth-login-error', 'Đăng nhập mạng xã hội chưa được cấu hình cho bản demo trên máy này.')">Google</button>
+          <button class="auth-ghost" onclick="showAuthError('auth-login-error', 'Đăng nhập mạng xã hội chưa được cấu hình cho bản demo trên máy này.')">Microsoft</button>
         </div>
-        <div class="auth-footer-link">New here? <button class="auth-small-action auth-inline-link" onclick="goToAuthView('signup')">Create an account</button></div>
+        <div class="auth-footer-link">Bạn mới dùng? <button class="auth-small-action auth-inline-link" onclick="goToAuthView('signup')">Tạo tài khoản</button></div>
       </div>
     </div>
   </section>
@@ -1363,50 +1770,54 @@
       <div class="brand-mark">✦</div>
       <div>
         <div class="brand-title">AI Debate Trainer</div>
-        <div class="brand-subtitle">Arena · Coach</div>
+        <div class="brand-subtitle">Đấu trường · Huấn luyện</div>
       </div>
     </div>
 
     <div>
-      <div class="flow-label">Flow</div>
+      <div class="flow-label">Quy trình</div>
       <div class="flow-list" id="flow-list"></div>
     </div>
 
     <div class="streak-card">
-      <div class="streak-label">Daily streak</div>
-      <div class="streak-value">12 days</div>
-      <div class="streak-copy">Keep the logic sharp.</div>
+      <div class="streak-label">Chuỗi mỗi ngày</div>
+      <div class="streak-value">12 ngày</div>
+      <div class="streak-copy">Giữ tư duy luôn sắc bén.</div>
     </div>
   </aside>
 
   <main class="main">
     <header class="topbar">
-      <div class="breadcrumb" id="breadcrumb">Setup <strong>Profile Setup</strong></div>
+      <div class="breadcrumb" id="breadcrumb">Thiết lập <strong>Hồ sơ</strong></div>
       <div class="top-actions">
-        <div class="coach-pill"><span class="dot"></span> Coach model: Socratic v3</div>
-        <button class="soft-pill hidden" id="save-chip" onclick="returnToAuth('login')">Log in to save</button>
+        <div class="coach-pill"><span class="dot"></span> Huấn luyện viên: Socratic v3</div>
+        <button class="soft-pill hidden" id="save-chip" onclick="returnToAuth('login')">Đăng nhập để lưu</button>
+        <button class="theme-toggle" id="themeToggle" title="Đổi giao diện">
+          <span class="theme-icon">🌙</span>
+          <span class="theme-label">Dark</span>
+        </button>
         <button class="user-menu-button" id="user-menu-button" onclick="toggleUserMenu(event)">
-          <span class="avatar" id="top-avatar">G</span>
+          <span class="avatar" id="top-avatar">K</span>
           <span>
-            <span class="user-name" id="top-user-name">Guest</span>
-            <span class="user-detail" id="top-user-detail">Adult &middot; Intermediate</span>
+            <span class="user-name" id="top-user-name">Khách</span>
+            <span class="user-detail" id="top-user-detail">Người lớn &middot; Trung cấp</span>
           </span>
           <span class="user-caret">⌄</span>
         </button>
         <div class="user-menu" id="user-menu">
           <div class="user-menu-head">
-            <div class="avatar" id="menu-avatar">G</div>
+            <div class="avatar" id="menu-avatar">K</div>
             <div>
-              <div class="user-menu-title" id="menu-user-name">Guest</div>
+              <div class="user-menu-title" id="menu-user-name">Khách</div>
               <div class="user-menu-subtitle" id="menu-user-email"></div>
             </div>
           </div>
           <div class="menu-list">
-            <button class="menu-item" onclick="goToView('profile')">View profile</button>
-            <button class="menu-item" onclick="goToView('profile')">Edit preferences</button>
-            <button class="menu-item" onclick="goToView('summary')">Session history</button>
-            <button class="menu-item active" onclick="goToView('progress')">Progress dashboard</button>
-            <button class="menu-item danger" onclick="logoutUser()">Log out</button>
+            <button class="menu-item" onclick="goToView('profile')">Xem hồ sơ</button>
+            <button class="menu-item" onclick="goToView('profile')">Chỉnh tùy chọn</button>
+            <button class="menu-item" onclick="goToView('summary')">Lịch sử phiên</button>
+            <button class="menu-item active" onclick="goToView('progress')">Bảng tiến độ</button>
+            <button class="menu-item danger" onclick="logoutUser()">Đăng xuất</button>
           </div>
         </div>
       </div>
@@ -1414,60 +1825,60 @@
 
     <section class="content">
       <section class="view active" id="view-profile">
-        <div class="eyebrow">Welcome</div>
-        <h1 class="page-title">Set up your debate profile</h1>
-        <p class="page-copy">Train your argument, receive counterarguments, and improve your logic. Your profile helps the AI Coach calibrate tone, language, and depth.</p>
+        <div class="eyebrow">Chào mừng</div>
+        <h1 class="page-title">Thiết lập hồ sơ tranh biện</h1>
+        <p class="page-copy">Luyện lập luận, nhận phản biện và cải thiện logic. Hồ sơ giúp huấn luyện viên AI điều chỉnh giọng điệu, ngôn ngữ và độ sâu phản hồi.</p>
 
-        <h2 class="section-title">Age group</h2>
+        <h2 class="section-title">Nhóm tuổi</h2>
         <div class="choice-grid three" id="age-options"></div>
 
-        <h2 class="section-title">Debate level</h2>
+        <h2 class="section-title">Trình độ tranh biện</h2>
         <div class="choice-grid three" id="level-options"></div>
 
-        <h2 class="section-title">Input mode</h2>
+        <h2 class="section-title">Cách nhập lập luận</h2>
         <div class="choice-grid two" id="mode-options"></div>
 
         <div class="setup-footer">
-          <div class="setup-summary">Profile: <strong id="profile-summary">Adult · Intermediate · Text</strong></div>
-          <button class="primary-btn" onclick="goToView('session')">Continue →</button>
+          <div class="setup-summary">Hồ sơ: <strong id="profile-summary">Người lớn · Trung cấp · Văn bản</strong></div>
+          <button class="primary-btn" onclick="goToView('session')">Tiếp tục →</button>
         </div>
       </section>
 
       <section class="view" id="view-session">
-        <div class="eyebrow">Step 2</div>
+        <div class="eyebrow">Bước 2</div>
         <h1 class="page-title">Thiết lập phiên tranh biện</h1>
-        <p class="page-copy">Chọn chủ đề, lập trường và độ khó để AI Coach kiến tạo phiên tranh biện phù hợp với trình độ của bạn.</p>
+        <p class="page-copy">Chọn chủ đề, lập trường và độ khó để huấn luyện viên AI tạo phiên tranh biện phù hợp với trình độ của bạn.</p>
 
         <div class="panel session-card">
           <div class="panel-head">
-            <h2 class="section-title" style="margin:0">Debate topic</h2>
-            <span class="soft-pill">5 categories</span>
+            <h2 class="section-title" style="margin:0">Chủ đề tranh biện</h2>
+            <span class="soft-pill">5 nhóm chủ đề</span>
           </div>
           <div class="topic-row" id="topic-options"></div>
           <div class="custom-topic">
-            <label for="custom-topic-input">✚ Custom topic (optional)</label>
-            <input class="text-input" id="custom-topic-input" placeholder="e.g. Should AI replace standardized testing in public schools?" oninput="setCustomTopic(this.value)">
+            <label for="custom-topic-input">✚ Chủ đề riêng (không bắt buộc)</label>
+            <input class="text-input" id="custom-topic-input" placeholder="Ví dụ: Có nên cho học sinh dùng AI trong học tập?" oninput="setCustomTopic(this.value)">
           </div>
         </div>
 
         <div class="config-grid">
           <div class="panel config-panel">
-            <h2 class="section-title" style="margin-top:0">Stance</h2>
+            <h2 class="section-title" style="margin-top:0">Lập trường</h2>
             <div class="stack" id="stance-options"></div>
           </div>
           <div class="panel config-panel">
-            <h2 class="section-title" style="margin-top:0">Difficulty</h2>
+            <h2 class="section-title" style="margin-top:0">Độ khó</h2>
             <div class="stack" id="difficulty-options"></div>
           </div>
           <div class="panel config-panel">
-            <h2 class="section-title" style="margin-top:0">⏱ Response time</h2>
+            <h2 class="section-title" style="margin-top:0">⏱ Thời gian phản hồi</h2>
             <div class="stack" id="time-options"></div>
           </div>
         </div>
 
         <div id="start-error" class="screen-error"></div>
         <div class="setup-footer">
-          <div class="setup-summary" id="session-ready">Session ready · Technology & AI · Ủng hộ · Intermediate</div>
+          <div class="setup-summary" id="session-ready">Phiên sẵn sàng · Công nghệ & AI · Ủng hộ · Trung cấp</div>
           <button class="primary-btn" id="start-btn" onclick="startDebate()">▷ Bắt đầu tranh biện</button>
         </div>
       </section>
@@ -1476,8 +1887,8 @@
         <div class="panel arena-top">
           <div class="chips" id="session-chips"></div>
           <div class="chips">
-            <span class="coach-pill"><span class="dot"></span> Coach live</span>
-            <button class="danger-btn" onclick="leaveSession()">↪ Leave session</button>
+            <span class="coach-pill"><span class="dot"></span> Huấn luyện viên đang hoạt động</span>
+            <button class="danger-btn" onclick="leaveSession()">↪ Rời phiên</button>
           </div>
         </div>
 
@@ -1485,112 +1896,112 @@
           <div class="arena-stack">
             <div class="panel arena-panel">
               <div class="panel-head">
-                <div class="panel-title">▣ Your argument</div>
+                <div class="panel-title">▣ Lập luận của bạn</div>
                 <span class="soft-pill" id="char-count">0 / 1200</span>
               </div>
               <div id="form-error" class="screen-error"></div>
-              <textarea class="arena-textarea" id="user-input" placeholder="State your argument here..." maxlength="1200" oninput="updateCharCount()"></textarea>
+              <textarea class="arena-textarea" id="user-input" placeholder="Nhập lập luận của bạn tại đây..." maxlength="1200" oninput="updateCharCount()"></textarea>
               <div class="argument-footer">
-                <div class="hint">💡 <span>Hint: <strong>Claim → Evidence → Reasoning</strong></span></div>
+                <div class="hint">💡 <span>Gợi ý: <strong>Luận điểm → Bằng chứng → Lập luận</strong></span></div>
                 <div class="chips">
-                  <button class="secondary-btn" type="button">🎙 Voice</button>
-                  <button class="primary-btn" id="debate-btn" onclick="submitArgument()">✈ Send</button>
+                  <button class="secondary-btn" type="button">🎙 Giọng nói</button>
+                  <button class="primary-btn" id="debate-btn" onclick="submitArgument()">✈ Gửi</button>
                 </div>
               </div>
             </div>
 
             <div class="panel arena-panel">
               <div class="panel-head">
-                <div class="panel-title">Transcript</div>
+                <div class="panel-title">Hội thoại</div>
                 <div class="chips"><span class="dot"></span><span class="dot"></span><span class="dot" style="background:#60a5fa"></span></div>
               </div>
-              <div id="transcript-output" class="empty-message">Your debate transcript will build here after each round.</div>
+              <div id="transcript-output" class="empty-message">Hội thoại tranh biện sẽ xuất hiện ở đây sau mỗi lượt.</div>
             </div>
           </div>
 
           <div class="arena-stack">
             <div class="panel arena-panel">
               <div class="panel-head">
-                <div class="panel-title"><span class="icon-box" style="background:#6d5dfc;color:white">🤖</span> AI Rebuttal</div>
-                <span class="chip purple">Counter-argument</span>
+                <div class="panel-title"><span class="icon-box" style="background:#6d5dfc;color:white">🤖</span> Phản biện của AI</div>
+                <span class="chip purple">Phản biện</span>
               </div>
-              <div id="ai-output" class="empty-message">Chờ lập luận đầu tiên của bạn. AI Coach sẽ phản biện và giải thích điểm cần cải thiện.</div>
+              <div id="ai-output" class="empty-message">Chờ lập luận đầu tiên của bạn. Huấn luyện viên AI sẽ phản biện và giải thích điểm cần cải thiện.</div>
             </div>
 
             <div class="panel arena-panel">
               <div class="panel-head">
-                <div class="panel-title"><span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> CER Score</div>
-                <div><div style="color:var(--muted);text-align:right">Total</div><div class="score-total" id="cer-total">0</div></div>
+                <div class="panel-title"><span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> Điểm CER</div>
+                <div><div style="color:var(--muted);text-align:right">Tổng</div><div class="score-total" id="cer-total">0</div></div>
               </div>
-              <div id="cer-output" class="empty-message">CER scores will appear after the AI response.</div>
+              <div id="cer-output" class="empty-message">Điểm CER sẽ xuất hiện sau phản hồi của AI.</div>
             </div>
 
             <div class="panel arena-panel">
               <div class="panel-head">
-                <div class="panel-title"><span class="icon-box" style="background:#4a3d13;color:var(--yellow)">🪄</span> Coach Feedback</div>
-                <span class="chip yellow" id="feedback-round">Round insight</span>
+                <div class="panel-title"><span class="icon-box" style="background:#4a3d13;color:var(--yellow)">🪄</span> Nhận xét huấn luyện</div>
+                <span class="chip yellow" id="feedback-round">Nhận xét lượt</span>
               </div>
-              <div id="feedback-output" class="empty-message">Feedback about strengths, weaknesses, and suggestions will appear here.</div>
+              <div id="feedback-output" class="empty-message">Điểm mạnh, điểm yếu và gợi ý cải thiện sẽ xuất hiện ở đây.</div>
             </div>
           </div>
         </div>
       </section>
 
       <section class="view" id="view-summary">
-        <div class="eyebrow">Session complete</div>
-        <h1 class="page-title">Nicely argued. Here's your breakdown.</h1>
-        <p class="page-copy">A condensed report on today's session. Use this to guide what to practice next.</p>
+        <div class="eyebrow">Phiên đã hoàn tất</div>
+        <h1 class="page-title">Bạn đã tranh biện xong. Đây là phần tổng kết.</h1>
+        <p class="page-copy">Báo cáo ngắn gọn cho phiên hôm nay. Dùng phần này để chọn kỹ năng cần luyện tiếp.</p>
 
         <div class="summary-grid">
-          <div class="summary-card"><div class="metric-label">Topic</div><div class="metric-value" id="summary-topic">-</div><div class="metric-note" id="summary-tags">-</div></div>
-          <div class="summary-card"><div class="metric-label">Total turns</div><div class="metric-value" id="summary-turns">0</div><div class="metric-note">rebuttals faced</div></div>
-          <div class="summary-card"><div class="metric-label">Average CER</div><div class="metric-value" id="summary-average">0</div><div class="metric-note">computed from this session</div></div>
+          <div class="summary-card"><div class="metric-label">Chủ đề</div><div class="metric-value" id="summary-topic">-</div><div class="metric-note" id="summary-tags">-</div></div>
+          <div class="summary-card"><div class="metric-label">Tổng số lượt</div><div class="metric-value" id="summary-turns">0</div><div class="metric-note">lượt phản biện đã xử lý</div></div>
+          <div class="summary-card"><div class="metric-label">CER trung bình</div><div class="metric-value" id="summary-average">0</div><div class="metric-note">tính từ phiên hiện tại</div></div>
         </div>
 
         <div class="summary-layout">
           <div class="summary-card">
-            <h2 class="section-title" style="margin-top:0">CER breakdown</h2>
+            <h2 class="section-title" style="margin-top:0">Chi tiết CER</h2>
             <div id="summary-cer"></div>
           </div>
           <div class="summary-card">
-            <div class="eyebrow" style="margin-bottom:18px">Recommended improvement</div>
-            <h2 class="section-title" style="margin-top:0" id="summary-focus">Practice evidence-layering</h2>
-            <p class="page-copy" style="font-size:21px;margin-bottom:20px">Challenge yourself to cite at least two independent sources before moving to reasoning.</p>
+            <div class="eyebrow" style="margin-bottom:18px">Gợi ý cải thiện</div>
+            <h2 class="section-title" style="margin-top:0" id="summary-focus">Luyện bổ sung bằng chứng</h2>
+            <p class="page-copy" style="font-size:21px;margin-bottom:20px">Hãy thử đưa ít nhất hai nguồn hoặc ví dụ độc lập trước khi chuyển sang phần suy luận.</p>
             <div class="recommendation-list">
-              <div class="recommendation">• Drill: Source triangulation (10 min)</div>
-              <div class="recommendation">• Read: Critical thinking in policy debate</div>
-              <div class="recommendation">• Watch: Steelman vs strawman technique</div>
+              <div class="recommendation">• Bài luyện: đối chiếu nguồn thông tin (10 phút)</div>
+              <div class="recommendation">• Đọc: tư duy phản biện trong tranh biện chính sách</div>
+              <div class="recommendation">• Xem: cách xây dựng lập luận mạnh nhất của đối phương và tránh ngụy biện người rơm</div>
             </div>
           </div>
         </div>
 
         <div class="panel summary-actions">
-          <div class="setup-summary">Keep the momentum — your reasoning is trending upward.</div>
+          <div class="setup-summary">Giữ nhịp luyện tập — phần suy luận của bạn đang tiến bộ.</div>
           <div class="chips">
-            <button class="secondary-btn" onclick="practiceAgain()">↻ Practice again</button>
-            <button class="secondary-btn" onclick="newTopic()">◉ New topic</button>
-            <button class="primary-btn" onclick="goToView('progress')">↗ View progress</button>
+            <button class="secondary-btn" onclick="practiceAgain()">↻ Luyện lại</button>
+            <button class="secondary-btn" onclick="newTopic()">◉ Chủ đề mới</button>
+            <button class="primary-btn" onclick="goToView('progress')">↗ Xem tiến độ</button>
           </div>
         </div>
       </section>
 
       <section class="view" id="view-progress">
-        <div class="eyebrow">Progress</div>
-        <h1 class="page-title">Your reasoning over time</h1>
-        <p class="page-copy">Tracks CER component scores across sessions so you can see where your thinking is compounding.</p>
+        <div class="eyebrow">Tiến độ</div>
+        <h1 class="page-title">Quá trình cải thiện lập luận</h1>
+        <p class="page-copy">Theo dõi điểm CER qua các phiên để bạn biết kỹ năng nào đang tốt lên và kỹ năng nào cần luyện thêm.</p>
 
         <div class="metric-grid">
-          <div class="progress-card"><div class="metric-label">Total sessions</div><div class="metric-value" id="progress-total-sessions">0</div><div class="metric-note" id="progress-completed-sessions">0 completed</div></div>
-          <div class="progress-card"><div class="metric-label">Avg CER</div><div class="metric-value" id="progress-avg">0</div><div class="metric-note" id="progress-streak">0 day streak</div></div>
-          <div class="progress-card"><div class="metric-label">Strongest skill</div><div class="metric-value" id="progress-strength">-</div><div class="metric-note" id="progress-strength-note">No data yet</div></div>
-          <div class="progress-card"><div class="metric-label">Weakest skill</div><div class="metric-value" id="progress-weakness">-</div><div class="metric-note" id="progress-weakness-note">No data yet</div></div>
+          <div class="progress-card"><div class="metric-label">Tổng số phiên</div><div class="metric-value" id="progress-total-sessions">0</div><div class="metric-note" id="progress-completed-sessions">0 phiên hoàn tất</div></div>
+          <div class="progress-card"><div class="metric-label">CER trung bình</div><div class="metric-value" id="progress-avg">0</div><div class="metric-note" id="progress-streak">0 ngày liên tiếp</div></div>
+          <div class="progress-card"><div class="metric-label">Kỹ năng mạnh nhất</div><div class="metric-value" id="progress-strength">-</div><div class="metric-note" id="progress-strength-note">Chưa có dữ liệu</div></div>
+          <div class="progress-card"><div class="metric-label">Kỹ năng yếu nhất</div><div class="metric-value" id="progress-weakness">-</div><div class="metric-note" id="progress-weakness-note">Chưa có dữ liệu</div></div>
         </div>
 
         <div class="progress-layout">
           <div class="progress-card">
             <div class="panel-head">
-              <h2 class="section-title" style="margin:0">Skill progress</h2>
-              <span class="chip teal">Last 7 sessions</span>
+              <h2 class="section-title" style="margin:0">Tiến độ kỹ năng</h2>
+              <span class="chip teal">7 phiên gần nhất</span>
             </div>
             <div class="chart">
               <svg viewBox="0 0 640 320" preserveAspectRatio="none" aria-hidden="true">
@@ -1601,7 +2012,7 @@
             </div>
           </div>
           <div class="progress-card">
-            <h2 class="section-title" style="margin-top:0">Practiced topics</h2>
+            <h2 class="section-title" style="margin-top:0">Chủ đề đã luyện</h2>
             <div class="topic-progress" id="progress-topics"></div>
           </div>
         </div>
@@ -1614,13 +2025,23 @@
   const BACKEND_API_URL = "http://localhost:8000";
   const AUTH_TOKEN_KEY = "ai_debate_trainer.authToken";
   const SIGNUP_DRAFT_KEY = "ai_debate_trainer.signupDraft";
+  const THEME_KEY = "ai_debate_theme";
+  const THEME_OPTIONS = ["dark", "blue-pastel"];
+  const THEME_ICONS = {
+    dark: "🌙",
+    "blue-pastel": "☀️"
+  };
+  const THEME_LABELS = {
+    dark: "Dark",
+    "blue-pastel": "Blue"
+  };
 
   const flowSteps = [
-    ["profile", "⚙", "Profile Setup"],
-    ["session", "▣", "Create Session"],
-    ["arena", "⚔", "Debate Arena"],
-    ["summary", "◔", "Session Summary"],
-    ["progress", "⌁", "Progress"],
+    ["profile", "⚙", "Hồ sơ"],
+    ["session", "▣", "Tạo phiên"],
+    ["arena", "⚔", "Đấu trường"],
+    ["summary", "◔", "Tổng kết"],
+    ["progress", "⌁", "Tiến độ"],
   ];
 
   const state = {
@@ -1630,7 +2051,7 @@
     authToken: null,
     currentUser: null,
     guestMode: false,
-    userName: "Guest",
+    userName: "Khách",
     userEmail: "",
     language: "English",
     view: "profile",
@@ -1651,33 +2072,103 @@
   };
 
   const profiles = [
-    ["Teen", "Age 13–17", "Supportive tone, familiar topics", "☃"],
-    ["Adult", "Age 18–40", "Sharp, structured debate feedback", "♙"],
-    ["Senior", "Age 41+", "Larger text, clearer flow", "♙"],
+    ["Teen", "13-17 tuổi", "Giọng khích lệ, ví dụ gần gũi", "☃"],
+    ["Adult", "18-40 tuổi", "Phản hồi rõ, có cấu trúc", "♙"],
+    ["Senior", "41+ tuổi", "Diễn đạt dễ đọc, mạch lạc", "♙"],
   ];
   const levels = [
-    ["Basic", "Foundational CER practice", "♧"],
-    ["Intermediate", "Structured rebuttal exchanges", "♨"],
-    ["Advanced", "Adversarial deep reasoning", "♕"],
+    ["Basic", "Luyện nền tảng Luận điểm - Bằng chứng - Lập luận", "♧"],
+    ["Intermediate", "Trao đổi phản biện có cấu trúc", "♨"],
+    ["Advanced", "Lập luận sâu và phản biện khó hơn", "♕"],
   ];
   const modes = [
-    ["Text", "Type your argument", "T"],
-    ["Voice", "Speak naturally, auto transcribed", "🎙"],
+    ["Text", "Gõ lập luận bằng văn bản", "T"],
+    ["Voice", "Nói tự nhiên, tự động chuyển thành chữ", "🎙"],
   ];
   const topics = [
-    ["Education", "Standardized testing, online learning", "🎓"],
-    ["Technology & AI", "AI ethics, automation, privacy", "🤖"],
-    ["Society", "Social media, culture, policy", "☷"],
-    ["Environment", "Climate, energy, conservation", "◒"],
-    ["Economy", "UBI, labor, globalization", "⌁"],
+    ["Education", "Thi cử, học trực tuyến, trường học", "🎓"],
+    ["Technology & AI", "Đạo đức AI, tự động hóa, quyền riêng tư", "🤖"],
+    ["Society", "Mạng xã hội, văn hóa, chính sách", "☷"],
+    ["Environment", "Khí hậu, năng lượng, bảo tồn", "◒"],
+    ["Economy", "Việc làm, thu nhập, toàn cầu hóa", "⌁"],
   ];
   const stances = [["Ủng hộ", "👍"], ["Phản đối", "👎"], ["Trung lập", "⚖"]];
   const difficulties = [["Basic", "●○○"], ["Intermediate", "●●○"], ["Advanced", "●●●"]];
-  const times = [["60 sec", "Fast drills"], ["90 sec", "Balanced pace"], ["3 min", "Deep reasoning"]];
+  const times = [["60 sec", "Luyện nhanh"], ["90 sec", "Nhịp cân bằng"], ["3 min", "Suy luận sâu"]];
   const authLanguages = [["English", ""], ["Tiếng Việt", ""], ["Auto-detect", ""]];
+  const displayLabels = {
+    "Guest": "Khách",
+    "Account": "Tài khoản",
+    "English": "Tiếng Anh",
+    "Auto-detect": "Tự động nhận diện",
+    "Teen": "Thanh thiếu niên",
+    "Adult": "Người lớn",
+    "Senior": "Người cao tuổi",
+    "Basic": "Cơ bản",
+    "Intermediate": "Trung cấp",
+    "Advanced": "Nâng cao",
+    "Text": "Văn bản",
+    "Voice": "Giọng nói",
+    "Education": "Giáo dục",
+    "Technology & AI": "Công nghệ & AI",
+    "Society": "Xã hội",
+    "Environment": "Môi trường",
+    "Economy": "Kinh tế",
+    "60 sec": "60 giây",
+    "90 sec": "90 giây",
+    "3 min": "3 phút",
+    "claim": "Luận điểm",
+    "evidence": "Bằng chứng",
+    "reasoning": "Lập luận",
+    "-": "-",
+  };
 
+  document.addEventListener("DOMContentLoaded", initTheme);
   document.addEventListener("DOMContentLoaded", init);
   document.addEventListener("click", closeUserMenu);
+
+  // Theme management
+  function getInitialTheme() {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved && THEME_OPTIONS.includes(saved)) {
+      return saved;
+    }
+    return "dark";
+  }
+
+  function applyTheme(theme) {
+    if (!THEME_OPTIONS.includes(theme)) theme = "dark";
+    document.body.setAttribute("data-theme", theme);
+    localStorage.setItem(THEME_KEY, theme);
+    updateThemeToggle(theme);
+  }
+
+  function toggleTheme() {
+    const current = document.body.getAttribute("data-theme") || "dark";
+    const currentIndex = THEME_OPTIONS.indexOf(current);
+    const nextIndex = (currentIndex + 1) % THEME_OPTIONS.length;
+    const nextTheme = THEME_OPTIONS[nextIndex];
+    applyTheme(nextTheme);
+  }
+
+  function updateThemeToggle(theme) {
+    const button = document.getElementById("themeToggle");
+    if (!button) return;
+    button.querySelector(".theme-icon").textContent = THEME_ICONS[theme] || "🌙";
+    button.querySelector(".theme-label").textContent = THEME_LABELS[theme] || "Dark";
+  }
+
+  function initTheme() {
+    const theme = getInitialTheme();
+    applyTheme(theme);
+    const button = document.getElementById("themeToggle");
+    if (button) {
+      button.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleTheme();
+      });
+    }
+  }
 
   async function init() {
     loadStoredAuth();
@@ -1711,7 +2202,7 @@
   }
 
   function loadStoredAuth() {
-    state.authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+    state.authToken = localStorage.getItem(AUTH_TOKEN_KEY) || sessionStorage.getItem(AUTH_TOKEN_KEY);
     state.isAuthenticated = Boolean(state.authToken);
     state.guestMode = false;
     state.currentUser = null;
@@ -1720,7 +2211,7 @@
   async function restoreCurrentUser() {
     try {
       const user = await apiRequest("/api/v1/auth/me");
-      applyCurrentUser(user, state.authToken);
+      applyCurrentUser(user, state.authToken, localStorage.getItem(AUTH_TOKEN_KEY) === state.authToken);
       return true;
     } catch (error) {
       clearAuthState();
@@ -1728,25 +2219,28 @@
     }
   }
 
-  function applyAuthSession(data) {
+  function applyAuthSession(data, persist = true) {
     if (!data?.token || !data?.user) {
-      throw new Error("Backend did not return a valid auth session.");
+      throw new Error("Máy chủ chưa trả về phiên đăng nhập hợp lệ.");
     }
-    applyCurrentUser(data.user, data.token);
+    applyCurrentUser(data.user, data.token, persist);
   }
 
-  function applyCurrentUser(user, token) {
+  function applyCurrentUser(user, token, persist = true) {
     state.authMode = "account";
     state.isAuthenticated = true;
     state.guestMode = false;
     state.authToken = token;
     state.currentUser = user;
-    state.userName = user.display_name || user.email || "Account";
+    state.userName = user.display_name || user.email || "Tài khoản";
     state.userEmail = user.email || "";
     state.age = titleCase(user.age_group || state.age || "adult");
     state.level = titleCase(user.debate_level || state.level || "intermediate");
     state.language = user.language === "vi" ? "Tiếng Việt" : "English";
-    localStorage.setItem(AUTH_TOKEN_KEY, token);
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    sessionStorage.removeItem(AUTH_TOKEN_KEY);
+    const storage = persist ? localStorage : sessionStorage;
+    storage.setItem(AUTH_TOKEN_KEY, token);
     updateUserTopbar();
     renderAuthOptions();
     renderProfileOptions();
@@ -1759,17 +2253,38 @@
     state.authToken = null;
     state.currentUser = null;
     state.guestMode = false;
-    state.userName = "Guest";
+    state.userName = "Khách";
     state.userEmail = "";
     state.sessionId = null;
     state.sessionStatus = "active";
     state.roundCount = 0;
     state.history = [];
     state.latest = null;
+    const progressTopics = document.getElementById("progress-topics");
+    if (progressTopics) {
+      progressTopics.innerHTML = `<div class="empty-message">Tài khoản này chưa có dữ liệu tiến độ.</div>`;
+    }
+    [
+      ["progress-total-sessions", "0"],
+      ["progress-completed-sessions", "0 phiên hoàn tất"],
+      ["progress-avg", "0"],
+      ["progress-streak", "0 ngày liên tiếp"],
+      ["progress-strength", "-"],
+      ["progress-weakness", "-"],
+      ["progress-strength-note", "Chưa có dữ liệu"],
+      ["progress-weakness-note", "Chưa có dữ liệu"],
+    ].forEach(([id, value]) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    });
     localStorage.removeItem(AUTH_TOKEN_KEY);
     localStorage.removeItem("authToken");
     localStorage.removeItem("currentUser");
     localStorage.removeItem("ai_debate_trainer.currentUser");
+    sessionStorage.removeItem(AUTH_TOKEN_KEY);
+    sessionStorage.removeItem("authToken");
+    sessionStorage.removeItem("currentUser");
+    sessionStorage.removeItem("ai_debate_trainer.currentUser");
     sessionStorage.removeItem(SIGNUP_DRAFT_KEY);
   }
 
@@ -1780,9 +2295,10 @@
       state.isAuthenticated = false;
       state.authToken = null;
       state.currentUser = null;
-      state.userName = "Guest";
+      state.userName = "Khách";
       state.userEmail = "";
       localStorage.removeItem(AUTH_TOKEN_KEY);
+      sessionStorage.removeItem(AUTH_TOKEN_KEY);
     }
     document.getElementById("auth-shell").classList.add("hidden");
     document.getElementById("app-shell").classList.remove("hidden");
@@ -1806,7 +2322,7 @@
 
   function continueSignup() {
     if (!document.getElementById("auth-terms").checked) {
-      showAuthError("auth-signup-error", "Please agree to the terms before continuing.");
+      showAuthError("auth-signup-error", "Vui lòng đồng ý với điều khoản trước khi tiếp tục.");
       return;
     }
 
@@ -1814,10 +2330,10 @@
     const email = document.getElementById("auth-email").value.trim();
     const password = document.getElementById("auth-password").value;
     const confirm = document.getElementById("auth-confirm").value;
-    if (!name) return showAuthError("auth-signup-error", "Please enter your name.");
-    if (!email) return showAuthError("auth-signup-error", "Please enter your email.");
-    if (password.length < 8) return showAuthError("auth-signup-error", "Password must be at least 8 characters.");
-    if (password !== confirm) return showAuthError("auth-signup-error", "Password confirmation does not match.");
+    if (!name) return showAuthError("auth-signup-error", "Vui lòng nhập họ tên.");
+    if (!email) return showAuthError("auth-signup-error", "Vui lòng nhập email.");
+    if (password.length < 8) return showAuthError("auth-signup-error", "Mật khẩu phải có ít nhất 8 ký tự.");
+    if (password !== confirm) return showAuthError("auth-signup-error", "Mật khẩu xác nhận không khớp.");
     sessionStorage.setItem(SIGNUP_DRAFT_KEY, JSON.stringify({ name, email, password }));
     goToAuthView("preferences");
   }
@@ -1826,7 +2342,7 @@
     const draft = JSON.parse(sessionStorage.getItem(SIGNUP_DRAFT_KEY) || "{}");
     if (!draft.email || !draft.password || !draft.name) {
       goToAuthView("signup");
-      return showAuthError("auth-signup-error", "Please complete account details first.");
+      return showAuthError("auth-signup-error", "Vui lòng hoàn tất thông tin tài khoản trước.");
     }
     hideOptionalError("auth-signup-error");
     try {
@@ -1861,7 +2377,9 @@
         body: { email, password },
         skipAuth: true,
       });
-      applyAuthSession(data);
+      clearAuthState();
+      const remember = Boolean(document.getElementById("remember-login")?.checked);
+      applyAuthSession(data, remember);
       enterApp("account", "progress");
     } catch (error) {
       clearAuthState();
@@ -1876,12 +2394,11 @@
       try {
         await apiRequest("/api/v1/auth/logout", { method: "POST" });
       } catch (error) {
-        console.warn("Logout failed:", error);
+        console.warn("Đăng xuất thất bại:", error);
       }
     }
     clearAuthState();
     updateUserTopbar();
-    renderProgressTopics();
     returnToAuth("home");
   }
 
@@ -1894,7 +2411,7 @@
 
   function authSegment(key, name, meta) {
     const selected = state[key] === name ? "active" : "";
-    return `<button class="auth-segment ${selected}" onclick="selectAuthPreference('${key}', '${escapeAttr(name)}')">${name}${meta ? `<span>${meta}</span>` : ""}</button>`;
+    return `<button class="auth-segment ${selected}" onclick="selectAuthPreference('${key}', '${escapeAttr(name)}')">${displayValue(name)}${meta ? `<span>${displayValue(meta)}</span>` : ""}</button>`;
   }
 
   function selectAuthPreference(key, value) {
@@ -1907,7 +2424,7 @@
 
   function updateUserTopbar() {
     const isGuest = state.guestMode;
-    const displayName = isGuest ? "Guest" : (state.currentUser?.display_name || state.userName || "Account");
+    const displayName = isGuest ? "Khách" : (state.currentUser?.display_name || state.userName || "Tài khoản");
     const email = isGuest ? "" : (state.currentUser?.email || state.userEmail || "");
     const initials = getInitials(displayName);
     document.getElementById("save-chip").classList.toggle("hidden", !isGuest);
@@ -1917,7 +2434,7 @@
     document.getElementById("top-user-name").textContent = displayName;
     document.getElementById("menu-user-name").textContent = displayName;
     document.getElementById("menu-user-email").textContent = email;
-    document.getElementById("top-user-detail").textContent = `${state.age} · ${state.level}`;
+    document.getElementById("top-user-detail").textContent = `${displayValue(state.age)} · ${displayValue(state.level)}`;
   }
 
   function toggleUserMenu(event) {
@@ -1954,7 +2471,7 @@
     document.getElementById("topic-options").innerHTML = topics.map(([name, desc, icon]) => `
       <button class="choice-card ${state.topic === name && !state.customTopic ? "selected" : ""}" onclick="selectValue('topic', '${escapeAttr(name)}')">
         <span class="icon-box">${icon}</span>
-        <span><span class="choice-name">${name}</span><span class="choice-desc">${desc}</span></span>
+        <span><span class="choice-name">${displayValue(name)}</span><span class="choice-desc">${desc}</span></span>
       </button>
     `).join("");
 
@@ -1969,8 +2486,8 @@
       <button class="choice-card ${size} ${selected}" onclick="selectValue('${key}', '${escapeAttr(name)}')">
         <span class="icon-box">${icon}</span>
         <span>
-          <span class="choice-name">${name}</span>
-          <span class="choice-meta">${meta}</span>
+          <span class="choice-name">${displayValue(name)}</span>
+          <span class="choice-meta">${displayValue(meta)}</span>
           ${desc ? `<span class="choice-desc">${desc}</span>` : ""}
         </span>
         <span class="choice-radio"></span>
@@ -1982,7 +2499,7 @@
     const selected = state[key] === name ? "selected" : "";
     return `
       <button class="line-choice ${selected}" onclick="selectValue('${key}', '${escapeAttr(name)}')">
-        <span>${name}<span class="mini-copy">${helper}</span></span>
+        <span>${displayValue(name)}<span class="mini-copy">${displayValue(helper)}</span></span>
         <span>○</span>
       </button>
     `;
@@ -2007,12 +2524,12 @@
   }
 
   function updateProfileSummary() {
-    document.getElementById("profile-summary").textContent = `${state.age} · ${state.level} · ${state.inputMode}`;
+    document.getElementById("profile-summary").textContent = `${displayValue(state.age)} · ${displayValue(state.level)} · ${displayValue(state.inputMode)}`;
   }
 
   function updateSessionSummary() {
     const topic = getTopic();
-    document.getElementById("session-ready").textContent = `Session ready · ${topic} · ${state.stance} · ${state.difficulty}`;
+    document.getElementById("session-ready").textContent = `Phiên sẵn sàng · ${displayValue(topic)} · ${displayValue(state.stance)} · ${displayValue(state.difficulty)}`;
   }
 
   function goToView(view) {
@@ -2022,8 +2539,8 @@
     document.getElementById(`view-${view}`).classList.add("active");
     document.querySelector(".content").scrollTop = 0;
     document.querySelectorAll(".flow-item").forEach(el => el.classList.toggle("active", el.dataset.flow === view));
-    const label = flowSteps.find(step => step[0] === view)?.[2] || "Profile Setup";
-    document.getElementById("breadcrumb").innerHTML = `${view === "progress" ? "Insights" : view === "arena" || view === "summary" ? "Session" : "Setup"} <strong>${label}</strong>`;
+    const label = flowSteps.find(step => step[0] === view)?.[2] || "Hồ sơ";
+    document.getElementById("breadcrumb").innerHTML = `${view === "progress" ? "Tiến độ" : view === "arena" || view === "summary" ? "Phiên" : "Thiết lập"} <strong>${label}</strong>`;
     if (view === "summary") renderSummary();
     if (view === "progress") renderProgressTopics();
   }
@@ -2051,7 +2568,7 @@
       });
 
       state.sessionId = data.session_id;
-      if (!state.sessionId) throw new Error("Backend không trả về session_id.");
+      if (!state.sessionId) throw new Error("Máy chủ chưa trả về mã phiên.");
       state.sessionStatus = normalizeStatus(data.status);
       state.roundCount = 0;
       state.history = [];
@@ -2078,10 +2595,10 @@
 
   function renderSessionChips() {
     document.getElementById("session-chips").innerHTML = `
-      <span class="chip teal">${escapeHtml(getTopic())}</span>
-      <span class="chip purple">Stance: ${escapeHtml(state.stance)}</span>
-      <span class="chip yellow">${escapeHtml(state.difficulty)}</span>
-      <span class="chip">Round ${state.roundCount} / 3</span>
+      <span class="chip teal">${escapeHtml(displayValue(getTopic()))}</span>
+      <span class="chip purple">Lập trường: ${escapeHtml(displayValue(state.stance))}</span>
+      <span class="chip yellow">${escapeHtml(displayValue(state.difficulty))}</span>
+      <span class="chip">Lượt ${state.roundCount} / 3</span>
     `;
   }
 
@@ -2091,14 +2608,14 @@
     hideError("form-error");
 
     if (state.isSubmitting) return;
-    if (!state.sessionId) return showError("form-error", "Chưa có phiên tranh biện. Hãy tạo session trước.");
+    if (!state.sessionId) return showError("form-error", "Chưa có phiên tranh biện. Hãy tạo phiên trước.");
     if (!argument) return showError("form-error", "Hãy nhập lập luận trước khi gửi.");
-    if (state.sessionStatus === "completed") return showError("form-error", "Phiên này đã hoàn tất. Hãy xem tổng kết hoặc tạo topic mới.");
+    if (state.sessionStatus === "completed") return showError("form-error", "Phiên này đã hoàn tất. Hãy xem tổng kết hoặc tạo chủ đề mới.");
 
     state.isSubmitting = true;
     input.disabled = true;
     const button = document.getElementById("debate-btn");
-    setLoading(button, true, "Coach đang nghĩ...");
+    setLoading(button, true, "Đang suy nghĩ...");
     renderLoadingState();
 
     try {
@@ -2136,11 +2653,11 @@
 
   function renderLoadingState() {
     document.getElementById("ai-output").className = "";
-    document.getElementById("ai-output").innerHTML = `<div class="loading-dots">AI Coach đang phản biện <span></span><span></span><span></span></div>`;
+    document.getElementById("ai-output").innerHTML = `<div class="loading-dots">Huấn luyện viên AI đang phản biện <span></span><span></span><span></span></div>`;
     document.getElementById("cer-output").className = "empty-message";
-    document.getElementById("cer-output").textContent = "Đang chấm Claim, Evidence, Reasoning...";
+    document.getElementById("cer-output").textContent = "Đang chấm Luận điểm, Bằng chứng, Lập luận...";
     document.getElementById("feedback-output").className = "empty-message";
-    document.getElementById("feedback-output").textContent = "Đang tạo feedback huấn luyện...";
+    document.getElementById("feedback-output").textContent = "Đang tạo nhận xét huấn luyện...";
   }
 
   function renderErrorState(message) {
@@ -2155,7 +2672,7 @@
       try {
         await apiRequest(`/api/v1/debate/session/${encodeURIComponent(state.sessionId)}/end`, { method: "POST" });
       } catch (error) {
-        console.warn("Could not end session:", error);
+        console.warn("Không thể kết thúc phiên:", error);
       }
     }
     goToView("summary");
@@ -2200,7 +2717,7 @@
       state.sessionStatus = normalizeStatus(data.status);
       renderSessionChips();
     } catch (error) {
-      console.warn("Session sync failed:", error);
+      console.warn("Đồng bộ phiên thất bại:", error);
     }
   }
 
@@ -2210,13 +2727,17 @@
     return {
       session_id: data.session_id || state.sessionId || "",
       user_argument: data.user_argument || fallbackArgument,
-      ai_rebuttal: data.ai_rebuttal || "AI Coach chưa trả về phản biện. Hãy thử lại sau.",
-      cer: {
-        claim: toScore(cer.claim),
-        evidence: toScore(cer.evidence),
-        reasoning: toScore(cer.reasoning),
-        total: toScore(cer.total),
-      },
+      ai_rebuttal: data.ai_rebuttal || "AI chưa trả về phản biện. Hãy thử lại sau.",
+      cer: (() => {
+        const total = toScore(cer.overall ?? cer.total);
+        return {
+          claim: toScore(cer.claim),
+          evidence: toScore(cer.evidence),
+          reasoning: toScore(cer.reasoning),
+          overall: total,
+          total,
+        };
+      })(),
       feedback: {
         strengths: toList(feedback.strengths),
         weaknesses: toList(feedback.weaknesses),
@@ -2227,14 +2748,15 @@
   }
 
   function normalizeStatus(status) {
-    if (status === "completed" || status === "error") return status;
+    if (status === "completed" || status === "error" || status === "invalid") return status;
     return "active";
   }
 
   function toScore(value) {
     const number = Number(value);
     if (!Number.isFinite(number)) return 0;
-    return Math.max(0, Math.min(1, number));
+    const score = number > 0 && number <= 1 ? number * 100 : number;
+    return Math.max(0, Math.min(100, score));
   }
 
   function toList(value) {
@@ -2247,7 +2769,7 @@
     const output = document.getElementById("ai-output");
     if (!text) {
       output.className = "empty-message";
-      output.textContent = "Chờ lập luận đầu tiên của bạn. AI Coach sẽ phản biện và giải thích điểm cần cải thiện.";
+      output.textContent = "Chờ lập luận đầu tiên của bạn. Huấn luyện viên AI sẽ phản biện và giải thích điểm cần cải thiện.";
       return;
     }
     output.className = "rebuttal-text";
@@ -2255,24 +2777,24 @@
   }
 
   function renderCER(cer) {
-    const total = cer ? Math.round(cer.total * 100) : 0;
+    const total = cer ? Math.round(cer.overall ?? cer.total) : 0;
     document.getElementById("cer-total").textContent = total;
     const output = document.getElementById("cer-output");
     if (!cer) {
       output.className = "empty-message";
-      output.textContent = "CER scores will appear after the AI response.";
+      output.textContent = "Điểm CER sẽ xuất hiện sau phản hồi của AI.";
       return;
     }
 
     const rows = [
-      ["Claim", cer.claim, ""],
-      ["Evidence", cer.evidence, "evidence"],
-      ["Reasoning", cer.reasoning, "reasoning"],
+      ["Luận điểm", cer.claim, ""],
+      ["Bằng chứng", cer.evidence, "evidence"],
+      ["Lập luận", cer.reasoning, "reasoning"],
     ];
     output.className = "";
     output.innerHTML = `
       ${rows.map(([label, score, tone]) => {
-        const percent = Math.round(score * 100);
+        const percent = Math.round(score);
         return `
           <div class="score-row">
             <div class="score-line"><span>${label}</span><strong>${percent}/100</strong></div>
@@ -2281,7 +2803,7 @@
         `;
       }).join("")}
       <div class="score-tiles">
-        ${rows.map(([label, score]) => `<div class="score-tile"><small>${label}</small><strong>${Math.round(score * 100)}</strong><span>${score >= 0.7 ? "Solid" : "Weak link"}</span></div>`).join("")}
+        ${rows.map(([label, score]) => `<div class="score-tile"><small>${label}</small><strong>${Math.round(score)}</strong><span>${score >= 70 ? "Vững" : "Cần luyện"}</span></div>`).join("")}
       </div>
     `;
   }
@@ -2290,18 +2812,18 @@
     const output = document.getElementById("feedback-output");
     if (!feedback) {
       output.className = "empty-message";
-      output.textContent = "Feedback about strengths, weaknesses, and suggestions will appear here.";
+      output.textContent = "Điểm mạnh, điểm yếu và gợi ý cải thiện sẽ xuất hiện ở đây.";
       return;
     }
     const groups = [
-      ["Strengths", feedback.strengths, ""],
-      ["Weaknesses", feedback.weaknesses, "weak"],
-      ["Suggestions", feedback.suggestions, ""],
+      ["Điểm mạnh", feedback.strengths, ""],
+      ["Điểm yếu", feedback.weaknesses, "weak"],
+      ["Gợi ý", feedback.suggestions, ""],
     ];
     const hasFeedback = groups.some(([, items]) => items.length);
     if (!hasFeedback) {
       output.className = "empty-message";
-      output.textContent = "Backend chưa trả feedback chi tiết cho lượt này.";
+      output.textContent = "Máy chủ chưa trả nhận xét chi tiết cho lượt này.";
       return;
     }
     output.className = "";
@@ -2313,20 +2835,20 @@
         </ul>
       </div>
     `).join("");
-    document.getElementById("feedback-round").textContent = `Round ${state.roundCount} insight`;
+    document.getElementById("feedback-round").textContent = `Nhận xét lượt ${state.roundCount}`;
   }
 
   function renderTranscript() {
     const output = document.getElementById("transcript-output");
     if (!state.history.length) {
       output.className = "empty-message";
-      output.textContent = "Your debate transcript will build here after each round.";
+      output.textContent = "Hội thoại tranh biện sẽ xuất hiện ở đây sau mỗi lượt.";
       return;
     }
     output.className = "";
     output.innerHTML = state.history.slice(-3).map(turn => `
       <div class="transcript-item">
-        <div class="speaker">YOU</div>
+        <div class="speaker">Bạn</div>
         <div class="bubble">${escapeHtml(turn.user_argument)}</div>
       </div>
       <div class="transcript-item">
@@ -2338,15 +2860,15 @@
 
   function renderSummary() {
     const average = getAverageCER();
-    document.getElementById("summary-topic").textContent = getTopic();
-    document.getElementById("summary-tags").textContent = `${state.topic} · ${state.stance}`;
+    document.getElementById("summary-topic").textContent = displayValue(getTopic());
+    document.getElementById("summary-tags").textContent = `${displayValue(state.topic)} · ${displayValue(state.stance)}`;
     document.getElementById("summary-turns").textContent = state.history.length;
     document.getElementById("summary-average").textContent = average;
     const cer = state.latest?.cer || { claim: 0, evidence: 0, reasoning: 0, total: 0 };
-    document.getElementById("summary-focus").textContent = cer.evidence <= cer.claim ? "Practice evidence-layering" : "Practice tighter reasoning";
+    document.getElementById("summary-focus").textContent = cer.evidence <= cer.claim ? "Luyện bổ sung bằng chứng" : "Luyện suy luận chặt chẽ hơn";
     document.getElementById("summary-cer").innerHTML = `
       ${["claim", "evidence", "reasoning"].map(key => {
-        const value = Math.round((cer[key] || 0) * 100);
+        const value = Math.round(cer[key] || 0);
         return `<div class="score-row"><div class="score-line"><span>${labelFor(key)}</span><strong>${value}/100</strong></div><div class="bar"><div class="bar-fill ${key}" style="--value:${value}%"></div></div></div>`;
       }).join("")}
     `;
@@ -2358,32 +2880,32 @@
     if (!output) return;
     try {
       const data = await apiRequest("/api/v1/debate/progress/overview");
-      const overall = Math.round(toScore(data.overall_score) * 100);
-      const claim = Math.round(toScore(data.avg_claim_score) * 100);
-      const evidence = Math.round(toScore(data.avg_evidence_score) * 100);
-      const reasoning = Math.round(toScore(data.avg_reasoning_score) * 100);
+      const overall = Math.round(toScore(data.overall_score));
+      const claim = Math.round(toScore(data.avg_claim_score));
+      const evidence = Math.round(toScore(data.avg_evidence_score));
+      const reasoning = Math.round(toScore(data.avg_reasoning_score));
       document.getElementById("progress-total-sessions").textContent = data.total_sessions || 0;
-      document.getElementById("progress-completed-sessions").textContent = `${data.completed_sessions || 0} completed`;
+      document.getElementById("progress-completed-sessions").textContent = `${data.completed_sessions || 0} phiên hoàn tất`;
       document.getElementById("progress-avg").textContent = overall;
-      document.getElementById("progress-streak").textContent = `${data.streak_days || 0} day streak`;
+      document.getElementById("progress-streak").textContent = `${data.streak_days || 0} ngày liên tiếp`;
       document.getElementById("progress-strength").textContent = labelFor(data.skill_strength || "-");
       document.getElementById("progress-weakness").textContent = labelFor(data.skill_weakness || "-");
-      document.getElementById("progress-strength-note").textContent = data.skill_strength ? `Avg ${scoreForSkill(data.skill_strength, { claim, evidence, reasoning })}` : "No data yet";
-      document.getElementById("progress-weakness-note").textContent = data.skill_weakness ? `Avg ${scoreForSkill(data.skill_weakness, { claim, evidence, reasoning })}` : "No data yet";
-      const topicRows = toList(data.recent_topics).map((topic, index) => [topic, overall || scoreForIndex(index), "recent"]);
+      document.getElementById("progress-strength-note").textContent = data.skill_strength ? `Trung bình ${scoreForSkill(data.skill_strength, { claim, evidence, reasoning })}` : "Chưa có dữ liệu";
+      document.getElementById("progress-weakness-note").textContent = data.skill_weakness ? `Trung bình ${scoreForSkill(data.skill_weakness, { claim, evidence, reasoning })}` : "Chưa có dữ liệu";
+      const topicRows = toList(data.recent_topics).map((topic, index) => [topic, overall || scoreForIndex(index), "gần đây"]);
       if (!topicRows.length) {
-        output.innerHTML = `<div class="empty-message">No progress yet for this account.</div>`;
+        output.innerHTML = `<div class="empty-message">Tài khoản này chưa có dữ liệu tiến độ.</div>`;
         return;
       }
       output.innerHTML = topicRows.map(([name, score, count]) => `
         <div class="topic-progress-row">
-          <header><strong>${escapeHtml(name)}</strong><span class="chip teal">${score}</span></header>
+          <header><strong>${escapeHtml(displayValue(name))}</strong><span class="chip teal">${score}</span></header>
           <div class="bar"><div class="bar-fill evidence" style="--value:${score}%"></div></div>
           <div class="metric-note">${count}</div>
         </div>
       `).join("");
     } catch (error) {
-      output.innerHTML = `<div class="empty-message">Progress is available after login or when the backend is running.</div>`;
+      output.innerHTML = `<div class="empty-message">Tiến độ sẽ hiển thị sau khi đăng nhập và backend đang chạy.</div>`;
     }
   }
 
@@ -2399,8 +2921,8 @@
   }
 
   function getInitials(name) {
-    const parts = String(name || "Guest").trim().split(/\s+/).filter(Boolean);
-    return (parts[0]?.[0] || "G") + (parts.length > 1 ? parts[parts.length - 1][0] : "");
+    const parts = String(name || "Khách").trim().split(/\s+/).filter(Boolean);
+    return (parts[0]?.[0] || "K") + (parts.length > 1 ? parts[parts.length - 1][0] : "");
   }
 
   function showError(id, message) {
@@ -2429,11 +2951,16 @@
   function getAverageCER() {
     if (!state.history.length) return 0;
     const sum = state.history.reduce((acc, turn) => acc + turn.cer.total, 0);
-    return Math.round((sum / state.history.length) * 100);
+    return Math.round(sum / state.history.length);
   }
 
   function labelFor(key) {
-    return key.charAt(0).toUpperCase() + key.slice(1);
+    const normalized = String(key || "").toLowerCase();
+    return displayLabels[normalized] || displayValue(key);
+  }
+
+  function displayValue(value) {
+    return displayLabels[String(value ?? "")] || String(value ?? "");
   }
 
   function titleCase(value) {

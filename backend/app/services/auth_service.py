@@ -8,7 +8,7 @@ from fastapi import Header, HTTPException
 
 from app.services.normalization import (
     normalize_age_group,
-    normalize_difficulty,
+    normalize_debate_level,
     normalize_language,
     optional_text,
 )
@@ -133,7 +133,7 @@ def register_user(payload) -> dict:
         password_hash=hash_password(payload.password),
         display_name=display_name,
         age_group=normalize_age_group(payload.age_group),
-        debate_level=normalize_difficulty(payload.debate_level),
+        debate_level=normalize_debate_level(payload.debate_level),
         language=normalize_language(payload.language),
     )
     return issue_token_for_user(user)

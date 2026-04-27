@@ -5,8 +5,3 @@ __pycache__/
 *.db
 *.sqlite
 *.sqlite3
-datasets/*.zip
-adapters/*
-!adapters/.gitkeep
-experiments/qlora/*
-!experiments/qlora/.gitkeep

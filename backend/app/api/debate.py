@@ -1,3 +1,6 @@
+import logging
+import time
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.schemas.debate import (
@@ -11,6 +14,7 @@ from app.schemas.debate import (
 )
 from app.services import ai_service
 from app.services.auth_service import get_debate_user
+from app.services.cer_scorer import normalize_cer_to_100
 from app.services.normalization import normalize_session_payload, normalize_status
 from app.services.session_store import (
     create_session,
@@ -22,6 +26,7 @@ from app.services.session_store import (
 )
 
 router = APIRouter()
+logger = logging.getLogger("uvicorn.error")
 
 
 def _session_response(session: dict) -> dict:
@@ -35,6 +40,7 @@ def _session_response(session: dict) -> dict:
         "input_mode": session["input_mode"],
         "age_group": session.get("age_group") or "adult",
         "debate_level": session.get("debate_level") or "intermediate",
+        "coach_model": session.get("coach_model") or "socratic_v3",
         "language": session.get("language") or "vi",
         "response_time": session.get("response_time"),
         "max_turns": int(session.get("max_turns") or 0),
@@ -58,6 +64,7 @@ def debate_turn(
     payload: DebateTurnRequest,
     current_user: dict = Depends(get_debate_user),
 ):
+    turn_start = time.perf_counter()
     session = get_session(payload.session_id, user_id=current_user["id"])
 
     if not session:
@@ -76,9 +83,13 @@ def debate_turn(
         user_argument=payload.user_argument,
         age_group=session.get("age_group"),
         debate_level=session.get("debate_level"),
+        coach_model=session.get("coach_model"),
         language=session.get("language"),
         input_mode=session.get("input_mode"),
     )
+    result["cer"] = normalize_cer_to_100(result.get("cer"))
+    ai_done_ms = int((time.perf_counter() - turn_start) * 1000)
+    turn_status = "active" if result["ok"] else result.get("status", "error")
 
     saved = save_debate_turn(
         session=session,
@@ -87,15 +98,29 @@ def debate_turn(
         cer=result["cer"],
         feedback=result["feedback"],
         content_flags=result.get("content_flags", []),
-        status="active" if result["ok"] else "error",
+        status=turn_status,
         count_for_completion=result["ok"],
     )
-    response_status = saved["session"]["status"] if result["ok"] else "error"
+    response_status = saved["session"]["status"] if result["ok"] else turn_status
+    total_turn_ms = int((time.perf_counter() - turn_start) * 1000)
+    timings = result.get("timings", {})
+    logger.info(
+        "debate_turn_timing session_id=%s status=%s build_prompt_ms=%s ollama_ms=%s parse_output_ms=%s ai_total_ms=%s turn_total_ms=%s",
+        payload.session_id,
+        normalize_status(response_status),
+        timings.get("build_prompt_ms"),
+        timings.get("ollama_ms"),
+        timings.get("parse_output_ms"),
+        timings.get("total_ai_ms", ai_done_ms),
+        total_turn_ms,
+    )
 
     return DebateTurnResponseV2(
         session_id=payload.session_id,
         user_argument=payload.user_argument,
         ai_rebuttal=result["rebuttal"],
+        is_valid=result.get("is_valid", result["ok"]),
+        cer_breakdown=result.get("cer_breakdown"),
         turn_number=int(saved["turn_number"]),
         max_turns=int(saved["session"].get("max_turns") or session["max_turns"]),
         status=normalize_status(response_status),
