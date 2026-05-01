@@ -108,11 +108,12 @@ def debate_turn(
     total_turn_ms = int((time.perf_counter() - turn_start) * 1000)
     timings = result.get("timings", {})
     logger.info(
-        "debate_turn_timing session_id=%s status=%s build_prompt_ms=%s ollama_ms=%s parse_output_ms=%s ai_total_ms=%s turn_total_ms=%s",
+        "debate_turn_timing session_id=%s status=%s provider=%s build_prompt_ms=%s llm_ms=%s parse_output_ms=%s ai_total_ms=%s turn_total_ms=%s",
         payload.session_id,
         normalize_status(response_status),
+        timings.get("provider") or result.get("provider"),
         timings.get("build_prompt_ms"),
-        timings.get("ollama_ms"),
+        timings.get("llm_ms"),
         timings.get("parse_output_ms"),
         timings.get("total_ai_ms", ai_done_ms),
         total_turn_ms,

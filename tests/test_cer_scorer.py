@@ -57,6 +57,40 @@ class CERRubricTests(unittest.TestCase):
         self.assertEqual(result["cer"]["overall"], 47.0)
         self.assertTrue(result["feedback"]["weaknesses"])
 
+    def test_parse_groq_marker_rubric_output(self):
+        raw = """
+[REBUTTAL]
+Không nên kết luận quá nhanh rằng sinh viên năm nhất chắc chắn không nên đi làm thêm, vì vấn đề nằm ở cách cân bằng thời gian và loại công việc. Nếu công việc ít giờ, liên quan đến ngành học hoặc giúp rèn kỹ năng mềm, nó có thể hỗ trợ việc học thay vì chỉ gây hại. Lập luận này cũng bỏ qua khác biệt về hoàn cảnh tài chính của từng sinh viên. Vì vậy, phản đối hoàn toàn là chưa đủ linh hoạt.
+
+[CER]
+Claim: 72/100
+Evidence: 38/100
+Reasoning: 64/100
+Overall: 59/100
+
+[FEEDBACK]
+Strengths:
+- Có quan điểm rõ.
+- Nêu được hệ quả với việc học.
+
+Weaknesses:
+- Thiếu ví dụ cụ thể.
+
+Suggestions:
+- Thêm điều kiện về số giờ làm.
+- Nêu một dẫn chứng thực tế.
+""".strip()
+
+        result = parse_cer_rubric_output(raw)
+
+        self.assertTrue(result["is_valid"])
+        self.assertEqual(result["cer"]["claim"], 72.0)
+        self.assertEqual(result["cer"]["evidence"], 38.0)
+        self.assertEqual(result["cer"]["reasoning"], 64.0)
+        self.assertEqual(result["cer"]["overall"], 59.0)
+        self.assertEqual(result["feedback"]["strengths"], ["Có quan điểm rõ.", "Nêu được hệ quả với việc học."])
+        self.assertEqual(result["cer_breakdown"]["claim"]["clarity"], 28.8)
+
     def test_invalid_input_validation(self):
         validation = validate_user_argument("Sinh viên đi làm thêm", "ok tùy")
 

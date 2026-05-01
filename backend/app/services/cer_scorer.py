@@ -62,6 +62,104 @@ def _clean_list(value: Any, default: list[str] | None = None) -> list[str]:
     return list(default or [])
 
 
+def _extract_section(text: str, section_name: str) -> str:
+    section = re.escape(section_name)
+    pattern = rf"\[{section}\]\s*(.*?)(?=\n\[[A-Z_]+\]\s*|\Z)"
+    match = re.search(pattern, text or "", flags=re.IGNORECASE | re.DOTALL)
+    return match.group(1).strip() if match else ""
+
+
+def _parse_marker_score(label: str, text: str) -> float:
+    pattern = rf"{re.escape(label)}\s*:\s*(-?\d+(?:\.\d+)?)\s*(?:/100)?"
+    match = re.search(pattern, text or "", flags=re.IGNORECASE)
+    return _score_to_100(match.group(1)) if match else 0.0
+
+
+def _feedback_subsection(feedback_text: str, label: str) -> str:
+    labels = "Strengths|Weaknesses|Suggestions"
+    pattern = rf"{re.escape(label)}\s*:\s*(.*?)(?=\n(?:{labels})\s*:|\Z)"
+    match = re.search(pattern, feedback_text or "", flags=re.IGNORECASE | re.DOTALL)
+    return match.group(1).strip() if match else ""
+
+
+def _parse_bullets(section_text: str) -> list[str]:
+    items = []
+    for line in (section_text or "").splitlines():
+        clean = re.sub(r"^[-*•]\s*", "", line.strip()).strip()
+        if clean:
+            items.append(clean)
+    return items[:3]
+
+
+def _proportional_breakdown(score: float, weights: dict[str, float]) -> dict[str, float]:
+    return {key: round(_clamp(score * weight, 0.0, cap), 1) for key, (weight, cap) in weights.items()}
+
+
+def _parse_marker_rubric_output(raw_text: str) -> dict:
+    rebuttal = _extract_section(raw_text, "REBUTTAL")
+    cer_text = _extract_section(raw_text, "CER")
+    feedback_text = _extract_section(raw_text, "FEEDBACK")
+    if not rebuttal or not cer_text:
+        result = fallback_cer_result("missing_marker_sections")
+        result["raw_scoring_text"] = raw_text or ""
+        return result
+
+    claim = _parse_marker_score("Claim", cer_text)
+    evidence = _parse_marker_score("Evidence", cer_text)
+    reasoning = _parse_marker_score("Reasoning", cer_text)
+    overall = _parse_marker_score("Overall", cer_text) or _weighted_overall(claim, evidence, reasoning)
+
+    strengths = _parse_bullets(_feedback_subsection(feedback_text, "Strengths"))
+    weaknesses = _parse_bullets(_feedback_subsection(feedback_text, "Weaknesses"))
+    suggestions = _parse_bullets(_feedback_subsection(feedback_text, "Suggestions"))
+
+    return {
+        "is_valid": True,
+        "status": "success",
+        "rebuttal": rebuttal,
+        "cer": {
+            "claim": claim,
+            "evidence": evidence,
+            "reasoning": reasoning,
+            "overall": round(_clamp(overall), 1),
+            "total": round(_clamp(overall), 1),
+        },
+        "cer_breakdown": {
+            "claim": _proportional_breakdown(
+                claim,
+                {
+                    "clarity": (0.4, 40.0),
+                    "relevance": (0.3, 30.0),
+                    "specificity": (0.3, 30.0),
+                },
+            ),
+            "evidence": _proportional_breakdown(
+                evidence,
+                {
+                    "presence": (0.4, 40.0),
+                    "specificity": (0.3, 30.0),
+                    "relevance": (0.3, 30.0),
+                },
+            ),
+            "reasoning": _proportional_breakdown(
+                reasoning,
+                {
+                    "logical_connection": (0.4, 40.0),
+                    "causal_explanation": (0.4, 40.0),
+                    "fallacy_control": (0.2, 20.0),
+                },
+            ),
+        },
+        "feedback": {
+            "strengths": strengths,
+            "weaknesses": weaknesses or ["Cần làm rõ hơn bằng chứng và suy luận."],
+            "suggestions": suggestions or ["Bổ sung ví dụ cụ thể và giải thích quan hệ nhân quả."],
+        },
+        "raw_scoring_text": raw_text or "",
+        "scoring_error": "",
+    }
+
+
 def _weighted_overall(claim: float, evidence: float, reasoning: float) -> float:
     return round((claim * 0.3) + (evidence * 0.3) + (reasoning * 0.4), 1)
 
@@ -157,6 +255,8 @@ def parse_cer_rubric_output(raw_text: str) -> dict:
     try:
         payload = json.loads(strip_json_code_block(raw_text))
     except (TypeError, ValueError, json.JSONDecodeError) as exc:
+        if _extract_section(raw_text, "REBUTTAL"):
+            return _parse_marker_rubric_output(raw_text)
         result = fallback_cer_result(str(exc))
         result["raw_scoring_text"] = raw_text or ""
         return result

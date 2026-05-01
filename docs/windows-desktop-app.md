@@ -8,8 +8,8 @@ static server, and opens it in a native WebView window.
 
 - Windows 10 or newer
 - Python 3.11+
-- Ollama running locally if `DEMO_MODE=false`
-- The configured Ollama model, for example `qwen3:latest`
+- A Groq API key configured in `backend/.env`
+- The configured Groq model, for example `llama-3.3-70b-versatile`
 
 ## Run in development
 

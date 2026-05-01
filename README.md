@@ -10,6 +10,7 @@ AI Debate Trainer là ứng dụng luyện tranh biện dùng FastAPI backend, g
 - `scripts/run_windows_app.ps1`: chạy app desktop ở chế độ phát triển.
 - `scripts/build_windows_app.ps1`: build app Windows thành thư mục `.exe`.
 - `docs/windows-desktop-app.md`: tài liệu riêng cho bản desktop.
+- `docs/groq_api_integration.md`: hướng dẫn cấu hình Groq API.
 
 ## Yêu cầu trước khi chạy
 
@@ -17,7 +18,7 @@ Cần cài:
 
 - Windows 10 hoặc mới hơn.
 - Python 3.11+.
-- Ollama nếu muốn dùng AI thật.
+- Groq API key.
 
 Kiểm tra Python:
 
@@ -25,35 +26,12 @@ Kiểm tra Python:
 python --version
 ```
 
-Kiểm tra Ollama:
+Thêm Groq API key vào `backend/.env`:
 
-```powershell
-ollama list
+```env
+GROQ_API_KEY=your_real_groq_api_key_here
+GROQ_MODEL=llama-3.3-70b-versatile
 ```
-
-Nếu chưa có model mặc định, tải model:
-
-```powershell
-ollama pull qwen3:latest
-```
-
-## Chạy Ollama
-
-Nếu Ollama chưa tự chạy nền, mở một cửa sổ PowerShell riêng và chạy:
-
-```powershell
-ollama serve
-```
-
-Giữ cửa sổ này mở trong lúc dùng app.
-
-Nếu thấy lỗi:
-
-```text
-Only one usage of each socket address is normally permitted
-```
-
-thì thường là Ollama đã chạy sẵn rồi. Lúc đó chỉ cần chạy app.
 
 ## Chạy app Windows
 
@@ -74,20 +52,6 @@ Script sẽ tự:
 6. Mở cửa sổ desktop `AI Debate Trainer`.
 
 Không cần mở `frontend/web.html` trực tiếp bằng trình duyệt. Nếu mở trực tiếp file HTML, frontend có thể báo `Failed to fetch` vì backend chưa chạy.
-
-## Chạy bằng demo mode
-
-Nếu chỉ muốn test UI/backend mà chưa dùng Ollama, bật demo mode trong `backend/.env`:
-
-```env
-DEMO_MODE=true
-```
-
-Sau đó chạy lại:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\run_windows_app.ps1
-```
 
 ## Build file `.exe`
 
@@ -156,16 +120,6 @@ Nếu backend chạy đúng, kết quả là:
 
 Đóng process đang dùng port `8000`, hoặc tắt backend cũ trước khi chạy app lại.
 
-### Ollama không phản hồi
+### Groq không phản hồi
 
-Kiểm tra Ollama:
-
-```powershell
-ollama list
-```
-
-Nếu chưa chạy:
-
-```powershell
-ollama serve
-```
+Kiểm tra `backend/.env` có `GROQ_API_KEY` hợp lệ, `GROQ_MODEL` đúng tên model, tài khoản còn quota, và máy có kết nối mạng.
