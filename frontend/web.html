@@ -765,7 +765,19 @@
     color: #cbd5e1;
     font-size: 21px;
     line-height: 1.65;
+    white-space: pre-wrap;
   }
+  .rebuttal-text.is-typing::after {
+    content: "";
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    margin-left: 4px;
+    vertical-align: -0.12em;
+    background: currentColor;
+    animation: caretBlink 0.9s steps(1) infinite;
+  }
+  @keyframes caretBlink { 50% { opacity: 0; } }
   .empty-message {
     color: var(--muted);
     padding: 28px;
@@ -1700,7 +1712,7 @@
   }
 </style>
 </head>
-<body>
+<body data-theme="blue-pastel">
 <div class="auth-shell" id="auth-shell">
   <section class="auth-view auth-home active" id="auth-home">
     <div class="auth-logo">&#10022;</div>
@@ -1858,8 +1870,8 @@
         <div class="coach-pill"><span class="dot"></span> Huấn luyện viên: Socratic v3</div>
         <button class="soft-pill hidden" id="save-chip" onclick="returnToAuth('login')">Đăng nhập để lưu</button>
         <button class="theme-toggle" id="themeToggle" title="Đổi giao diện">
-          <span class="theme-icon">🌙</span>
-          <span class="theme-label">Dark</span>
+          <span class="theme-icon">☀️</span>
+          <span class="theme-label">Blue</span>
         </button>
         <button class="user-menu-button" id="user-menu-button" onclick="toggleUserMenu(event)">
           <span class="avatar" id="top-avatar">K</span>
@@ -2102,6 +2114,11 @@
   const AUTH_TOKEN_KEY = "ai_debate_trainer.authToken";
   const SIGNUP_DRAFT_KEY = "ai_debate_trainer.signupDraft";
   const THEME_KEY = "ai_debate_theme";
+  const DEFAULT_THEME = "blue-pastel";
+  const TYPEWRITER_INITIAL_DELAY_MS = 360;
+  const TYPEWRITER_CHAR_DELAY_MS = 18;
+  const TYPEWRITER_SPACE_DELAY_MS = 12;
+  const TYPEWRITER_PUNCTUATION_DELAY_MS = 95;
   const THEME_OPTIONS = ["dark", "blue-pastel"];
   const THEME_ICONS = {
     dark: "🌙",
@@ -2145,6 +2162,7 @@
     history: [],
     latest: null,
   };
+  let activeRebuttalAnimation = 0;
 
   const profiles = [
     ["Teen", "13-17 tuổi", "Giọng khích lệ, ví dụ gần gũi", "☃"],
@@ -2201,18 +2219,18 @@
     if (saved && THEME_OPTIONS.includes(saved)) {
       return saved;
     }
-    return "dark";
+    return DEFAULT_THEME;
   }
 
   function applyTheme(theme) {
-    if (!THEME_OPTIONS.includes(theme)) theme = "dark";
+    if (!THEME_OPTIONS.includes(theme)) theme = DEFAULT_THEME;
     document.body.setAttribute("data-theme", theme);
     localStorage.setItem(THEME_KEY, theme);
     updateThemeToggle(theme);
   }
 
   function toggleTheme() {
-    const current = document.body.getAttribute("data-theme") || "dark";
+    const current = document.body.getAttribute("data-theme") || DEFAULT_THEME;
     const currentIndex = THEME_OPTIONS.indexOf(current);
     const nextIndex = (currentIndex + 1) % THEME_OPTIONS.length;
     const nextTheme = THEME_OPTIONS[nextIndex];
@@ -2223,7 +2241,7 @@
     const button = document.getElementById("themeToggle");
     if (!button) return;
     button.querySelector(".theme-icon").textContent = THEME_ICONS[theme] || "🌙";
-    button.querySelector(".theme-label").textContent = THEME_LABELS[theme] || "Dark";
+    button.querySelector(".theme-label").textContent = THEME_LABELS[theme] || THEME_LABELS[DEFAULT_THEME];
   }
 
   function initTheme() {
@@ -2724,14 +2742,15 @@
       state.roundCount += 1;
       state.sessionStatus = turn.status;
       state.latest = turn;
-      state.history.push(turn);
 
       input.value = "";
       updateCharCount();
       renderArenaShell();
-      renderRebuttal(turn.ai_rebuttal);
       renderCER(turn.cer);
       renderFeedback(turn.feedback);
+      setLoading(button, true, "AI đang trả lời...");
+      await renderRebuttal(turn.ai_rebuttal, { animate: true });
+      state.history.push(turn);
       renderTranscript();
 
       if (turn.status === "completed") {
@@ -2867,15 +2886,46 @@
     return [];
   }
 
-  function renderRebuttal(text) {
+  function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function typewriterDelayFor(char) {
+    if (/\s/.test(char)) return TYPEWRITER_SPACE_DELAY_MS;
+    if (/[.!?;:]/.test(char)) return TYPEWRITER_PUNCTUATION_DELAY_MS;
+    if (/[,)]/.test(char)) return 45;
+    return TYPEWRITER_CHAR_DELAY_MS;
+  }
+
+  async function renderRebuttal(text, options = {}) {
     const output = document.getElementById("ai-output");
+    activeRebuttalAnimation += 1;
+    const animationId = activeRebuttalAnimation;
     if (!text) {
       output.className = "empty-message";
       output.textContent = "Chờ lập luận đầu tiên của bạn. Huấn luyện viên AI sẽ phản biện và giải thích điểm cần cải thiện.";
       return;
     }
-    output.className = "rebuttal-text";
-    output.innerHTML = escapeHtml(text);
+    output.className = options.animate ? "rebuttal-text is-typing" : "rebuttal-text";
+    output.setAttribute("aria-live", "polite");
+
+    if (!options.animate) {
+      output.textContent = text;
+      return;
+    }
+
+    output.textContent = "";
+    await wait(TYPEWRITER_INITIAL_DELAY_MS);
+
+    for (const char of Array.from(text)) {
+      if (animationId !== activeRebuttalAnimation) return;
+      output.textContent += char;
+      await wait(typewriterDelayFor(char));
+    }
+
+    if (animationId === activeRebuttalAnimation) {
+      output.className = "rebuttal-text";
+    }
   }
 
   function renderCER(cer) {

@@ -65,6 +65,13 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn("/end", html)
         self.assertNotIn("Rời phiên", html)
 
+    def test_frontend_defaults_to_blue_theme(self):
+        html = read_frontend()
+
+        self.assertIn('<body data-theme="blue-pastel">', html)
+        self.assertIn('const DEFAULT_THEME = "blue-pastel";', html)
+        self.assertIn("return DEFAULT_THEME;", html)
+
 
 if __name__ == "__main__":
     unittest.main()
