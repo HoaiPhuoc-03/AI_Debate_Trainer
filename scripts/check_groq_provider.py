@@ -1,7 +1,13 @@
 import sys
+from pathlib import Path
 
-from app.core.config import settings
-from app.services.ai_service import generate_rebuttal
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+BACKEND_DIR = ROOT_DIR / "backend"
+sys.path.insert(0, str(BACKEND_DIR))
+
+from app.core.config import settings  # noqa: E402
+from app.services.ai_service import generate_rebuttal  # noqa: E402
 
 
 def main():

@@ -9,6 +9,7 @@ AI Debate Trainer là ứng dụng luyện tranh biện dùng FastAPI backend, g
 - `desktop_app.py`: launcher desktop Windows. File này tự bật backend local, serve frontend, rồi mở cửa sổ app.
 - `scripts/run_windows_app.ps1`: chạy app desktop ở chế độ phát triển.
 - `scripts/build_windows_app.ps1`: build app Windows thành thư mục `.exe`.
+- `scripts/check_groq_provider.py`: kiểm tra nhanh cấu hình Groq mà không in API key.
 - `docs/windows-desktop-app.md`: tài liệu riêng cho bản desktop.
 - `docs/groq_api_integration.md`: hướng dẫn cấu hình Groq API.
 

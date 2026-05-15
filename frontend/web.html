@@ -752,6 +752,71 @@
     line-height: 1.45;
     outline: none;
   }
+  .voice-arena-panel {
+    display: none;
+    margin-top: 30px;
+    padding: 30px;
+  }
+  .voice-duel-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 24px;
+  }
+  .voice-side {
+    min-height: 260px;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 18px;
+    padding: 28px;
+    border: 1px solid var(--line-soft);
+    border-radius: 18px;
+    background: rgba(15, 23, 42, 0.42);
+    text-align: center;
+  }
+  .voice-side.ai {
+    background: rgba(37, 99, 235, 0.12);
+  }
+  .voice-avatar {
+    width: 92px;
+    height: 92px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    color: #ffffff;
+    font-size: 42px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--coral), var(--yellow));
+    box-shadow: 0 18px 44px rgba(251, 113, 133, 0.2);
+  }
+  .voice-side.ai .voice-avatar {
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+  }
+  .voice-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .voice-title {
+    font-size: 24px;
+    font-weight: 850;
+  }
+  .voice-status {
+    min-height: 52px;
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1.5;
+  }
+  .voice-action {
+    min-width: 180px;
+    justify-content: center;
+  }
+  body[data-view="arena"][data-input-mode="voice"] .arena-layout {
+    display: none;
+  }
+  body[data-view="arena"][data-input-mode="voice"] .voice-arena-panel {
+    display: block;
+  }
   .argument-footer {
     display: flex;
     align-items: center;
@@ -1690,7 +1755,7 @@
       position: static;
       padding: 18px;
     }
-    .flow-list { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .flow-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .flow-item { grid-template-columns: 1fr; gap: 8px; justify-items: center; text-align: center; }
     .flow-icon { display: none; }
     .streak-card { display: none; }
@@ -1709,6 +1774,1378 @@
     .auth-feature-row, .auth-two-col, .auth-segment-grid, .auth-socials { grid-template-columns: 1fr; }
     .auth-heading-row { align-items: flex-start; }
     .auth-success-card { padding: 28px; }
+  }
+
+  /* Debate arena redesign layer */
+  body {
+    --arena-ink: #15202f;
+    --arena-card: rgba(255, 255, 255, 0.82);
+    --arena-card-strong: rgba(255, 255, 255, 0.94);
+    --arena-edge: rgba(55, 91, 130, 0.18);
+    --arena-shadow: 0 18px 60px rgba(26, 49, 84, 0.12);
+    --arena-cyan: #46b9d8;
+    --arena-violet: #7c6fe8;
+    --arena-coral: #f26d5b;
+    --arena-gold: #d99b23;
+    --arena-green: #11a66a;
+    --arena-ring: rgba(70, 185, 216, 0.24);
+  }
+
+  body[data-theme="dark"] {
+    --arena-ink: #f8fafc;
+    --arena-card: rgba(11, 18, 34, 0.78);
+    --arena-card-strong: rgba(14, 23, 42, 0.94);
+    --arena-edge: rgba(148, 163, 184, 0.2);
+    --arena-shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
+    --arena-cyan: #20e7d1;
+    --arena-violet: #9b87ff;
+    --arena-coral: #fb7185;
+    --arena-gold: #facc15;
+    --arena-green: #10b981;
+    --arena-ring: rgba(32, 231, 209, 0.18);
+  }
+
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  body::before {
+    z-index: 0;
+    background:
+      linear-gradient(115deg, rgba(242, 109, 91, 0.12), transparent 26%),
+      linear-gradient(245deg, rgba(17, 166, 106, 0.1), transparent 30%),
+      conic-gradient(from 160deg at 50% 18%, transparent 0 22%, rgba(124, 111, 232, 0.16) 26% 38%, transparent 44% 100%),
+      linear-gradient(180deg, rgba(70, 185, 216, 0.1), transparent 48%, rgba(217, 155, 35, 0.08));
+  }
+
+  body::after {
+    z-index: 0;
+    opacity: 0.26;
+    background-image:
+      linear-gradient(rgba(55, 91, 130, 0.16) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(55, 91, 130, 0.16) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(circle at 52% 48%, black, transparent 72%);
+  }
+
+  .auth-shell,
+  .app-shell {
+    position: relative;
+    z-index: 1;
+  }
+
+  .auth-shell {
+    place-items: start center;
+    padding-top: 22px;
+  }
+
+  .auth-home {
+    position: relative;
+    isolation: isolate;
+    width: min(calc(100vw - 108px), 1680px);
+    min-height: min(870px, calc(100vh - 58px));
+    padding: 96px 52px 44px;
+    overflow: hidden;
+    border: 1px solid var(--arena-edge);
+    border-radius: 28px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06)),
+      url("assets/login-dragon-battle-bg.png") center / cover no-repeat;
+    box-shadow: var(--arena-shadow);
+    backdrop-filter: blur(18px);
+  }
+
+  .auth-home > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  body[data-theme="dark"] .auth-home {
+    background:
+      linear-gradient(180deg, rgba(14, 23, 42, 0.26), rgba(7, 12, 26, 0.18)),
+      url("assets/login-dragon-battle-bg.png") center / cover no-repeat;
+  }
+
+  .auth-home::before,
+  .auth-home::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    z-index: 1;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .auth-home::before {
+    top: 34px;
+    width: 440px;
+    height: 150px;
+    border: 1px solid rgba(70, 185, 216, 0.28);
+    border-radius: 50%;
+    background:
+      linear-gradient(90deg, transparent, rgba(124, 111, 232, 0.16), transparent),
+      repeating-linear-gradient(90deg, transparent 0 35px, rgba(70, 185, 216, 0.16) 36px 37px);
+    animation: arenaOrbit 11s linear infinite;
+  }
+
+  .auth-home::after {
+    bottom: 40px;
+    width: 76%;
+    height: 3px;
+    border-radius: 999px;
+    background:
+      linear-gradient(90deg, rgba(242, 109, 91, 0.18), rgba(217, 155, 35, 0.12), rgba(17, 166, 106, 0.16));
+  }
+
+  .auth-logo,
+  .brand-mark,
+  .avatar {
+    border-radius: 16px;
+    background:
+      linear-gradient(135deg, var(--arena-cyan), var(--arena-violet)) !important;
+    box-shadow: 0 16px 36px rgba(70, 185, 216, 0.24) !important;
+  }
+
+  .auth-button,
+  .primary-btn {
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(135deg, #1c7ed6, var(--arena-cyan) 52%, var(--arena-green)) !important;
+    color: #ffffff !important;
+    box-shadow: 0 16px 34px rgba(28, 126, 214, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  }
+
+  .auth-button::after,
+  .primary-btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-110%);
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+    transition: transform 0.5s ease;
+  }
+
+  .auth-button:hover,
+  .primary-btn:hover,
+  .choice-card:hover,
+  .line-choice:hover,
+  .flow-item:hover {
+    transform: translateY(-2px);
+  }
+
+  .auth-button:hover::after,
+  .primary-btn:hover::after {
+    transform: translateX(110%);
+  }
+
+  .secondary-btn,
+  .auth-ghost,
+  .soft-pill,
+  .coach-pill,
+  .theme-toggle {
+    background: rgba(255, 255, 255, 0.62) !important;
+    border: 1px solid var(--arena-edge) !important;
+    color: var(--arena-ink) !important;
+    box-shadow: 0 10px 26px rgba(26, 49, 84, 0.07);
+    backdrop-filter: blur(12px);
+  }
+
+  body[data-theme="dark"] .secondary-btn,
+  body[data-theme="dark"] .auth-ghost,
+  body[data-theme="dark"] .soft-pill,
+  body[data-theme="dark"] .coach-pill,
+  body[data-theme="dark"] .theme-toggle {
+    background: rgba(15, 23, 42, 0.62) !important;
+  }
+
+  .sidebar,
+  .topbar {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(18px);
+  }
+
+  body[data-theme="dark"] .sidebar,
+  body[data-theme="dark"] .topbar {
+    background: rgba(7, 12, 26, 0.74) !important;
+  }
+
+  .main {
+    background:
+      linear-gradient(125deg, rgba(70, 185, 216, 0.12), transparent 34%, rgba(242, 109, 91, 0.08)),
+      linear-gradient(135deg, rgba(248, 251, 255, 0.72), rgba(236, 247, 255, 0.48)) !important;
+  }
+
+  body[data-theme="dark"] .main {
+    background:
+      linear-gradient(125deg, rgba(32, 231, 209, 0.1), transparent 34%, rgba(251, 113, 133, 0.08)),
+      linear-gradient(135deg, rgba(7, 12, 26, 0.72), rgba(15, 23, 42, 0.48)) !important;
+  }
+
+  .choice-card,
+  .panel,
+  .summary-card,
+  .progress-card,
+  .setup-footer,
+  .auth-success-card {
+    background: var(--arena-card) !important;
+    border-color: var(--arena-edge) !important;
+    border-radius: 18px !important;
+    box-shadow: var(--arena-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(16px);
+  }
+
+  .choice-card,
+  .line-choice,
+  .flow-item,
+  .auth-segment {
+    transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+  }
+
+  .choice-card.selected,
+  .line-choice.selected,
+  .auth-segment.active,
+  .flow-item.active {
+    background:
+      linear-gradient(135deg, rgba(70, 185, 216, 0.2), rgba(124, 111, 232, 0.12)),
+      var(--arena-card-strong) !important;
+    border-color: rgba(70, 185, 216, 0.52) !important;
+    box-shadow: 0 16px 42px rgba(70, 185, 216, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.34) !important;
+  }
+
+  .choice-radio {
+    border-color: rgba(70, 185, 216, 0.34);
+  }
+
+  .choice-card.selected .choice-radio {
+    border-color: var(--arena-cyan);
+    background: radial-gradient(circle, var(--arena-cyan) 0 38%, transparent 42%);
+    box-shadow: 0 0 0 5px rgba(70, 185, 216, 0.14) !important;
+  }
+
+  .line-choice.selected > span:last-child {
+    color: transparent;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0 28%, var(--arena-green) 32%);
+    box-shadow: 0 0 0 5px rgba(17, 166, 106, 0.14);
+  }
+
+  .session-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .session-card::after {
+    content: "";
+    position: absolute;
+    right: -60px;
+    bottom: -90px;
+    width: 300px;
+    height: 210px;
+    border-radius: 28px;
+    background:
+      linear-gradient(135deg, rgba(242, 109, 91, 0.14), rgba(217, 155, 35, 0.08)),
+      repeating-linear-gradient(90deg, transparent 0 22px, rgba(217, 155, 35, 0.18) 23px 24px);
+    transform: rotate(-10deg);
+    pointer-events: none;
+  }
+
+  #view-home {
+    max-width: min(1040px, 100%);
+  }
+
+  .hub-stack {
+    display: grid;
+    gap: 16px;
+  }
+
+  .hub-row {
+    position: relative;
+    min-height: 142px;
+    display: grid;
+    grid-template-columns: 74px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 20px;
+    padding: 22px 24px;
+    overflow: hidden;
+    border: 1px solid var(--arena-edge);
+    border-radius: 18px;
+    background: var(--arena-card);
+    box-shadow: var(--arena-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.30);
+    backdrop-filter: blur(16px);
+  }
+
+  .hub-row > * {
+    min-width: 0;
+  }
+
+  .hub-row::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 5px;
+    background: linear-gradient(180deg, var(--arena-cyan), var(--arena-green));
+  }
+
+  .hub-row.profile::before {
+    background: linear-gradient(180deg, var(--arena-cyan), var(--arena-violet));
+  }
+
+  .hub-row.arena::before {
+    background: linear-gradient(180deg, var(--arena-coral), var(--arena-gold), var(--arena-cyan), var(--arena-violet));
+  }
+
+  .hub-row.progress::before {
+    background: linear-gradient(180deg, var(--arena-green), var(--arena-cyan));
+  }
+
+  .hub-icon,
+  .tab-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+  }
+
+  .hub-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--arena-cyan), var(--arena-violet));
+    box-shadow: 0 16px 36px rgba(70, 185, 216, 0.20);
+  }
+
+  .hub-row.arena .hub-icon {
+    background: linear-gradient(135deg, var(--arena-coral), var(--arena-gold));
+  }
+
+  .hub-row.progress .hub-icon {
+    background: linear-gradient(135deg, var(--arena-green), var(--arena-cyan));
+  }
+
+  .hub-icon svg,
+  .tab-icon svg {
+    width: 25px;
+    height: 25px;
+    stroke: currentColor;
+    stroke-width: 2.3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+
+  .hub-kicker {
+    color: var(--muted-2);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .hub-title {
+    margin-top: 5px;
+    color: var(--arena-ink);
+    font-size: 23px;
+    line-height: 1.15;
+    font-weight: 800;
+  }
+
+  .hub-copy {
+    max-width: 650px;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .hub-side {
+    min-width: 190px;
+    display: grid;
+    justify-items: end;
+    gap: 12px;
+  }
+
+  .status-chip {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    border-radius: 999px;
+    color: #334155;
+    background: #f8fbff;
+    border: 1px solid #d8e7f5;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  body[data-theme="dark"] .status-chip {
+    color: #e2e8f0;
+    background: rgba(15, 23, 42, 0.62);
+    border-color: var(--arena-edge);
+  }
+
+  .debate-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+    max-width: 660px;
+  }
+
+  .debate-tab {
+    min-height: 64px;
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid #d8e7f5;
+    border-radius: 14px;
+    color: var(--arena-ink);
+    background: #f8fbff;
+    text-align: left;
+  }
+
+  body[data-theme="dark"] .debate-tab {
+    background: rgba(15, 23, 42, 0.62);
+    border-color: var(--arena-edge);
+  }
+
+  .debate-tab.active,
+  .debate-tab:hover {
+    background:
+      linear-gradient(135deg, rgba(70, 185, 216, 0.20), rgba(124, 111, 232, 0.12)),
+      var(--arena-card-strong);
+    border-color: rgba(70, 185, 216, 0.52);
+    box-shadow: 0 10px 24px rgba(79, 158, 232, 0.12);
+  }
+
+  .tab-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    color: #3f83c8;
+    background: #eef6ff;
+  }
+
+  body[data-theme="dark"] .tab-icon {
+    color: var(--arena-cyan);
+    background: rgba(32, 231, 209, 0.10);
+  }
+
+  .debate-tab.active .tab-icon,
+  .debate-tab:hover .tab-icon {
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--arena-cyan), var(--arena-violet));
+  }
+
+  .tab-name {
+    display: block;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .tab-meta {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted-2);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .hub-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .hub-metric {
+    min-width: 86px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: #f8fbff;
+    border: 1px solid #d8e7f5;
+    text-align: center;
+  }
+
+  body[data-theme="dark"] .hub-metric {
+    background: rgba(15, 23, 42, 0.62);
+    border-color: var(--arena-edge);
+  }
+
+  .hub-metric strong {
+    display: block;
+    color: var(--arena-ink);
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .hub-metric span {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted-2);
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .arrow-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .lumi-companion {
+    position: absolute;
+    top: 28px;
+    right: 32px;
+    z-index: 6;
+    width: min(230px, 28vw);
+    display: grid;
+    grid-template-columns: 74px 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px 12px 10px;
+    border: 1px solid var(--arena-edge);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.76);
+    box-shadow: var(--arena-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+    backdrop-filter: blur(16px);
+  }
+
+  body[data-theme="dark"] .lumi-companion {
+    background: rgba(15, 23, 42, 0.72);
+  }
+
+  body[data-view="arena"] .lumi-companion {
+    display: none;
+  }
+
+  .lumi-avatar {
+    position: relative;
+    --lumi-x: -12%;
+    --lumi-y: -13%;
+    --lumi-y-lift: -16%;
+    width: 74px;
+    height: 74px;
+    overflow: visible;
+    border-radius: 18px;
+    background: transparent;
+    border: 0;
+    isolation: isolate;
+  }
+
+  .lumi-avatar img {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 138%;
+    height: 138%;
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+    object-position: 50% 50%;
+    transform: translate(var(--lumi-x), var(--lumi-y));
+    display: block;
+    transform-origin: 52% 62%;
+    filter: drop-shadow(0 12px 18px rgba(31, 75, 128, 0.18));
+    z-index: 1;
+  }
+
+  .lumi-avatar::before,
+  .lumi-stage-token::before {
+    content: "";
+    position: absolute;
+    inset: 9px 7px 6px;
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 58% 35%, rgba(32, 231, 209, 0.42), transparent 46%),
+      radial-gradient(circle at 40% 68%, rgba(124, 111, 232, 0.34), transparent 54%);
+    filter: blur(10px);
+    opacity: 0.72;
+    pointer-events: none;
+    animation: lumiAura 3.8s ease-in-out infinite;
+  }
+
+  .lumi-avatar::after,
+  .lumi-stage-token::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .lumi-companion[data-lumi-state="idle"] .lumi-avatar img,
+  body[data-lumi-state="idle"] .lumi-stage-token img,
+  body[data-lumi-state="idle"] .lumi-title-token img {
+    animation: lumiIdle 3.8s ease-in-out infinite, lumiWingGlint 5.6s ease-in-out infinite;
+  }
+
+  .lumi-companion[data-lumi-state="thinking"] .lumi-avatar img,
+  body[data-lumi-state="thinking"] .lumi-stage-token img,
+  body[data-lumi-state="thinking"] .lumi-title-token img {
+    animation: lumiThinking 0.95s ease-in-out infinite, lumiWingGlint 1.8s ease-in-out infinite;
+    filter: saturate(1.12) drop-shadow(0 12px 22px rgba(70, 185, 216, 0.34));
+  }
+
+  .lumi-companion[data-lumi-state="thinking"] .lumi-avatar::after,
+  body[data-lumi-state="thinking"] .lumi-stage-token::after {
+    right: 8px;
+    top: 8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 28% 50%, #46b9d8 0 2px, transparent 3px),
+      radial-gradient(circle at 50% 50%, #7c6fe8 0 2px, transparent 3px),
+      radial-gradient(circle at 72% 50%, #11a66a 0 2px, transparent 3px),
+      rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(70, 185, 216, 0.30);
+    box-shadow: 0 8px 18px rgba(26, 49, 84, 0.12);
+    animation: lumiBubble 1s ease-in-out infinite;
+    z-index: 2;
+  }
+
+  .lumi-companion[data-lumi-state="victory"] .lumi-avatar,
+  body[data-lumi-state="victory"] .lumi-stage-token {
+    box-shadow: 0 0 0 6px rgba(17, 166, 106, 0.12), 0 18px 34px rgba(17, 166, 106, 0.22);
+  }
+
+  .lumi-companion[data-lumi-state="victory"] .lumi-avatar img,
+  body[data-lumi-state="victory"] .lumi-stage-token img,
+  body[data-lumi-state="victory"] .lumi-title-token img {
+    animation: lumiVictory 0.8s cubic-bezier(.2, .9, .2, 1) 1, lumiIdle 3.8s ease-in-out 0.8s infinite, lumiWingGlint 4.2s ease-in-out 0.8s infinite;
+    filter: saturate(1.18) drop-shadow(0 14px 24px rgba(17, 166, 106, 0.28));
+  }
+
+  .lumi-companion[data-lumi-state="victory"] .lumi-avatar::after,
+  body[data-lumi-state="victory"] .lumi-stage-token::after {
+    right: 5px;
+    top: 4px;
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    content: "★";
+    font-size: 14px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--arena-gold), var(--arena-green));
+    box-shadow: 0 8px 20px rgba(17, 166, 106, 0.24);
+    animation: lumiStar 1.2s ease-in-out infinite;
+    z-index: 2;
+  }
+
+  .lumi-name {
+    color: var(--arena-ink);
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  .lumi-message {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .lumi-stage-token {
+    position: relative;
+    width: 54px;
+    height: 54px;
+    --lumi-x: -13%;
+    --lumi-y: -14%;
+    --lumi-y-lift: -17%;
+    display: block;
+    overflow: visible;
+    padding: 0;
+    background: transparent !important;
+    border-radius: 17px !important;
+    isolation: isolate;
+  }
+
+  .lumi-stage-token img {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 146%;
+    height: 146%;
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+    object-position: 50% 50%;
+    transform: translate(var(--lumi-x), var(--lumi-y));
+    display: block;
+    transform-origin: 52% 62%;
+    filter: drop-shadow(0 10px 16px rgba(31, 75, 128, 0.18));
+    z-index: 1;
+  }
+
+  .lumi-title-token {
+    position: relative;
+    flex: 0 0 auto;
+    width: 58px;
+    height: 58px;
+    --lumi-x: -14%;
+    --lumi-y: -15%;
+    --lumi-y-lift: -18%;
+    display: inline-grid;
+    place-items: center;
+    overflow: visible;
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 58% 38%, rgba(70, 185, 216, 0.22), transparent 48%),
+      rgba(239, 246, 255, 0.74);
+    border: 1px solid rgba(70, 185, 216, 0.16);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42), 0 10px 22px rgba(31, 75, 128, 0.10);
+    isolation: isolate;
+  }
+
+  .lumi-title-token::before {
+    content: "";
+    position: absolute;
+    inset: 8px;
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 55% 40%, rgba(32, 231, 209, 0.42), transparent 46%),
+      radial-gradient(circle at 40% 68%, rgba(124, 111, 232, 0.28), transparent 54%);
+    filter: blur(9px);
+    opacity: 0.62;
+    animation: lumiAura 3.8s ease-in-out infinite;
+  }
+
+  .lumi-title-token img {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 142%;
+    height: 142%;
+    max-width: none;
+    max-height: none;
+    object-fit: contain;
+    object-position: 50% 50%;
+    transform: translate(var(--lumi-x), var(--lumi-y));
+    transform-origin: 52% 62%;
+    filter: drop-shadow(0 10px 16px rgba(31, 75, 128, 0.18));
+    z-index: 1;
+  }
+
+  @keyframes lumiIdle {
+    0%, 100% { transform: translate(var(--lumi-x), var(--lumi-y)) rotate(0deg) scale(1); }
+    35% { transform: translate(calc(var(--lumi-x) + 1%), var(--lumi-y-lift)) rotate(1.4deg) scale(1.025); }
+    70% { transform: translate(calc(var(--lumi-x) - 1%), calc(var(--lumi-y) + 1%)) rotate(-0.8deg) scale(1.01); }
+  }
+
+  @keyframes lumiThinking {
+    0%, 100% { transform: translate(var(--lumi-x), var(--lumi-y)) rotate(-1deg) scale(1); }
+    30% { transform: translate(calc(var(--lumi-x) + 2%), var(--lumi-y-lift)) rotate(3deg) scale(1.045); }
+    60% { transform: translate(calc(var(--lumi-x) - 1%), calc(var(--lumi-y) + 1%)) rotate(-2deg) scale(1.02); }
+  }
+
+  @keyframes lumiVictory {
+    0% { transform: translate(var(--lumi-x), var(--lumi-y)) scale(1); }
+    42% { transform: translate(var(--lumi-x), calc(var(--lumi-y-lift) - 7%)) rotate(-5deg) scale(1.11); }
+    72% { transform: translate(var(--lumi-x), calc(var(--lumi-y) + 3%)) rotate(3deg) scale(1.04); }
+    100% { transform: translate(var(--lumi-x), var(--lumi-y)) rotate(0deg) scale(1); }
+  }
+
+  @keyframes lumiBubble {
+    50% { transform: translateY(-3px) scale(1.06); opacity: 0.78; }
+  }
+
+  @keyframes lumiStar {
+    50% { transform: rotate(10deg) scale(1.12); }
+  }
+
+  @keyframes lumiAura {
+    0%, 100% { transform: scale(0.92); opacity: 0.42; }
+    50% { transform: scale(1.1); opacity: 0.78; }
+  }
+
+  @keyframes lumiWingGlint {
+    0%, 100% { filter: drop-shadow(0 12px 18px rgba(31, 75, 128, 0.18)) saturate(1); }
+    46% { filter: drop-shadow(0 14px 24px rgba(70, 185, 216, 0.34)) saturate(1.14); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lumi-avatar img,
+    .lumi-stage-token img,
+    .lumi-avatar::before,
+    .lumi-stage-token::before,
+    .lumi-avatar::after,
+    .lumi-stage-token::after {
+      animation: none !important;
+    }
+
+  }
+
+  #view-arena {
+    max-width: min(1280px, 100%);
+  }
+
+  .arena-top {
+    z-index: 8;
+    align-items: center;
+  }
+
+  body[data-view="arena"] {
+    overflow: hidden;
+  }
+
+  body[data-view="arena"] .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  body[data-view="arena"] .sidebar,
+  body[data-view="arena"] .topbar {
+    display: none;
+  }
+
+  body[data-view="arena"] .main {
+    height: 100vh;
+    min-height: 100vh;
+  }
+
+  body[data-view="arena"] .content {
+    height: 100vh;
+    padding: 24px 28px 32px;
+    overflow: auto;
+  }
+
+  body[data-view="arena"] #view-arena {
+    width: 100%;
+    max-width: none;
+    min-height: calc(100vh - 56px);
+  }
+
+  body[data-view="arena"] .arena-top {
+    margin-bottom: 18px;
+  }
+
+  body[data-view="arena"] .arena-stage {
+    min-height: 300px;
+  }
+
+  body[data-view="arena"] .arena-layout {
+    grid-template-columns: minmax(0, 1.12fr) minmax(420px, 0.88fr);
+    gap: 24px;
+  }
+
+  body[data-view="arena"] .arena-panel {
+    padding: 28px;
+  }
+
+  body[data-view="arena"] .arena-textarea {
+    min-height: 430px;
+  }
+
+  .arena-stage {
+    position: relative;
+    min-height: 214px;
+    margin-bottom: 18px;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) minmax(210px, 0.9fr) minmax(180px, 1fr);
+    gap: 18px;
+    align-items: stretch;
+    overflow: hidden;
+    border: 1px solid var(--arena-edge);
+    border-radius: 22px;
+    background:
+      conic-gradient(from 205deg at 50% 45%, rgba(242, 109, 91, 0.14), rgba(70, 185, 216, 0.18), rgba(17, 166, 106, 0.1), rgba(242, 109, 91, 0.14)),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.58));
+    box-shadow: var(--arena-shadow);
+    isolation: isolate;
+  }
+
+  body[data-theme="dark"] .arena-stage {
+    background:
+      conic-gradient(from 205deg at 50% 45%, rgba(251, 113, 133, 0.1), rgba(32, 231, 209, 0.14), rgba(16, 185, 129, 0.08), rgba(251, 113, 133, 0.1)),
+      linear-gradient(180deg, rgba(14, 23, 42, 0.82), rgba(7, 12, 26, 0.66));
+  }
+
+  .arena-stage::before,
+  .arena-stage::after {
+    content: "";
+    position: absolute;
+    inset: 16px;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .arena-stage::before {
+    border-radius: 50%;
+    border: 1px solid rgba(70, 185, 216, 0.18);
+    transform: perspective(520px) rotateX(66deg) translateY(28px);
+    background:
+      repeating-radial-gradient(ellipse at center, transparent 0 20px, rgba(70, 185, 216, 0.14) 21px 22px),
+      linear-gradient(90deg, rgba(242, 109, 91, 0.08), rgba(17, 166, 106, 0.08));
+    animation: arenaGlow 4.8s ease-in-out infinite;
+  }
+
+  .arena-stage::after {
+    top: auto;
+    bottom: 24px;
+    height: 58px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(21, 32, 47, 0.18), transparent 70%);
+    filter: blur(8px);
+  }
+
+  .stage-combatant,
+  .stage-core {
+    position: relative;
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.56);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
+    backdrop-filter: blur(12px);
+  }
+
+  body[data-theme="dark"] .stage-combatant,
+  body[data-theme="dark"] .stage-core {
+    border-color: rgba(148, 163, 184, 0.18);
+    background: rgba(15, 23, 42, 0.54);
+  }
+
+  .stage-combatant {
+    display: grid;
+    grid-template-columns: 54px 1fr;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .stage-combatant.ai-side {
+    text-align: right;
+    grid-template-columns: 1fr 54px;
+  }
+
+  .stage-token {
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    border-radius: 17px;
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--arena-coral), var(--arena-gold));
+    box-shadow: 0 16px 36px rgba(242, 109, 91, 0.2);
+  }
+
+  .ai-side .stage-token {
+    background: linear-gradient(135deg, var(--arena-violet), var(--arena-cyan));
+    box-shadow: 0 16px 36px rgba(124, 111, 232, 0.2);
+  }
+
+  .stage-label {
+    color: var(--muted-2);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .stage-name {
+    margin-top: 6px;
+    color: var(--arena-ink);
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.15;
+  }
+
+  .stage-note {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .stage-core {
+    display: grid;
+    align-content: center;
+    text-align: center;
+  }
+
+  .stage-orb {
+    position: relative;
+    width: 88px;
+    height: 68px;
+    margin: 0 auto 12px;
+    border-radius: 18px;
+    clip-path: polygon(12% 0, 88% 0, 100% 26%, 100% 74%, 88% 100%, 12% 100%, 0 74%, 0 26%);
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 800;
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.28), transparent 28%),
+      conic-gradient(from 0deg, var(--arena-coral), var(--arena-gold), var(--arena-green), var(--arena-cyan), var(--arena-violet), var(--arena-coral));
+    box-shadow: 0 0 0 10px var(--arena-ring), 0 18px 38px rgba(70, 185, 216, 0.2);
+    animation: arenaOrb 4.8s ease-in-out infinite;
+  }
+
+  .stage-orb::after {
+    content: "";
+    position: absolute;
+    inset: -12px;
+    border-radius: inherit;
+    border: 1px solid rgba(70, 185, 216, 0.26);
+    animation: arenaPulse 2.5s ease-in-out infinite;
+  }
+
+  .stage-state {
+    color: var(--arena-ink);
+    font-size: 17px;
+    font-weight: 800;
+  }
+
+  .stage-count-caption {
+    margin: -4px 0 10px;
+    color: var(--muted-2);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .stage-topic {
+    max-width: 100%;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .stage-metrics {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .stage-meter {
+    padding: 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.52);
+    border: 1px solid rgba(70, 185, 216, 0.12);
+  }
+
+  body[data-theme="dark"] .stage-meter {
+    background: rgba(15, 23, 42, 0.52);
+  }
+
+  .stage-meter header {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .stage-meter-track {
+    height: 8px;
+    margin-top: 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(99, 116, 139, 0.16);
+  }
+
+  .stage-meter-fill {
+    width: var(--score, 0%);
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--arena-cyan), var(--arena-green));
+    transition: width 0.72s cubic-bezier(.2, .8, .2, 1);
+  }
+
+  .stage-meter:nth-child(2) .stage-meter-fill {
+    background: linear-gradient(90deg, var(--arena-gold), var(--arena-green));
+  }
+
+  .stage-meter:nth-child(3) .stage-meter-fill {
+    background: linear-gradient(90deg, var(--arena-violet), var(--arena-cyan));
+  }
+
+  #view-arena.arena-thinking .stage-orb {
+    animation-duration: 2.2s;
+    filter: saturate(1.18);
+  }
+
+  #view-arena.arena-thinking .arena-stage::before {
+    animation-duration: 1.6s;
+  }
+
+  #view-arena.arena-rebuttal .ai-side {
+    animation: stageNudge 0.7s ease;
+  }
+
+  #view-arena.arena-ready .user-side {
+    animation: stageNudge 0.7s ease;
+  }
+
+  #view-arena.arena-error .stage-orb {
+    background: linear-gradient(135deg, #e11d48, var(--arena-coral));
+    animation: arenaShake 0.36s ease;
+  }
+
+  .arena-panel {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .arena-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: linear-gradient(90deg, var(--arena-coral), var(--arena-gold), var(--arena-cyan), var(--arena-violet));
+    opacity: 0.82;
+  }
+
+  .arena-textarea {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(248, 251, 255, 0.86)) !important;
+    border-color: rgba(70, 185, 216, 0.22) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  body[data-theme="dark"] .arena-textarea {
+    background:
+      linear-gradient(180deg, rgba(8, 13, 28, 0.82), rgba(15, 23, 42, 0.76)) !important;
+  }
+
+  .arena-textarea:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 4px rgba(70, 185, 216, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.34) !important;
+  }
+
+  .rebuttal-text,
+  .bubble,
+  .feedback-list,
+  .score-line {
+    color: var(--muted) !important;
+  }
+
+  .transcript-item {
+    animation: slideUpSoft 0.36s ease both;
+  }
+
+  .speaker {
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(242, 109, 91, 0.18), rgba(217, 155, 35, 0.18)) !important;
+    color: var(--arena-coral) !important;
+  }
+
+  .speaker.ai {
+    background: linear-gradient(135deg, rgba(124, 111, 232, 0.18), rgba(70, 185, 216, 0.18)) !important;
+    color: var(--arena-violet) !important;
+  }
+
+  .bar-fill {
+    transition: width 0.72s cubic-bezier(.2, .8, .2, 1);
+  }
+
+  .score-tile {
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+  }
+
+  .score-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(26, 49, 84, 0.1);
+  }
+
+  .chart polyline {
+    stroke-dasharray: 900;
+    stroke-dashoffset: 900;
+    animation: drawLine 1.4s ease forwards;
+  }
+
+  .chart polyline:nth-child(2) {
+    animation-delay: 0.16s;
+  }
+
+  .chart polyline:nth-child(3) {
+    animation-delay: 0.28s;
+  }
+
+  @keyframes arenaOrb {
+    50% {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 0 0 14px var(--arena-ring), 0 22px 44px rgba(70, 185, 216, 0.24);
+    }
+  }
+
+  @keyframes arenaOrbit {
+    50% { transform: translateX(-50%) rotate(1.5deg) scale(1.03); }
+  }
+
+  @keyframes arenaPulse {
+    50% { transform: scale(1.12); opacity: 0.44; }
+  }
+
+  @keyframes arenaGlow {
+    50% { opacity: 0.62; transform: perspective(520px) rotateX(66deg) translateY(20px) scale(1.04); }
+  }
+
+  @keyframes stageNudge {
+    0% { transform: translateY(0); }
+    35% { transform: translateY(-5px); }
+    100% { transform: translateY(0); }
+  }
+
+  @keyframes arenaShake {
+    25% { transform: translateX(-3px); }
+    50% { transform: translateX(3px); }
+    75% { transform: translateX(-2px); }
+  }
+
+  @keyframes slideUpSoft {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes drawLine {
+    to { stroke-dashoffset: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  @media (max-width: 1180px) {
+    .auth-home {
+      padding: 54px 22px 30px;
+      border-radius: 22px;
+      width: min(calc(100vw - 36px), 100%);
+    }
+
+    .arena-stage {
+      grid-template-columns: 1fr;
+      min-height: auto;
+      padding: 16px;
+    }
+
+    .stage-combatant,
+    .stage-combatant.ai-side {
+      grid-template-columns: 46px 1fr;
+      text-align: left;
+    }
+
+    .stage-combatant.ai-side .stage-token {
+      order: -1;
+    }
+
+    .stage-metrics {
+      grid-template-columns: 1fr;
+    }
+
+    .voice-duel-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .arena-top {
+      position: static;
+    }
+
+    .hub-row {
+      grid-template-columns: 58px minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .hub-side {
+      grid-column: 1 / -1;
+      min-width: 0;
+      justify-items: start;
+    }
+
+    .hub-metrics {
+      justify-content: flex-start;
+    }
+
+    .debate-tabs {
+      grid-template-columns: 1fr;
+    }
+
+    .lumi-companion {
+      position: static;
+      width: min(100%, 360px);
+      margin: 0 0 22px auto;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .topbar {
+      padding: 0 18px;
+      gap: 12px;
+    }
+
+    .breadcrumb {
+      min-width: 0;
+      font-size: 13px;
+    }
+
+    .breadcrumb strong {
+      display: block;
+      margin-left: 0;
+      font-size: 14px;
+    }
+
+    .coach-pill {
+      display: none;
+    }
+
+    .user-menu-button {
+      padding-right: 5px;
+    }
+
+    .user-menu-button > span:nth-child(2),
+    .user-caret {
+      display: none;
+    }
+
+    .hub-row {
+      grid-template-columns: 1fr;
+      padding: 22px;
+    }
+
+    .hub-title {
+      font-size: 22px;
+    }
+
+    .hub-copy {
+      font-size: 14px;
+    }
+
+    .lumi-companion {
+      width: 100%;
+      margin: 0 0 18px;
+    }
+
   }
 </style>
 </head>
@@ -1805,7 +3242,7 @@
       <div class="auth-success-icon">&#10003;</div>
       <h1 class="auth-title" style="font-size:32px">Tài khoản đã được tạo</h1>
       <p class="auth-copy" style="margin-bottom:34px">Hồ sơ tranh biện của bạn đã sẵn sàng. Hãy kiểm tra nhanh các tùy chọn cá nhân.</p>
-      <button class="auth-button" onclick="enterApp('account', 'profile')">Tiếp tục tới hồ sơ &rarr;</button>
+        <button class="auth-button" onclick="enterApp('account', 'home')">Tiếp tục &rarr;</button>
     </div>
   </section>
 
@@ -1852,7 +3289,7 @@
     </div>
 
     <div>
-      <div class="flow-label">Quy trình</div>
+      <div class="flow-label">Điều hướng</div>
       <div class="flow-list" id="flow-list"></div>
     </div>
 
@@ -1890,10 +3327,11 @@
             </div>
           </div>
           <div class="menu-list">
+            <button class="menu-item" onclick="goToView('home')">Trang chính</button>
             <button class="menu-item" onclick="goToView('profile')">Xem hồ sơ</button>
             <button class="menu-item" onclick="goToView('profile')">Chỉnh tùy chọn</button>
             <button class="menu-item" onclick="goToView('summary')">Lịch sử phiên</button>
-            <button class="menu-item active" onclick="goToView('progress')">Bảng tiến độ</button>
+            <button class="menu-item" onclick="goToView('progress')">Bảng tiến độ</button>
             <button class="menu-item danger" onclick="logoutUser()">Đăng xuất</button>
           </div>
         </div>
@@ -1901,7 +3339,86 @@
     </header>
 
     <section class="content">
-      <section class="view active" id="view-profile">
+      <aside class="lumi-companion" id="lumi-companion" aria-live="polite">
+        <div class="lumi-avatar"><img src="assets/lumi-paper-dragon-cutout.png" alt="Lumi, rồng giấy huấn luyện tranh biện"></div>
+        <div>
+          <div class="lumi-name">Lumi</div>
+          <div class="lumi-message" id="lumi-message">Sẵn sàng mài sắc lập luận của bạn.</div>
+        </div>
+      </aside>
+
+      <section class="view active" id="view-home">
+        <div class="eyebrow">Bắt đầu nhanh</div>
+        <h1 class="page-title">Chọn khu vực bạn muốn tiếp tục</h1>
+        <p class="page-copy">Chào mừng trở lại. Bạn có thể cập nhật hồ sơ, bắt đầu một phiên tranh biện mới hoặc xem tiến độ luyện tập gần đây.</p>
+
+        <div class="hub-stack">
+          <article class="hub-row profile">
+            <div class="hub-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c1.7-4 14.3-4 16 0"></path></svg>
+            </div>
+            <div>
+              <div class="hub-kicker">Cá nhân hóa</div>
+              <h2 class="hub-title">Thiết lập hồ sơ</h2>
+              <p class="hub-copy">Cập nhật nhóm tuổi, trình độ, ngôn ngữ và cách nhập lập luận để AI điều chỉnh phản hồi đúng mức.</p>
+            </div>
+            <div class="hub-side">
+              <span class="status-chip"><span class="dot"></span><span id="hub-profile-status">Hồ sơ sẵn sàng</span></span>
+              <button class="secondary-btn" onclick="goToView('profile')"><span class="arrow-icon">→</span> Mở hồ sơ</button>
+            </div>
+          </article>
+
+          <article class="hub-row arena">
+            <div class="hub-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 4l10 16"></path><path d="M17 4 7 20"></path><path d="M5 7h4"></path><path d="M15 7h4"></path></svg>
+            </div>
+            <div>
+              <div class="hub-kicker">Luồng chính</div>
+              <h2 class="hub-title">Đấu trường tranh biện</h2>
+              <p class="hub-copy">Đi từ tạo phiên, vào sân tranh biện, rồi xem phần tổng kết CER ngay trong cùng một cụm điều hướng.</p>
+              <div class="debate-tabs" aria-label="Điều hướng đấu trường">
+                <button class="debate-tab active" onclick="goToView('session')">
+                  <span class="tab-icon"><svg viewBox="0 0 24 24"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg></span>
+                  <span><span class="tab-name">Tạo phiên</span><span class="tab-meta">Chủ đề · lập trường</span></span>
+                </button>
+                <button class="debate-tab" onclick="goToArenaFromHub()">
+                  <span class="tab-icon"><svg viewBox="0 0 24 24"><path d="M4 12h4l2-5 4 10 2-5h4"></path></svg></span>
+                  <span><span class="tab-name">Đấu trường</span><span class="tab-meta">Nhập lập luận</span></span>
+                </button>
+                <button class="debate-tab" onclick="goToSummaryFromHub()">
+                  <span class="tab-icon"><svg viewBox="0 0 24 24"><path d="M5 19V5"></path><path d="M9 19V9"></path><path d="M13 19v-6"></path><path d="M17 19V7"></path></svg></span>
+                  <span><span class="tab-name">Tổng kết</span><span class="tab-meta">CER · góp ý</span></span>
+                </button>
+              </div>
+            </div>
+            <div class="hub-side">
+              <span class="status-chip" id="hub-session-status">Chưa có phiên</span>
+              <button class="primary-btn" onclick="goToArenaFromHub()"><span class="arrow-icon">→</span> Vào đấu trường</button>
+            </div>
+          </article>
+
+          <article class="hub-row progress">
+            <div class="hub-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 19V5"></path><path d="M8 17l4-5 3 3 5-8"></path><path d="M8 17h12"></path></svg>
+            </div>
+            <div>
+              <div class="hub-kicker">Theo dõi</div>
+              <h2 class="hub-title">Xem tiến độ</h2>
+              <p class="hub-copy">Xem số phiên, điểm CER trung bình, kỹ năng mạnh nhất và kỹ năng cần luyện thêm qua các lần tranh biện.</p>
+            </div>
+            <div class="hub-side">
+              <div class="hub-metrics">
+                <div class="hub-metric"><strong id="hub-total-sessions">0</strong><span>phiên</span></div>
+                <div class="hub-metric"><strong id="hub-avg-score">0</strong><span>CER TB</span></div>
+                <div class="hub-metric"><strong id="hub-streak-days">0</strong><span>ngày</span></div>
+              </div>
+              <button class="secondary-btn" onclick="goToView('progress')"><span class="arrow-icon">→</span> Mở tiến độ</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="view-profile">
         <div class="eyebrow">Chào mừng</div>
         <h1 class="page-title">Thiết lập hồ sơ tranh biện</h1>
         <p class="page-copy">Luyện lập luận, nhận phản biện và cải thiện logic. Hồ sơ giúp huấn luyện viên AI điều chỉnh giọng điệu, ngôn ngữ và độ sâu phản hồi.</p>
@@ -1980,6 +3497,67 @@
           </div>
         </div>
 
+        <div class="arena-stage" id="arena-stage" aria-live="polite">
+          <div class="stage-combatant user-side">
+            <div class="stage-token">B</div>
+            <div>
+              <div class="stage-label">Người tranh biện</div>
+              <div class="stage-name" id="arena-user-name">Bạn</div>
+              <div class="stage-note">Xây luận điểm, đưa bằng chứng, khóa suy luận.</div>
+            </div>
+          </div>
+          <div class="stage-core">
+            <div class="stage-orb" id="arena-round-value">0</div>
+            <div class="stage-count-caption">lần AI phản biện</div>
+            <div class="stage-state" id="arena-state-label">Sân đấu đã mở</div>
+            <div class="stage-topic" id="arena-topic-line">Chưa có topic</div>
+          </div>
+          <div class="stage-combatant ai-side">
+            <div>
+              <div class="stage-label">AI Coach</div>
+              <div class="stage-name">Lumi</div>
+              <div class="stage-note">Rồng giấy soi điểm yếu và chấm CER theo từng lượt.</div>
+            </div>
+            <div class="stage-token lumi-stage-token"><img src="assets/lumi-paper-dragon-cutout.png" alt="Lumi"></div>
+          </div>
+          <div class="stage-metrics">
+            <div class="stage-meter">
+              <header><span>Luận điểm</span><strong id="arena-claim-metric">0</strong></header>
+              <div class="stage-meter-track"><div class="stage-meter-fill" id="arena-claim-bar"></div></div>
+            </div>
+            <div class="stage-meter">
+              <header><span>Bằng chứng</span><strong id="arena-evidence-metric">0</strong></header>
+              <div class="stage-meter-track"><div class="stage-meter-fill" id="arena-evidence-bar"></div></div>
+            </div>
+            <div class="stage-meter">
+              <header><span>Lập luận</span><strong id="arena-reasoning-metric">0</strong></header>
+              <div class="stage-meter-track"><div class="stage-meter-fill" id="arena-reasoning-bar"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel arena-panel voice-arena-panel" id="voice-arena-panel" aria-live="polite">
+          <div class="panel-head">
+            <div class="panel-title">🎙 Phiên voice</div>
+            <span class="chip teal">Voice-only</span>
+          </div>
+          <div id="voice-error" class="screen-error"></div>
+          <div class="voice-duel-grid">
+            <div class="voice-side">
+              <div class="voice-avatar">B</div>
+              <div class="voice-title" id="voice-user-title">Bạn</div>
+              <div class="voice-status" id="voice-user-status">Bấm mic để nói lập luận. Hệ thống sẽ chuyển giọng nói thành transcript và gửi vào phiên.</div>
+              <button class="primary-btn voice-action" id="voice-record-btn" type="button" onclick="startVoiceTurn()">🎙 Nói lượt này</button>
+            </div>
+            <div class="voice-side ai">
+              <div class="voice-avatar"><img src="assets/lumi-paper-dragon-cutout.png" alt="Lumi"></div>
+              <div class="voice-title">Lumi</div>
+              <div class="voice-status" id="voice-ai-status">Lumi sẽ phản biện bằng giọng nói sau khi nhận lượt của bạn.</div>
+              <button class="secondary-btn voice-action" id="voice-replay-btn" type="button" onclick="speakLatestRebuttal()" disabled>🔊 Nghe lại</button>
+            </div>
+          </div>
+        </div>
+
         <div class="arena-layout">
           <div class="arena-stack">
             <div class="panel arena-panel">
@@ -1991,8 +3569,8 @@
               <textarea class="arena-textarea" id="user-input" placeholder="Nhập lập luận của bạn tại đây..." maxlength="1200" oninput="updateCharCount()"></textarea>
               <div class="argument-footer">
                 <div class="hint">💡 <span>Gợi ý: <strong>Luận điểm → Bằng chứng → Lập luận</strong></span></div>
-                <div class="chips">
-                  <button class="secondary-btn" type="button">🎙 Giọng nói</button>
+                <div class="chips" id="argument-actions">
+                  <button class="secondary-btn" id="voice-input-btn" type="button">🎙 Giọng nói</button>
                   <button class="primary-btn" id="debate-btn" onclick="submitArgument()">✈ Gửi</button>
                 </div>
               </div>
@@ -2010,7 +3588,7 @@
           <div class="arena-stack">
             <div class="panel arena-panel">
               <div class="panel-head">
-                <div class="panel-title"><span class="icon-box" style="background:#6d5dfc;color:white">🤖</span> Phản biện của AI</div>
+                <div class="panel-title"><span class="lumi-title-token" aria-hidden="true"><img src="assets/lumi-paper-dragon-cutout.png" alt=""></span> Phản biện của Lumi</div>
                 <span class="chip purple">Phản biện</span>
               </div>
               <div id="ai-output" class="empty-message">Chờ lập luận đầu tiên của bạn. Huấn luyện viên AI sẽ phản biện và giải thích điểm cần cải thiện.</div>
@@ -2128,13 +3706,25 @@
     dark: "Dark",
     "blue-pastel": "Blue"
   };
+  const LUMI_MESSAGES = {
+    home: "Chọn hướng luyện hôm nay, mình sẽ giữ nhịp cho bạn.",
+    profile: "Hồ sơ càng rõ, phản biện càng đúng sức.",
+    session: "Một topic tốt nên có hai phía tranh luận rõ ràng.",
+    arena: "Tập trung vào Claim, Evidence, Reasoning.",
+    summary: "Xem điểm yếu nhất rồi luyện lại một lượt ngắn.",
+    progress: "Tiến bộ nhỏ mỗi ngày sẽ cộng dồn rất nhanh.",
+  };
+  const LUMI_STATE_MESSAGES = {
+    idle: "",
+    thinking: "Lumi đang phân tích điểm yếu trong lập luận...",
+    victory: "Điểm CER tốt. Lumi rất hài lòng với lượt này!",
+  };
+  const LUMI_GOOD_CER_THRESHOLD = 70;
 
   const flowSteps = [
-    ["profile", "⚙", "Hồ sơ"],
-    ["session", "▣", "Tạo phiên"],
-    ["arena", "⚔", "Đấu trường"],
-    ["summary", "◔", "Tổng kết"],
-    ["progress", "⌁", "Tiến độ"],
+    { id: "home", icon: "◆", title: "Trang chính", target: "home", matches: ["home"] },
+    { id: "debate", icon: "◇", title: "Đấu trường", target: "session", matches: ["session", "arena", "summary"] },
+    { id: "progress", icon: "◎", title: "Tiến độ", target: "progress", matches: ["progress"] },
   ];
 
   const state = {
@@ -2147,7 +3737,7 @@
     userName: "Khách",
     userEmail: "",
     language: "English",
-    view: "profile",
+    view: "home",
     age: "Adult",
     level: "Intermediate",
     inputMode: "Text",
@@ -2159,10 +3749,13 @@
     sessionStatus: "active",
     roundCount: 0,
     isSubmitting: false,
+    lumiState: "idle",
     history: [],
     latest: null,
   };
   let activeRebuttalAnimation = 0;
+  let voiceRecognition = null;
+  let voiceDraft = "";
 
   const profiles = [
     ["Teen", "13-17 tuổi", "Giọng khích lệ, ví dụ gần gũi", "☃"],
@@ -2265,11 +3858,11 @@
     updateProfileSummary();
     updateSessionSummary();
     updateUserTopbar();
-    goToView("profile");
+    goToView("home");
     if (state.authToken) {
       const restored = await restoreCurrentUser();
       if (restored) {
-        enterApp("account", "progress");
+        enterApp("account", "home");
         return;
       }
     }
@@ -2359,6 +3952,10 @@
       ["progress-weakness", "-"],
       ["progress-strength-note", "Chưa có dữ liệu"],
       ["progress-weakness-note", "Chưa có dữ liệu"],
+      ["hub-total-sessions", "0"],
+      ["hub-avg-score", "0"],
+      ["hub-streak-days", "0"],
+      ["hub-session-status", "Chưa có phiên"],
     ].forEach(([id, value]) => {
       const el = document.getElementById(id);
       if (el) el.textContent = value;
@@ -2374,7 +3971,7 @@
     sessionStorage.removeItem(SIGNUP_DRAFT_KEY);
   }
 
-  function enterApp(mode = "guest", view = "profile") {
+  function enterApp(mode = "guest", view = "home") {
     state.authMode = mode;
     state.guestMode = mode === "guest";
     if (state.guestMode) {
@@ -2396,7 +3993,7 @@
 
   function enterGuestMode() {
     clearAuthState();
-    enterApp("guest", "profile");
+    enterApp("guest", "home");
   }
 
   function returnToAuth(view = "home") {
@@ -2466,7 +4063,7 @@
       clearAuthState();
       const remember = Boolean(document.getElementById("remember-login")?.checked);
       applyAuthSession(data, remember);
-      enterApp("account", "progress");
+      enterApp("account", "home");
     } catch (error) {
       clearAuthState();
       updateUserTopbar();
@@ -2538,11 +4135,11 @@
   }
 
   function renderFlow() {
-    document.getElementById("flow-list").innerHTML = flowSteps.map(([id, icon, title], index) => `
-      <button class="flow-item" data-flow="${id}" onclick="goToView('${id}')">
+    document.getElementById("flow-list").innerHTML = flowSteps.map((step, index) => `
+      <button class="flow-item" data-flow="${step.id}" onclick="goToView('${step.target}')">
         <span class="flow-index">${index + 1}</span>
-        <span class="flow-icon">${icon}</span>
-        <span class="flow-title">${title}</span>
+        <span class="flow-icon">${step.icon}</span>
+        <span class="flow-title">${step.title}</span>
       </button>
     `).join("");
   }
@@ -2590,6 +4187,8 @@
     renderSessionOptions();
     updateProfileSummary();
     updateSessionSummary();
+    if (key === "inputMode") renderArgumentControls();
+    syncInputModeDataset();
   }
 
   function setSessionTopic(value) {
@@ -2600,24 +4199,151 @@
 
   function updateProfileSummary() {
     document.getElementById("profile-summary").textContent = `${displayValue(state.age)} · ${displayValue(state.level)} · ${displayValue(state.inputMode)}`;
+    renderHomeHub();
   }
 
   function updateSessionSummary() {
     const topic = getTopic();
     document.getElementById("session-ready").textContent = `${topic ? "Phiên sẵn sàng" : "Cần nhập chủ đề"} · ${topic ? displayValue(topic) : "Chưa có topic"} · ${displayValue(state.stance)} · ${displayValue(state.difficulty)}`;
+    renderHomeHub();
+    renderLumiCompanion();
+  }
+
+  function renderHomeHub() {
+    setText("hub-profile-status", getProfileStatusLabel());
+    setText("hub-session-status", getSessionStatusLabel());
+  }
+
+  function getProfileStatusLabel() {
+    const completed = [state.age, state.level, state.inputMode].filter(Boolean).length;
+    return completed >= 3 ? "Hồ sơ sẵn sàng" : `Hồ sơ ${Math.round((completed / 3) * 100)}%`;
+  }
+
+  function getSessionStatusLabel() {
+    if (!state.sessionId) return "Chưa có phiên";
+    if (state.sessionStatus === "completed") return `Phiên đã xong · ${state.roundCount || state.history.length} lượt`;
+    if (state.history.length) return `Phiên đang mở · ${state.history.length} lượt`;
+    return "Phiên đã tạo";
+  }
+
+  function goToArenaFromHub() {
+    if (state.sessionId) {
+      renderArenaShell();
+      goToView("arena");
+      return;
+    }
+    goToView("session");
+  }
+
+  function goToSummaryFromHub() {
+    if (!state.sessionId && !state.history.length) {
+      goToView("session");
+      return;
+    }
+    goToView("summary");
+  }
+
+  function updateHubProgress(data = {}) {
+    setText("hub-total-sessions", data.total_sessions ?? 0);
+    setText("hub-avg-score", Math.round(toScore(data.overall_score)));
+    setText("hub-streak-days", data.streak_days ?? 0);
   }
 
   function goToView(view) {
     closeUserMenu();
     state.view = view;
+    document.body.dataset.view = view;
+    syncInputModeDataset();
     document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
-    document.getElementById(`view-${view}`).classList.add("active");
+    const target = document.getElementById(`view-${view}`);
+    if (!target) return;
+    target.classList.add("active");
+    syncArenaFocusMode(view);
     document.querySelector(".content").scrollTop = 0;
-    document.querySelectorAll(".flow-item").forEach(el => el.classList.toggle("active", el.dataset.flow === view));
-    const label = flowSteps.find(step => step[0] === view)?.[2] || "Hồ sơ";
-    document.getElementById("breadcrumb").innerHTML = `${view === "progress" ? "Tiến độ" : view === "arena" || view === "summary" ? "Phiên" : "Thiết lập"} <strong>${label}</strong>`;
+    const activeFlow = flowSteps.find(step => step.matches.includes(view)) || flowSteps[0];
+    document.querySelectorAll(".flow-item").forEach(el => el.classList.toggle("active", el.dataset.flow === activeFlow.id));
+    const breadcrumbs = {
+      home: ["Sau đăng nhập", "Bảng điều hướng"],
+      profile: ["Thiết lập", "Hồ sơ"],
+      session: ["Đấu trường", "Tạo phiên"],
+      arena: ["Đấu trường", "Phiên tranh biện"],
+      summary: ["Đấu trường", "Tổng kết"],
+      progress: ["Tiến độ", "Bảng tiến độ"],
+    };
+    const [section, label] = breadcrumbs[view] || breadcrumbs.profile;
+    document.getElementById("breadcrumb").innerHTML = `${section} <strong>${label}</strong>`;
+    renderLumiCompanion();
+    if (view === "home") {
+      renderHomeHub();
+      renderProgressTopics();
+    }
     if (view === "summary") renderSummary();
     if (view === "progress") renderProgressTopics();
+  }
+
+  function renderLumiCompanion() {
+    syncLumiState(getLumiStateForContext());
+  }
+
+  function syncLumiState(nextState = "idle") {
+    state.lumiState = nextState;
+    document.body.dataset.lumiState = nextState;
+    const companion = document.getElementById("lumi-companion");
+    if (companion) companion.dataset.lumiState = nextState;
+    setText("lumi-message", getLumiMessage(nextState));
+  }
+
+  function getLumiStateForContext() {
+    if (state.isSubmitting) return "thinking";
+    const latestScore = getLatestCERScore();
+    if ((state.view === "arena" || state.view === "summary") && latestScore >= LUMI_GOOD_CER_THRESHOLD) {
+      return "victory";
+    }
+    return "idle";
+  }
+
+  function getLumiMessage(lumiState) {
+    if (LUMI_STATE_MESSAGES[lumiState]) return LUMI_STATE_MESSAGES[lumiState];
+    if (state.view === "session" && getTopic()) {
+      return "Topic đã ổn. Bước tiếp theo là chọn nhịp phản biện.";
+    }
+    return LUMI_MESSAGES[state.view] || LUMI_MESSAGES.home;
+  }
+
+  function getLatestCERScore(cer = state.latest?.cer) {
+    if (!cer) return 0;
+    return Math.round(toScore(cer.overall ?? cer.total));
+  }
+
+  function syncArenaFocusMode(view) {
+    const isArena = view === "arena";
+    document.body.classList.toggle("arena-focus-mode", isArena);
+    if (isArena) {
+      requestArenaFullscreen();
+    } else {
+      exitArenaFullscreen();
+    }
+  }
+
+  function requestArenaFullscreen() {
+    const root = document.documentElement;
+    if (!root.requestFullscreen || document.fullscreenElement) return;
+    try {
+      const fullscreenRequest = root.requestFullscreen();
+      if (fullscreenRequest?.catch) fullscreenRequest.catch(() => {});
+    } catch (error) {
+      // Browser or desktop shell may block fullscreen without a direct user gesture.
+    }
+  }
+
+  function exitArenaFullscreen() {
+    if (!document.fullscreenElement || !document.exitFullscreen) return;
+    try {
+      const fullscreenExit = document.exitFullscreen();
+      if (fullscreenExit?.catch) fullscreenExit.catch(() => {});
+    } catch (error) {
+      // Leaving focus mode should never block regular navigation.
+    }
   }
 
   function normalizeTopicText(value) {
@@ -2700,12 +4426,49 @@
 
   function renderArenaShell() {
     renderSessionChips();
+    renderArenaStage();
+    renderArgumentControls();
+    renderVoiceControls();
+    setArenaPulse(state.roundCount ? "ready" : "");
     document.getElementById("user-input").value = "";
     updateCharCount();
     renderTranscript();
     renderRebuttal(null);
     renderCER(null);
     renderFeedback(null);
+  }
+
+  function isTextInputMode() {
+    return state.inputMode === "Text";
+  }
+
+  function isVoiceInputMode() {
+    return state.inputMode === "Voice";
+  }
+
+  function syncInputModeDataset() {
+    document.body.dataset.inputMode = isVoiceInputMode() ? "voice" : "text";
+  }
+
+  function renderArgumentControls() {
+    syncInputModeDataset();
+    const voiceButton = document.getElementById("voice-input-btn");
+    if (!voiceButton) return;
+    voiceButton.classList.toggle("hidden", isTextInputMode());
+    voiceButton.setAttribute("aria-hidden", isTextInputMode() ? "true" : "false");
+    renderVoiceControls();
+  }
+
+  function renderVoiceControls() {
+    const recordButton = document.getElementById("voice-record-btn");
+    const replayButton = document.getElementById("voice-replay-btn");
+    setText("voice-user-title", state.currentUser?.display_name || state.userName || "Bạn");
+    if (recordButton) {
+      recordButton.disabled = state.isSubmitting || state.sessionStatus === "completed";
+      if (!recordButton.dataset.label) recordButton.dataset.label = recordButton.textContent;
+      if (!state.isSubmitting && state.sessionStatus !== "completed") recordButton.textContent = recordButton.dataset.label;
+    }
+    if (replayButton) replayButton.disabled = !state.latest?.ai_rebuttal;
   }
 
   function renderSessionChips() {
@@ -2715,12 +4478,133 @@
       <span class="chip yellow">${escapeHtml(displayValue(state.difficulty))}</span>
       <span class="chip">Lượt ${state.roundCount} / 3</span>
     `;
+    renderHomeHub();
+    renderArenaStage();
   }
 
-  async function submitArgument() {
+  function setArenaPulse(mode = "") {
+    const arena = document.getElementById("view-arena");
+    if (!arena) return;
+    arena.classList.remove("arena-thinking", "arena-rebuttal", "arena-ready", "arena-error");
+    if (mode) arena.classList.add(`arena-${mode}`);
+  }
+
+  function renderArenaStage(cer = state.latest?.cer || null) {
+    const stage = document.getElementById("arena-stage");
+    if (!stage) return;
+    const round = Math.min(Number(state.roundCount) || 0, 3);
+    const topic = getTopic() || "Chưa có topic";
+    const displayName = state.currentUser?.display_name || state.userName || "Bạn";
+    const statusLabel = state.isSubmitting
+      ? "AI đang phản biện"
+      : state.sessionStatus === "completed"
+        ? "Phiên đã khép lại"
+        : round > 0
+          ? "Sẵn sàng lượt kế tiếp"
+          : "Sân đấu đã mở";
+    const scores = {
+      claim: cer ? Math.round(cer.claim || 0) : 0,
+      evidence: cer ? Math.round(cer.evidence || 0) : 0,
+      reasoning: cer ? Math.round(cer.reasoning || 0) : 0,
+    };
+
+    setText("arena-user-name", displayName);
+    setText("arena-round-value", round);
+    setText("arena-state-label", statusLabel);
+    setText("arena-topic-line", topic);
+    updateStageMetric("claim", scores.claim);
+    updateStageMetric("evidence", scores.evidence);
+    updateStageMetric("reasoning", scores.reasoning);
+  }
+
+  function updateStageMetric(key, value) {
+    const metric = document.getElementById(`arena-${key}-metric`);
+    const bar = document.getElementById(`arena-${key}-bar`);
+    if (metric) metric.textContent = value;
+    if (bar) bar.style.setProperty("--score", `${value}%`);
+  }
+
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  function getSpeechRecognition() {
+    return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  }
+
+  function startVoiceTurn() {
+    hideOptionalError("voice-error");
+    hideError("form-error");
+    if (state.isSubmitting) return;
+    if (!state.sessionId) return showError("voice-error", "Chưa có phiên tranh biện. Hãy tạo phiên trước.");
+    if (state.sessionStatus === "completed") return showError("voice-error", "Phiên này đã hoàn tất. Hãy xem tổng kết hoặc tạo chủ đề mới.");
+
+    const Recognition = getSpeechRecognition();
+    if (!Recognition) {
+      showError("voice-error", "Trình duyệt hiện tại chưa hỗ trợ nhận giọng nói. Hãy dùng Chrome hoặc Edge để bật voice mode.");
+      setText("voice-ai-status", "Lumi sẽ phản biện bằng giọng nói sau khi nhận lượt của bạn.");
+      return;
+    }
+
+    if (voiceRecognition) {
+      voiceRecognition.stop();
+      voiceRecognition = null;
+    }
+
+    voiceDraft = "";
+    voiceRecognition = new Recognition();
+    voiceRecognition.lang = state.language === "Tiếng Việt" ? "vi-VN" : "en-US";
+    voiceRecognition.interimResults = true;
+    voiceRecognition.continuous = false;
+    setText("voice-user-status", "Đang nghe... nói trọn một lượt lập luận của bạn.");
+    setText("voice-ai-status", "Lumi đang chờ transcript từ giọng nói của bạn.");
+    setLoading(document.getElementById("voice-record-btn"), true, "Đang nghe...");
+
+    voiceRecognition.onresult = (event) => {
+      voiceDraft = Array.from(event.results)
+        .map(result => result[0]?.transcript || "")
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+      setText("voice-user-status", voiceDraft || "Đang nghe...");
+    };
+    voiceRecognition.onerror = (event) => {
+      showError("voice-error", `Không thể nhận giọng nói: ${event.error || "lỗi không xác định"}.`);
+      setText("voice-user-status", "Bấm mic để thử lại.");
+      setLoading(document.getElementById("voice-record-btn"), false);
+    };
+    voiceRecognition.onend = async () => {
+      voiceRecognition = null;
+      setLoading(document.getElementById("voice-record-btn"), false);
+      const argument = voiceDraft.trim();
+      if (!argument) {
+        setText("voice-user-status", "Chưa nghe được nội dung rõ ràng. Bấm mic và nói lại lượt này.");
+        return;
+      }
+      document.getElementById("user-input").value = argument;
+      updateCharCount();
+      setText("voice-user-status", `Đã nhận: ${argument}`);
+      await submitArgument({ fromVoice: true });
+    };
+    voiceRecognition.start();
+  }
+
+  function speakLatestRebuttal() {
+    const text = state.latest?.ai_rebuttal;
+    if (!text || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = state.language === "Tiếng Việt" ? "vi-VN" : "en-US";
+    utterance.rate = 0.95;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  async function submitArgument(options = {}) {
     const input = document.getElementById("user-input");
     const argument = input.value.trim();
     hideError("form-error");
+    hideOptionalError("voice-error");
 
     if (state.isSubmitting) return;
     if (!state.sessionId) return showError("form-error", "Chưa có phiên tranh biện. Hãy tạo phiên trước.");
@@ -2752,6 +4636,7 @@
       await renderRebuttal(turn.ai_rebuttal, { animate: true });
       state.history.push(turn);
       renderTranscript();
+      if (options.fromVoice) speakLatestRebuttal();
 
       if (turn.status === "completed") {
         showError("form-error", "Phiên đã hoàn tất. Bạn có thể xem tổng kết hoặc tạo chủ đề mới.");
@@ -2759,15 +4644,22 @@
       await syncSessionStatus();
     } catch (error) {
       renderErrorState(error.message);
-      showError("form-error", "Không thể gửi lập luận. Phiên hiện tại vẫn được giữ để bạn thử lại.");
+      showError(options.fromVoice ? "voice-error" : "form-error", "Không thể gửi lập luận. Phiên hiện tại vẫn được giữ để bạn thử lại.");
     } finally {
       state.isSubmitting = false;
       input.disabled = state.sessionStatus === "completed";
       setLoading(button, false);
+      renderVoiceControls();
+      syncLumiState(getLumiStateForContext());
+      renderArenaStage();
     }
   }
 
   function renderLoadingState() {
+    syncLumiState("thinking");
+    setArenaPulse("thinking");
+    renderArenaStage();
+    setText("voice-ai-status", "Lumi đang phân tích và chuẩn bị phản biện bằng giọng nói...");
     document.getElementById("ai-output").className = "";
     document.getElementById("ai-output").innerHTML = `<div class="loading-dots">Huấn luyện viên AI đang phản biện <span></span><span></span><span></span></div>`;
     document.getElementById("cer-output").className = "empty-message";
@@ -2777,6 +4669,9 @@
   }
 
   function renderErrorState(message) {
+    syncLumiState("idle");
+    setArenaPulse("error");
+    setText("voice-ai-status", "Lumi chưa thể trả lời lượt này. Hãy thử nói lại sau khi backend ổn định.");
     document.getElementById("ai-output").className = "empty-message";
     document.getElementById("ai-output").innerHTML = `<span style="color:#fca5a5">Lỗi kết nối: ${escapeHtml(message)}</span>`;
     renderCER(null);
@@ -2904,13 +4799,19 @@
     if (!text) {
       output.className = "empty-message";
       output.textContent = "Chờ lập luận đầu tiên của bạn. Huấn luyện viên AI sẽ phản biện và giải thích điểm cần cải thiện.";
+      setText("voice-ai-status", "Lumi sẽ phản biện bằng giọng nói sau khi nhận lượt của bạn.");
       return;
     }
+    setText("voice-ai-status", text);
+    renderVoiceControls();
     output.className = options.animate ? "rebuttal-text is-typing" : "rebuttal-text";
     output.setAttribute("aria-live", "polite");
 
     if (!options.animate) {
       output.textContent = text;
+      setArenaPulse("rebuttal");
+      syncLumiState(getLumiStateForContext());
+      renderArenaStage();
       return;
     }
 
@@ -2925,12 +4826,17 @@
 
     if (animationId === activeRebuttalAnimation) {
       output.className = "rebuttal-text";
+      setArenaPulse("rebuttal");
+      syncLumiState(getLumiStateForContext());
+      renderArenaStage();
     }
   }
 
   function renderCER(cer) {
     const total = cer ? Math.round(cer.overall ?? cer.total) : 0;
     document.getElementById("cer-total").textContent = total;
+    if (!state.isSubmitting) syncLumiState(getLumiStateForContext());
+    renderArenaStage(cer);
     const output = document.getElementById("cer-output");
     if (!cer) {
       output.className = "empty-message";
@@ -3036,6 +4942,7 @@
       const claim = Math.round(toScore(data.avg_claim_score));
       const evidence = Math.round(toScore(data.avg_evidence_score));
       const reasoning = Math.round(toScore(data.avg_reasoning_score));
+      updateHubProgress(data);
       document.getElementById("progress-total-sessions").textContent = data.total_sessions || 0;
       document.getElementById("progress-completed-sessions").textContent = `${data.completed_sessions || 0} phiên hoàn tất`;
       document.getElementById("progress-avg").textContent = overall;
@@ -3057,6 +4964,7 @@
         </div>
       `).join("");
     } catch (error) {
+      updateHubProgress();
       output.innerHTML = `<div class="empty-message">Tiến độ sẽ hiển thị sau khi đăng nhập và backend đang chạy.</div>`;
     }
   }

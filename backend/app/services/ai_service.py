@@ -1,7 +1,4 @@
-import re
 import time
-
-import httpx
 
 from app.core.config import settings
 from app.services.cer_scorer import (
@@ -11,7 +8,13 @@ from app.services.cer_scorer import (
     parse_cer_rubric_output,
     validate_user_argument,
 )
+from app.services.groq_client import (
+    GROQ_FRIENDLY_ERROR,
+    call_groq as _call_groq,
+    sanitize_error,
+)
 from app.services.output_parser import DEFAULT_CER
+from app.services.prompt_builder import build_groq_messages
 
 
 DEFAULT_FEEDBACK = {
@@ -20,16 +23,11 @@ DEFAULT_FEEDBACK = {
     "suggestions": ["Vui lòng kiểm tra Groq API key, model hoặc kết nối mạng rồi thử lại."],
 }
 
-GROQ_FRIENDLY_ERROR = "Groq API hiện không phản hồi. Vui lòng kiểm tra GROQ_API_KEY hoặc thử lại sau."
 GROQ_FORMAT_ERROR = "Groq trả về nội dung chưa đúng định dạng. Vui lòng thử lại."
 
 
 def _sanitize_error(message: str) -> str:
-    sanitized = str(message or "")
-    sanitized = re.sub(r"(key=)[^&\s']+", r"\1***", sanitized, flags=re.IGNORECASE)
-    sanitized = re.sub(r"(Bearer\s+)[A-Za-z0-9_\-\.]+", r"\1***", sanitized, flags=re.IGNORECASE)
-    sanitized = re.sub(r"gsk_[A-Za-z0-9_\-]+", "gsk_***", sanitized)
-    return sanitized
+    return sanitize_error(message)
 
 
 def _needs_rebuttal_repair(text: str) -> bool:
@@ -55,10 +53,6 @@ def _needs_rebuttal_repair(text: str) -> bool:
     return len(cleaned) < 80 or any(marker in lowered for marker in weak_markers) or looks_like_feedback
 
 
-def _language_name(language: str) -> str:
-    return "tiếng Việt" if language == "vi" else "English"
-
-
 def build_messages(
     topic: str,
     stance: str,
@@ -69,61 +63,16 @@ def build_messages(
     input_mode: str | None = None,
     language: str = "vi",
 ) -> list[dict[str, str]]:
-    output_language = _language_name(language or "vi")
-    system_prompt = f"""
-Bạn là AI Debate Trainer, một huấn luyện viên tranh biện bằng {output_language}.
-Luôn phản biện lại lập luận của người dùng, không đồng ý hoàn toàn.
-Chấm CER theo thang 100 gồm Claim, Evidence, Reasoning.
-Trả đúng format, không thêm markdown code block.
-""".strip()
-    user_prompt = f"""
-Chủ đề: {topic}
-Lập trường người dùng: {stance}
-Độ khó: {difficulty}
-Nhóm tuổi: {age_group or "adult"}
-Trình độ tranh biện: {debate_level or "intermediate"}
-Cách nhập lập luận: {input_mode or "text"}
-Ngôn ngữ trả lời: {output_language}
-
-Lập luận người dùng:
-{user_argument}
-
-Format bắt buộc:
-[REBUTTAL]
-Viết 4-7 câu phản biện trực tiếp, có lý do rõ ràng.
-
-[CER]
-Claim: x/100
-Evidence: y/100
-Reasoning: z/100
-Overall: t/100
-
-[FEEDBACK]
-Strengths:
-- ...
-- ...
-
-Weaknesses:
-- ...
-- ...
-
-Suggestions:
-- ...
-- ...
-
-Yêu cầu giọng điệu:
-- Nếu age_group=teen: giọng khích lệ, dễ hiểu.
-- Nếu age_group=adult: rõ ràng, có cấu trúc.
-- Nếu age_group=senior: dễ đọc, mạch lạc, ít thuật ngữ.
-- Nếu debate_level=basic: giải thích đơn giản.
-- Nếu debate_level=intermediate: phản biện có cấu trúc.
-- Nếu debate_level=advanced: phản biện sâu hơn, chỉ ra giả định ẩn/ngoại lệ/lỗi logic.
-- Nếu input_mode=voice: không trừ điểm nặng vì transcript nói tự nhiên hơi thiếu dấu.
-""".strip()
-    return [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_prompt},
-    ]
+    return build_groq_messages(
+        topic=topic,
+        stance=stance,
+        difficulty=difficulty,
+        user_argument=user_argument,
+        age_group=age_group,
+        debate_level=debate_level,
+        input_mode=input_mode,
+        language=language,
+    )
 
 
 def call_groq(
@@ -132,55 +81,11 @@ def call_groq(
     max_tokens: int = 700,
     temperature: float = 0.35,
 ) -> dict:
-    if not settings.GROQ_API_KEY.strip():
-        return {
-            "ok": False,
-            "text": GROQ_FRIENDLY_ERROR,
-            "provider": "groq",
-            "model": settings.GROQ_MODEL,
-            "error": "GROQ_API_KEY is missing.",
-        }
-
-    try:
-        response = httpx.post(
-            settings.GROQ_BASE_URL,
-            headers={
-                "Authorization": f"Bearer {settings.GROQ_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": settings.GROQ_MODEL,
-                "messages": messages,
-                "temperature": temperature,
-                "top_p": 0.9,
-                "max_tokens": max_tokens,
-            },
-            timeout=settings.GROQ_TIMEOUT_SECONDS,
-        )
-        response.raise_for_status()
-        data = response.json()
-        text = (
-            data.get("choices", [{}])[0]
-            .get("message", {})
-            .get("content", "")
-        )
-        if not isinstance(text, str) or not text.strip():
-            raise ValueError("Groq response did not contain choices[0].message.content")
-        return {
-            "ok": True,
-            "text": text.strip(),
-            "provider": "groq",
-            "model": settings.GROQ_MODEL,
-            "error": "",
-        }
-    except Exception as exc:
-        return {
-            "ok": False,
-            "text": GROQ_FRIENDLY_ERROR,
-            "provider": "groq",
-            "model": settings.GROQ_MODEL,
-            "error": _sanitize_error(str(exc)),
-        }
+    return _call_groq(
+        messages,
+        max_tokens=max_tokens,
+        temperature=temperature,
+    )
 
 
 def _error_analysis(message: str, *, provider: str = "groq", model: str = "") -> dict:

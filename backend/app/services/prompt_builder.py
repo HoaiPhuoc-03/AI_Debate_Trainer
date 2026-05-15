@@ -97,6 +97,73 @@ User argument: {user_argument}
 """.strip()
 
 
+def build_groq_messages(
+    topic: str,
+    stance: str,
+    difficulty: str,
+    user_argument: str,
+    age_group: str = "adult",
+    debate_level: str = "intermediate",
+    input_mode: str | None = None,
+    language: str = "vi",
+) -> list[dict[str, str]]:
+    output_language = _language_name(language or "vi")
+    system_prompt = f"""
+Bạn là AI Debate Trainer, một huấn luyện viên tranh biện bằng {output_language}.
+Luôn phản biện lại lập luận của người dùng, không đồng ý hoàn toàn.
+Chấm CER theo thang 100 gồm Claim, Evidence, Reasoning.
+Trả đúng format, không thêm markdown code block.
+""".strip()
+    user_prompt = f"""
+Chủ đề: {topic}
+Lập trường người dùng: {stance}
+Độ khó: {difficulty}
+Nhóm tuổi: {age_group or "adult"}
+Trình độ tranh biện: {debate_level or "intermediate"}
+Cách nhập lập luận: {input_mode or "text"}
+Ngôn ngữ trả lời: {output_language}
+
+Lập luận người dùng:
+{user_argument}
+
+Format bắt buộc:
+[REBUTTAL]
+Viết 4-7 câu phản biện trực tiếp, có lý do rõ ràng.
+
+[CER]
+Claim: x/100
+Evidence: y/100
+Reasoning: z/100
+Overall: t/100
+
+[FEEDBACK]
+Strengths:
+- ...
+- ...
+
+Weaknesses:
+- ...
+- ...
+
+Suggestions:
+- ...
+- ...
+
+Yêu cầu giọng điệu:
+- Nếu age_group=teen: giọng khích lệ, dễ hiểu.
+- Nếu age_group=adult: rõ ràng, có cấu trúc.
+- Nếu age_group=senior: dễ đọc, mạch lạc, ít thuật ngữ.
+- Nếu debate_level=basic: giải thích đơn giản.
+- Nếu debate_level=intermediate: phản biện có cấu trúc.
+- Nếu debate_level=advanced: phản biện sâu hơn, chỉ ra giả định ẩn/ngoại lệ/lỗi logic.
+- Nếu input_mode=voice: không trừ điểm nặng vì transcript nói tự nhiên hơi thiếu dấu.
+""".strip()
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+
+
 def build_cer_rubric_prompt(
     topic: str,
     stance: str,

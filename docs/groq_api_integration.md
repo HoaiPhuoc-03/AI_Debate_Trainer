@@ -69,10 +69,10 @@ Nếu Groq lỗi, `status` sẽ là `error`, `cer` về 0 và `ai_rebuttal` là 
 
 ## 6. Test riêng Groq provider
 
-Từ thư mục `backend`:
+Từ thư mục project:
 
 ```powershell
-python test_groq_provider.py
+python scripts\check_groq_provider.py
 ```
 
 Script chỉ in provider, model, trạng thái `ok`, text và lỗi nếu có. Script không in API key.

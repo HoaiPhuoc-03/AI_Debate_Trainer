@@ -72,6 +72,86 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn('const DEFAULT_THEME = "blue-pastel";', html)
         self.assertIn("return DEFAULT_THEME;", html)
 
+    def test_frontend_login_opens_post_login_navigation_hub(self):
+        html = read_frontend()
+
+        self.assertIn('id="view-home"', html)
+        self.assertIn("Thiết lập hồ sơ", html)
+        self.assertIn("Đấu trường tranh biện", html)
+        self.assertIn("Xem tiến độ", html)
+        self.assertIn('enterApp("account", "home")', html)
+        self.assertIn('enterApp("guest", "home")', html)
+        self.assertIn('goToArenaFromHub()', html)
+        self.assertIn('goToSummaryFromHub()', html)
+
+    def test_frontend_arena_uses_focus_mode(self):
+        html = read_frontend()
+
+        self.assertIn('body[data-view="arena"] .sidebar', html)
+        self.assertIn('body[data-view="arena"] .topbar', html)
+        self.assertIn('body[data-view="arena"] #view-arena', html)
+        self.assertIn("syncArenaFocusMode(view)", html)
+        self.assertIn("requestArenaFullscreen()", html)
+        self.assertIn("exitArenaFullscreen()", html)
+
+    def test_frontend_hides_voice_controls_for_text_input_mode(self):
+        html = read_frontend()
+
+        self.assertIn('id="voice-input-btn"', html)
+        self.assertIn("function isTextInputMode()", html)
+        self.assertIn('state.inputMode === "Text"', html)
+        self.assertIn('voiceButton.classList.toggle("hidden", isTextInputMode())', html)
+        self.assertIn('if (key === "inputMode") renderArgumentControls();', html)
+        self.assertIn("renderArgumentControls();", html)
+
+    def test_frontend_voice_profile_switches_arena_to_voice_only(self):
+        html = read_frontend()
+
+        self.assertIn('id="voice-arena-panel"', html)
+        self.assertIn('body[data-view="arena"][data-input-mode="voice"] .arena-layout', html)
+        self.assertIn('body[data-view="arena"][data-input-mode="voice"] .voice-arena-panel', html)
+        self.assertIn("function isVoiceInputMode()", html)
+        self.assertIn("function syncInputModeDataset()", html)
+        self.assertIn('document.body.dataset.inputMode = isVoiceInputMode() ? "voice" : "text"', html)
+        self.assertIn("function startVoiceTurn()", html)
+        self.assertIn("window.SpeechRecognition || window.webkitSpeechRecognition", html)
+        self.assertIn("await submitArgument({ fromVoice: true })", html)
+        self.assertIn("function speakLatestRebuttal()", html)
+        self.assertIn("window.speechSynthesis", html)
+
+    def test_frontend_includes_lumi_mascot_companion(self):
+        html = read_frontend()
+
+        self.assertIn("assets/lumi-paper-dragon-cutout.png", html)
+        self.assertTrue((ROOT_DIR / "frontend" / "assets" / "lumi-paper-dragon-cutout.png").exists())
+        self.assertIn('id="lumi-companion"', html)
+        self.assertIn("LUMI_MESSAGES", html)
+        self.assertIn("renderLumiCompanion()", html)
+        self.assertIn("Phản biện của Lumi", html)
+        self.assertIn("LUMI_GOOD_CER_THRESHOLD", html)
+        self.assertIn("lumiThinking", html)
+        self.assertIn("lumiVictory", html)
+        self.assertIn("lumiAura", html)
+        self.assertIn("lumiWingGlint", html)
+        self.assertIn('class="lumi-title-token"', html)
+        self.assertIn('body[data-lumi-state="thinking"] .lumi-title-token img', html)
+        self.assertIn("prefers-reduced-motion: reduce", html)
+        self.assertIn(".lumi-stage-token {\n    position: relative;", html)
+        self.assertIn("display: block;\n    overflow: visible;", html)
+        self.assertIn(".lumi-stage-token img {\n    position: absolute;", html)
+        self.assertIn('syncLumiState("thinking")', html)
+
+    def test_frontend_login_uses_generated_dragon_battle_background(self):
+        html = read_frontend()
+
+        self.assertIn('id="auth-home"', html)
+        self.assertIn('url("assets/login-dragon-battle-bg.png") center / cover no-repeat', html)
+        self.assertTrue((ROOT_DIR / "frontend" / "assets" / "login-dragon-battle-bg.png").exists())
+        self.assertNotIn('class="login-dragon-scene"', html)
+        self.assertNotIn('class="login-weapon login-sword"', html)
+        self.assertNotIn("loginDragonFloat", html)
+        self.assertIn("goToAuthView('login')", html)
+
 
 if __name__ == "__main__":
     unittest.main()
