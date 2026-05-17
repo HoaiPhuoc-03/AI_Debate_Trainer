@@ -1,678 +1,99 @@
-import sqlite3
-from contextlib import contextmanager
-from datetime import date, timedelta
-from pathlib import Path
+"""
+session_store.py — Firebase Firestore backend
+=============================================
+Replaces the SQLite implementation.  All public function signatures and
+return shapes are preserved so the rest of the app requires no changes.
+
+Firestore collections
+---------------------
+  users            – one document per user (doc id = user_id)
+  auth_sessions    – one document per session (doc id = session_id)
+  debate_sessions  – one document per debate (doc id = session_id)
+  debate_turns     – one document per turn  (doc id = turn_id)
+  cer_scores       – one document per score (doc id = score_id)
+  feedback_items   – one document per item  (doc id = feedback_id)
+  content_flags    – one document per flag  (doc id = flag_id)
+
+Required Firestore composite indexes
+-------------------------------------
+  debate_turns     : session_id ASC, turn_number ASC
+  feedback_items   : turn_id    ASC, created_at   ASC
+  debate_sessions  : user_id    ASC, created_at   DESC  (for get_progress_overview)
+
+Install
+-------
+  pip install firebase-admin
+
+Configuration (add to settings)
+--------------------------------
+  FIREBASE_CREDENTIALS_PATH  – path to service-account JSON (optional when
+                               running on Google Cloud with a default identity)
+  FIREBASE_PROJECT_ID        – only needed when credentials don't embed the
+                               project id (e.g. Application Default Credentials)
+"""
+
+from datetime import date, datetime, timedelta, timezone
 from uuid import uuid4
+import json
+import os
+
+import firebase_admin
+from firebase_admin import credentials, firestore
+from google.cloud.firestore_v1 import FieldFilter
 
 from app.core.config import settings
 from app.services.cer_scorer import normalize_cer_to_100
 
 
-SESSION_MIGRATIONS = {
-    "user_id": "TEXT REFERENCES users(id)",
-    "topic_category": "TEXT",
-    "custom_topic": "TEXT",
-    "age_group": "TEXT NOT NULL DEFAULT 'adult'",
-    "debate_level": "TEXT NOT NULL DEFAULT 'intermediate'",
-    "coach_model": "TEXT NOT NULL DEFAULT 'socratic_v3'",
-    "language": "TEXT NOT NULL DEFAULT 'vi'",
-    "response_time": "TEXT",
-    "display_name": "TEXT",
-}
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
 
 DEMO_USER_ID = "demo-user"
 DEMO_USER_EMAIL = "guest@ai-debate-trainer.local"
 
 
-def _connect():
-    db_path = Path(settings.DATABASE_PATH)
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(db_path)
-    connection.row_factory = sqlite3.Row
-    connection.execute("PRAGMA foreign_keys = ON")
-    return connection
+# ---------------------------------------------------------------------------
+# Firebase initialisation (lazy, safe for repeated calls)
+# ---------------------------------------------------------------------------
 
+def _db() -> firestore.Client:
+    if not firebase_admin._apps:
+        raw_json = settings.FIREBASE_CREDENTIALS_JSON
+        cred_path = settings.FIREBASE_CREDENTIALS_PATH
+        project_id = settings.FIREBASE_PROJECT_ID
+        options = {"projectId": project_id} if project_id else {}
 
-@contextmanager
-def _connection():
-    connection = _connect()
-    try:
-        yield connection
-        connection.commit()
-    except Exception:
-        connection.rollback()
-        raise
-    finally:
-        connection.close()
-
-
-def _row_to_dict(row):
-    return dict(row) if row else None
-
-
-def _rows_to_dicts(rows):
-    return [dict(row) for row in rows]
-
-
-def _ensure_demo_user_row(connection):
-    connection.execute(
-        """
-        INSERT OR IGNORE INTO users (
-            id,
-            email,
-            password_hash,
-            display_name,
-            age_group,
-            debate_level,
-            language
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            DEMO_USER_ID,
-            DEMO_USER_EMAIL,
-            "demo-not-for-login",
-            "Guest",
-            "adult",
-            "intermediate",
-            "vi",
-        ),
-    )
-
-
-def _migrate_debate_sessions(connection):
-    existing_columns = {
-        row["name"]
-        for row in connection.execute("PRAGMA table_info(debate_sessions)").fetchall()
-    }
-    for column_name, definition in SESSION_MIGRATIONS.items():
-        if column_name not in existing_columns:
-            connection.execute(
-                f"ALTER TABLE debate_sessions ADD COLUMN {column_name} {definition}"
-            )
-
-    connection.execute(
-        """
-        UPDATE debate_sessions
-        SET status = CASE
-            WHEN status IN ('ready', 'found', 'success') THEN 'active'
-            WHEN status IN ('complete', 'done') THEN 'completed'
-            WHEN status = 'error' THEN 'error'
-            ELSE COALESCE(NULLIF(status, ''), 'active')
-        END,
-            input_mode = COALESCE(NULLIF(input_mode, ''), 'text'),
-            age_group = COALESCE(NULLIF(age_group, ''), 'adult'),
-            debate_level = COALESCE(NULLIF(debate_level, ''), 'intermediate'),
-            coach_model = COALESCE(NULLIF(coach_model, ''), 'socratic_v3'),
-            language = COALESCE(NULLIF(language, ''), 'vi'),
-            difficulty = CASE
-                WHEN lower(COALESCE(difficulty, '')) IN ('basic', 'easy', 'beginner') THEN 'Cơ bản'
-                WHEN lower(COALESCE(difficulty, '')) IN ('intermediate', 'medium') THEN 'Trung bình'
-                WHEN lower(COALESCE(difficulty, '')) IN ('advanced', 'hard', 'expert') THEN 'Nâng cao'
-                ELSE COALESCE(NULLIF(difficulty, ''), 'Trung bình')
-            END,
-            max_turns = CASE WHEN max_turns < 1 THEN ? ELSE max_turns END
-        """,
-        (settings.DEFAULT_MAX_TURNS,),
-    )
-    connection.execute(
-        """
-        UPDATE debate_sessions
-        SET user_id = ?
-        WHERE user_id IS NULL OR user_id = ''
-        """,
-        (DEMO_USER_ID,),
-    )
-
-
-def init_db():
-    with _connection() as connection:
-        connection.executescript(
-            """
-            CREATE TABLE IF NOT EXISTS users (
-                id TEXT PRIMARY KEY,
-                email TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
-                display_name TEXT NOT NULL,
-                age_group TEXT,
-                debate_level TEXT,
-                language TEXT NOT NULL DEFAULT 'vi',
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE TABLE IF NOT EXISTS auth_sessions (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
-                token TEXT UNIQUE NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                expires_at TEXT,
-                is_active INTEGER NOT NULL DEFAULT 1,
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
-
-            CREATE TABLE IF NOT EXISTS debate_sessions (
-                session_id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
-                topic TEXT NOT NULL,
-                topic_category TEXT,
-                custom_topic TEXT,
-                stance TEXT NOT NULL,
-                difficulty TEXT NOT NULL,
-                input_mode TEXT NOT NULL,
-                age_group TEXT NOT NULL DEFAULT 'adult',
-                debate_level TEXT NOT NULL DEFAULT 'intermediate',
-                coach_model TEXT NOT NULL DEFAULT 'socratic_v3',
-                language TEXT NOT NULL DEFAULT 'vi',
-                response_time TEXT,
-                display_name TEXT,
-                status TEXT NOT NULL,
-                turn_count INTEGER NOT NULL DEFAULT 0,
-                max_turns INTEGER NOT NULL DEFAULT 5,
-                average_score REAL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                completed_at TEXT,
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
-
-            CREATE TABLE IF NOT EXISTS debate_turns (
-                turn_id TEXT PRIMARY KEY,
-                session_id TEXT NOT NULL,
-                turn_number INTEGER NOT NULL,
-                user_argument TEXT NOT NULL,
-                ai_rebuttal TEXT NOT NULL,
-                status TEXT NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (session_id) REFERENCES debate_sessions(session_id)
-            );
-
-            CREATE TABLE IF NOT EXISTS cer_scores (
-                score_id TEXT PRIMARY KEY,
-                turn_id TEXT NOT NULL,
-                claim REAL NOT NULL,
-                evidence REAL NOT NULL,
-                reasoning REAL NOT NULL,
-                total REAL NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (turn_id) REFERENCES debate_turns(turn_id)
-            );
-
-            CREATE TABLE IF NOT EXISTS feedback_items (
-                feedback_id TEXT PRIMARY KEY,
-                turn_id TEXT NOT NULL,
-                category TEXT NOT NULL,
-                message TEXT NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (turn_id) REFERENCES debate_turns(turn_id)
-            );
-
-            CREATE TABLE IF NOT EXISTS content_flags (
-                flag_id TEXT PRIMARY KEY,
-                turn_id TEXT NOT NULL,
-                flag_type TEXT NOT NULL,
-                severity TEXT NOT NULL,
-                message TEXT NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (turn_id) REFERENCES debate_turns(turn_id)
-            );
-            """
-        )
-        _ensure_demo_user_row(connection)
-        _migrate_debate_sessions(connection)
-
-
-def create_user(
-    email: str,
-    password_hash: str,
-    display_name: str,
-    age_group: str,
-    debate_level: str,
-    language: str,
-):
-    init_db()
-    user_id = str(uuid4())
-    with _connection() as connection:
-        connection.execute(
-            """
-            INSERT INTO users (
-                id, email, password_hash, display_name, age_group, debate_level, language
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                user_id,
-                email,
-                password_hash,
-                display_name,
-                age_group,
-                debate_level,
-                language,
-            ),
-        )
-        row = connection.execute(
-            "SELECT * FROM users WHERE id = ?",
-            (user_id,),
-        ).fetchone()
-    return _row_to_dict(row)
-
-
-def get_user_by_email(email: str):
-    init_db()
-    with _connection() as connection:
-        row = connection.execute(
-            "SELECT * FROM users WHERE email = ?",
-            (email,),
-        ).fetchone()
-    return _row_to_dict(row)
-
-
-def get_user_by_id(user_id: str):
-    init_db()
-    with _connection() as connection:
-        row = connection.execute(
-            "SELECT * FROM users WHERE id = ?",
-            (user_id,),
-        ).fetchone()
-    return _row_to_dict(row)
-
-
-def get_demo_user():
-    init_db()
-    return get_user_by_id(DEMO_USER_ID)
-
-
-def create_auth_session(user_id: str, token: str, expires_at: str | None = None):
-    init_db()
-    session_id = str(uuid4())
-    with _connection() as connection:
-        connection.execute(
-            """
-            INSERT INTO auth_sessions (
-                id, user_id, token, expires_at, is_active
-            )
-            VALUES (?, ?, ?, ?, 1)
-            """,
-            (session_id, user_id, token, expires_at),
-        )
-        row = connection.execute(
-            """
-            SELECT
-                auth_sessions.*,
-                users.email,
-                users.display_name,
-                users.age_group,
-                users.debate_level,
-                users.language
-            FROM auth_sessions
-            JOIN users ON users.id = auth_sessions.user_id
-            WHERE auth_sessions.id = ?
-            """,
-            (session_id,),
-        ).fetchone()
-    return _row_to_dict(row)
-
-
-def get_auth_session_by_token(token: str):
-    init_db()
-    with _connection() as connection:
-        row = connection.execute(
-            """
-            SELECT
-                auth_sessions.*,
-                users.email,
-                users.display_name,
-                users.age_group,
-                users.debate_level,
-                users.language
-            FROM auth_sessions
-            JOIN users ON users.id = auth_sessions.user_id
-            WHERE auth_sessions.token = ?
-            """,
-            (token,),
-        ).fetchone()
-    return _row_to_dict(row)
-
-
-def deactivate_auth_session(token: str):
-    init_db()
-    with _connection() as connection:
-        connection.execute(
-            """
-            UPDATE auth_sessions
-            SET is_active = 0
-            WHERE token = ?
-            """,
-            (token,),
-        )
-        row = connection.execute(
-            "SELECT * FROM auth_sessions WHERE token = ?",
-            (token,),
-        ).fetchone()
-    return _row_to_dict(row)
-
-
-def create_session(
-    user_id: str,
-    topic: str,
-    stance: str,
-    difficulty: str,
-    input_mode: str,
-    topic_category: str | None = None,
-    custom_topic: str | None = None,
-    age_group: str = "adult",
-    debate_level: str = "intermediate",
-    coach_model: str = "socratic_v3",
-    language: str = "vi",
-    response_time: str | None = None,
-    max_turns: int | None = None,
-    display_name: str | None = None,
-):
-    init_db()
-    session_id = str(uuid4())
-    resolved_max_turns = int(max_turns or settings.DEFAULT_MAX_TURNS)
-
-    with _connection() as connection:
-        connection.execute(
-            """
-            INSERT INTO debate_sessions (
-                session_id,
-                user_id,
-                topic,
-                topic_category,
-                custom_topic,
-                stance,
-                difficulty,
-                input_mode,
-                age_group,
-                debate_level,
-                coach_model,
-                language,
-                response_time,
-                display_name,
-                status,
-                max_turns
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                session_id,
-                user_id,
-                topic,
-                topic_category,
-                custom_topic,
-                stance,
-                difficulty,
-                input_mode,
-                age_group,
-                debate_level,
-                coach_model,
-                language,
-                response_time,
-                display_name,
-                "active",
-                resolved_max_turns,
-            ),
-        )
-
-        row = connection.execute(
-            "SELECT * FROM debate_sessions WHERE session_id = ?",
-            (session_id,),
-        ).fetchone()
-
-    return _row_to_dict(row)
-
-
-def get_session(session_id: str, user_id: str | None = None):
-    init_db()
-    with _connection() as connection:
-        if user_id is None:
-            row = connection.execute(
-                "SELECT * FROM debate_sessions WHERE session_id = ?",
-                (session_id,),
-            ).fetchone()
+        if raw_json:
+            cred = credentials.Certificate(json.loads(raw_json))
+            firebase_admin.initialize_app(cred, options)
+        elif cred_path:
+            cred = credentials.Certificate(cred_path)
+            firebase_admin.initialize_app(cred, options)
         else:
-            row = connection.execute(
-                "SELECT * FROM debate_sessions WHERE session_id = ? AND user_id = ?",
-                (session_id, user_id),
-            ).fetchone()
-    return _row_to_dict(row)
-
-
-def end_session(session_id: str, user_id: str | None = None):
-    init_db()
-    with _connection() as connection:
-        if user_id is None:
-            row = connection.execute(
-                "SELECT * FROM debate_sessions WHERE session_id = ?",
-                (session_id,),
-            ).fetchone()
-        else:
-            row = connection.execute(
-                "SELECT * FROM debate_sessions WHERE session_id = ? AND user_id = ?",
-                (session_id, user_id),
-            ).fetchone()
-        if not row:
-            return None
-
-        if user_id is None:
-            connection.execute(
-                """
-                UPDATE debate_sessions
-                SET status = 'completed',
-                    average_score = (
-                        SELECT AVG(total)
-                        FROM cer_scores
-                        JOIN debate_turns ON debate_turns.turn_id = cer_scores.turn_id
-                        WHERE debate_turns.session_id = ?
-                    ),
-                    updated_at = CURRENT_TIMESTAMP,
-                    completed_at = COALESCE(completed_at, CURRENT_TIMESTAMP)
-                WHERE session_id = ?
-                """,
-                (session_id, session_id),
-            )
-        else:
-            connection.execute(
-                """
-                UPDATE debate_sessions
-                SET status = 'completed',
-                    average_score = (
-                        SELECT AVG(total)
-                        FROM cer_scores
-                        JOIN debate_turns ON debate_turns.turn_id = cer_scores.turn_id
-                        WHERE debate_turns.session_id = ?
-                    ),
-                    updated_at = CURRENT_TIMESTAMP,
-                    completed_at = COALESCE(completed_at, CURRENT_TIMESTAMP)
-                WHERE session_id = ? AND user_id = ?
-                """,
-                (session_id, session_id, user_id),
-            )
-        updated = connection.execute(
-            "SELECT * FROM debate_sessions WHERE session_id = ?",
-            (session_id,),
-        ).fetchone()
-
-    return _row_to_dict(updated)
-
-
-def save_debate_turn(
-    session: dict,
-    user_argument: str,
-    ai_rebuttal: str,
-    cer: dict,
-    feedback: dict,
-    content_flags: list | None = None,
-    status: str = "active",
-    count_for_completion: bool = True,
-):
-    init_db()
-    turn_id = str(uuid4())
-    session_id = session["session_id"]
-    turn_number = int(session.get("turn_count", 0)) + 1
-    cer = normalize_cer_to_100(cer)
-    total_score = float(cer.get("total", 0.0))
-    flags = content_flags or []
-
-    with _connection() as connection:
-        connection.execute(
-            """
-            INSERT INTO debate_turns (
-                turn_id, session_id, turn_number, user_argument, ai_rebuttal, status
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (turn_id, session_id, turn_number, user_argument, ai_rebuttal, status),
-        )
-
-        connection.execute(
-            """
-            INSERT INTO cer_scores (
-                score_id, turn_id, claim, evidence, reasoning, total
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (
-                str(uuid4()),
-                turn_id,
-                float(cer.get("claim", 0.0)),
-                float(cer.get("evidence", 0.0)),
-                float(cer.get("reasoning", 0.0)),
-                total_score,
-            ),
-        )
-
-        for category in ("strengths", "weaknesses", "suggestions"):
-            for message in feedback.get(category, []):
-                connection.execute(
-                    """
-                    INSERT INTO feedback_items (
-                        feedback_id, turn_id, category, message
-                    )
-                    VALUES (?, ?, ?, ?)
-                    """,
-                    (str(uuid4()), turn_id, category, str(message)),
-                )
-
-        for flag in flags:
-            connection.execute(
-                """
-                INSERT INTO content_flags (
-                    flag_id, turn_id, flag_type, severity, message
-                )
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (
-                    str(uuid4()),
-                    turn_id,
-                    flag.get("type", "ai_error"),
-                    flag.get("severity", "low"),
-                    flag.get("message", ""),
-                ),
+            raise RuntimeError(
+                "Firebase credentials not configured. "
+                "Set FIREBASE_CREDENTIALS_JSON or FIREBASE_CREDENTIALS_PATH in your .env file."
             )
 
-        next_turn_count = turn_number if count_for_completion else int(session.get("turn_count", 0))
-        next_status = (
-            "completed"
-            if count_for_completion and next_turn_count >= int(session["max_turns"])
-            else "active"
-        )
-        connection.execute(
-            """
-            UPDATE debate_sessions
-            SET status = ?,
-                turn_count = ?,
-                average_score = (
-                    SELECT AVG(total)
-                    FROM cer_scores
-                    JOIN debate_turns ON debate_turns.turn_id = cer_scores.turn_id
-                    WHERE debate_turns.session_id = ?
-                ),
-                updated_at = CURRENT_TIMESTAMP,
-                completed_at = CASE
-                    WHEN ? = 'completed' THEN COALESCE(completed_at, CURRENT_TIMESTAMP)
-                    ELSE completed_at
-                END
-            WHERE session_id = ?
-            """,
-            (next_status, next_turn_count, session_id, next_status, session_id),
-        )
+    return firestore.client()
 
-        updated_session = connection.execute(
-            "SELECT * FROM debate_sessions WHERE session_id = ?",
-            (session_id,),
-        ).fetchone()
+# ---------------------------------------------------------------------------
+# Timestamp helpers
+# ---------------------------------------------------------------------------
 
-    return {
-        "turn_id": turn_id,
-        "turn_number": turn_number,
-        "session": _row_to_dict(updated_session),
-    }
+def _now() -> str:
+    """ISO-like UTC timestamp matching SQLite's CURRENT_TIMESTAMP format."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 
-def get_session_turns(session_id: str):
-    init_db()
-    with _connection() as connection:
-        rows = connection.execute(
-            """
-            SELECT
-                debate_turns.turn_id,
-                debate_turns.turn_number,
-                debate_turns.user_argument,
-                debate_turns.ai_rebuttal,
-                debate_turns.status,
-                debate_turns.created_at,
-                COALESCE(cer_scores.claim, 0.0) AS claim,
-                COALESCE(cer_scores.evidence, 0.0) AS evidence,
-                COALESCE(cer_scores.reasoning, 0.0) AS reasoning,
-                COALESCE(cer_scores.total, 0.0) AS total
-            FROM debate_turns
-            LEFT JOIN cer_scores ON cer_scores.turn_id = debate_turns.turn_id
-            WHERE debate_turns.session_id = ?
-            ORDER BY debate_turns.turn_number ASC, debate_turns.created_at ASC
-            """,
-            (session_id,),
-        ).fetchall()
-        turns = _rows_to_dicts(rows)
-
-        feedback_rows = connection.execute(
-            """
-            SELECT
-                feedback_items.turn_id,
-                feedback_items.category,
-                feedback_items.message
-            FROM feedback_items
-            JOIN debate_turns ON debate_turns.turn_id = feedback_items.turn_id
-            WHERE debate_turns.session_id = ?
-            ORDER BY feedback_items.created_at ASC
-            """,
-            (session_id,),
-        ).fetchall()
-
-    feedback_by_turn = {
-        turn["turn_id"]: {"strengths": [], "weaknesses": [], "suggestions": []}
-        for turn in turns
-    }
-    for row in feedback_rows:
-        category = row["category"]
-        if category in feedback_by_turn.get(row["turn_id"], {}):
-            feedback_by_turn[row["turn_id"]][category].append(row["message"])
-
-    for turn in turns:
-        turn["cer"] = normalize_cer_to_100({
-            "claim": float(turn.pop("claim")),
-            "evidence": float(turn.pop("evidence")),
-            "reasoning": float(turn.pop("reasoning")),
-            "total": float(turn.pop("total")),
-        })
-        turn["feedback"] = feedback_by_turn[turn["turn_id"]]
-
-    return turns
-
+# ---------------------------------------------------------------------------
+# Pure-Python helpers (unchanged from the SQLite version)
+# ---------------------------------------------------------------------------
 
 def _unique_first(items: list[str], limit: int = 5) -> list[str]:
-    seen = set()
-    unique = []
+    seen: set[str] = set()
+    unique: list[str] = []
     for item in items:
         clean = str(item).strip()
         key = clean.casefold()
@@ -690,40 +111,6 @@ def _average(values: list[float]) -> float:
     return round(sum(values) / len(values), 2)
 
 
-def get_session_summary(session_id: str, user_id: str | None = None):
-    session = get_session(session_id, user_id=user_id)
-    if not session:
-        return None
-
-    turns = get_session_turns(session_id)
-    scored_turns = [turn for turn in turns if turn["status"] not in ("error", "invalid")]
-    cer_scores = [turn["cer"] for turn in scored_turns]
-    strengths = []
-    weaknesses = []
-    suggestions = []
-    for turn in turns:
-        strengths.extend(turn["feedback"]["strengths"])
-        weaknesses.extend(turn["feedback"]["weaknesses"])
-        suggestions.extend(turn["feedback"]["suggestions"])
-
-    return {
-        "session_id": session["session_id"],
-        "topic": session["topic"],
-        "stance": session["stance"],
-        "difficulty": session["difficulty"],
-        "turn_count": int(session["turn_count"]),
-        "max_turns": int(session["max_turns"]),
-        "status": session["status"],
-        "avg_claim_score": _average([score["claim"] for score in cer_scores]),
-        "avg_evidence_score": _average([score["evidence"] for score in cer_scores]),
-        "avg_reasoning_score": _average([score["reasoning"] for score in cer_scores]),
-        "overall_score": _average([score["total"] for score in cer_scores]),
-        "strength_summary": _unique_first(strengths),
-        "weakness_summary": _unique_first(weaknesses),
-        "next_steps": _unique_first(suggestions),
-    }
-
-
 def _skill_label(scores: dict[str, float], pick_highest: bool) -> str:
     if not scores:
         return ""
@@ -733,14 +120,9 @@ def _skill_label(scores: dict[str, float], pick_highest: bool) -> str:
 
 
 def _streak_days(completed_days: list[str]) -> int:
-    parsed_days = {
-        date.fromisoformat(day)
-        for day in completed_days
-        if day
-    }
+    parsed_days = {date.fromisoformat(day) for day in completed_days if day}
     if not parsed_days:
         return 0
-
     cursor = max(parsed_days)
     streak = 0
     while cursor in parsed_days:
@@ -749,73 +131,574 @@ def _streak_days(completed_days: list[str]) -> int:
     return streak
 
 
-def get_progress_overview(user_id: str | None = None):
+def _normalize_score_value(value: float) -> float:
+    """Mirror the SQLite CASE: values in (0, 1] are treated as fractions → ×100."""
+    if 0 < value <= 1:
+        return value * 100.0
+    return value
+
+
+def _normalize_difficulty(difficulty: str) -> str:
+    low = (difficulty or "").lower()
+    if low in ("basic", "easy", "beginner"):
+        return "Cơ bản"
+    if low in ("intermediate", "medium"):
+        return "Trung bình"
+    if low in ("advanced", "hard", "expert"):
+        return "Nâng cao"
+    return difficulty or "Trung bình"
+
+
+# ---------------------------------------------------------------------------
+# Database initialisation
+# ---------------------------------------------------------------------------
+
+def _ensure_demo_user() -> None:
+    db = _db()
+    ref = db.collection("users").document(DEMO_USER_ID)
+    if not ref.get().exists:
+        ref.set({
+            "id": DEMO_USER_ID,
+            "email": DEMO_USER_EMAIL,
+            "password_hash": "demo-not-for-login",
+            "display_name": "Guest",
+            "age_group": "adult",
+            "debate_level": "intermediate",
+            "language": "vi",
+            "created_at": _now(),
+        })
+
+
+def init_db() -> None:
+    """
+    Initialise Firestore and seed the demo user.
+
+    Firestore is schemaless, so there is no DDL or migration to run.
+    This function is intentionally cheap to call multiple times.
+    """
+    _db()
+    _ensure_demo_user()
+
+
+# ---------------------------------------------------------------------------
+# Users
+# ---------------------------------------------------------------------------
+
+def create_user(
+    email: str,
+    password_hash: str,
+    display_name: str,
+    age_group: str,
+    debate_level: str,
+    language: str,
+) -> dict:
     init_db()
-    with _connection() as connection:
-        user_filter = "" if user_id is None else "WHERE user_id = ?"
-        params = () if user_id is None else (user_id,)
-        counts = connection.execute(
-            f"""
-            SELECT
-                COUNT(*) AS total_sessions,
-                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed_sessions
-            FROM debate_sessions
-            {user_filter}
-            """,
-            params,
-        ).fetchone()
-        averages = connection.execute(
-            f"""
-            SELECT
-                AVG(CASE WHEN cer_scores.claim > 0 AND cer_scores.claim <= 1 THEN cer_scores.claim * 100.0 ELSE cer_scores.claim END) AS avg_claim_score,
-                AVG(CASE WHEN cer_scores.evidence > 0 AND cer_scores.evidence <= 1 THEN cer_scores.evidence * 100.0 ELSE cer_scores.evidence END) AS avg_evidence_score,
-                AVG(CASE WHEN cer_scores.reasoning > 0 AND cer_scores.reasoning <= 1 THEN cer_scores.reasoning * 100.0 ELSE cer_scores.reasoning END) AS avg_reasoning_score,
-                AVG(CASE WHEN cer_scores.total > 0 AND cer_scores.total <= 1 THEN cer_scores.total * 100.0 ELSE cer_scores.total END) AS overall_score
-            FROM cer_scores
-            JOIN debate_turns ON debate_turns.turn_id = cer_scores.turn_id
-            JOIN debate_sessions ON debate_sessions.session_id = debate_turns.session_id
-            WHERE debate_turns.status NOT IN ('error', 'invalid')
-            {"AND debate_sessions.user_id = ?" if user_id is not None else ""}
-            """,
-            params,
-        ).fetchone()
-        topics = connection.execute(
-            f"""
-            SELECT topic
-            FROM debate_sessions
-            WHERE COALESCE(topic, '') != ''
-            {"AND user_id = ?" if user_id is not None else ""}
-            ORDER BY created_at DESC
-            LIMIT 5
-            """,
-            params,
-        ).fetchall()
-        completed_days = connection.execute(
-            f"""
-            SELECT DISTINCT DATE(completed_at) AS completed_day
-            FROM debate_sessions
-            WHERE completed_at IS NOT NULL
-            {"AND user_id = ?" if user_id is not None else ""}
-            ORDER BY completed_day DESC
-            """,
-            params,
-        ).fetchall()
+    user_id = str(uuid4())
+    data = {
+        "id": user_id,
+        "email": email,
+        "password_hash": password_hash,
+        "display_name": display_name,
+        "age_group": age_group,
+        "debate_level": debate_level,
+        "language": language,
+        "created_at": _now(),
+    }
+    _db().collection("users").document(user_id).set(data)
+    return data
+
+
+def get_user_by_email(email: str) -> dict | None:
+    init_db()
+    docs = (
+        _db()
+        .collection("users")
+        .where(filter=FieldFilter("email", "==", email))
+        .limit(1)
+        .get()
+    )
+    return docs[0].to_dict() if docs else None
+
+
+def get_user_by_id(user_id: str) -> dict | None:
+    init_db()
+    doc = _db().collection("users").document(user_id).get()
+    return doc.to_dict() if doc.exists else None
+
+
+def get_demo_user() -> dict | None:
+    init_db()
+    return get_user_by_id(DEMO_USER_ID)
+
+
+# ---------------------------------------------------------------------------
+# Auth sessions
+# ---------------------------------------------------------------------------
+
+def _enrich_auth_session(session_data: dict) -> dict:
+    """
+    Merge user profile fields into an auth-session dict.
+    Replicates the JOIN on users done in the SQLite version.
+    """
+    user = get_user_by_id(session_data["user_id"]) or {}
+    return {
+        **session_data,
+        "email": user.get("email"),
+        "display_name": user.get("display_name"),
+        "age_group": user.get("age_group"),
+        "debate_level": user.get("debate_level"),
+        "language": user.get("language"),
+    }
+
+
+def create_auth_session(
+    user_id: str,
+    token: str,
+    expires_at: str | None = None,
+) -> dict:
+    init_db()
+    session_id = str(uuid4())
+    data = {
+        "id": session_id,
+        "user_id": user_id,
+        "token": token,
+        "created_at": _now(),
+        "expires_at": expires_at,
+        "is_active": 1,
+    }
+    _db().collection("auth_sessions").document(session_id).set(data)
+    return _enrich_auth_session(data)
+
+
+def get_auth_session_by_token(token: str) -> dict | None:
+    init_db()
+    docs = (
+        _db()
+        .collection("auth_sessions")
+        .where(filter=FieldFilter("token", "==", token))
+        .limit(1)
+        .get()
+    )
+    if not docs:
+        return None
+    return _enrich_auth_session(docs[0].to_dict())
+
+
+def deactivate_auth_session(token: str) -> dict | None:
+    init_db()
+    db = _db()
+    docs = (
+        db.collection("auth_sessions")
+        .where(filter=FieldFilter("token", "==", token))
+        .limit(1)
+        .get()
+    )
+    if not docs:
+        return None
+    doc_ref = docs[0].reference
+    doc_ref.update({"is_active": 0})
+    return doc_ref.get().to_dict()
+
+
+# ---------------------------------------------------------------------------
+# Debate sessions
+# ---------------------------------------------------------------------------
+
+def _compute_session_avg_score(db: firestore.Client, session_id: str) -> float | None:
+    """
+    Compute the average CER total across all turns in a session.
+    Mirrors the correlated sub-select used in the SQLite UPDATE statements.
+    """
+    turn_docs = (
+        db.collection("debate_turns")
+        .where(filter=FieldFilter("session_id", "==", session_id))
+        .get()
+    )
+    turn_ids = [d.to_dict()["turn_id"] for d in turn_docs]
+    if not turn_ids:
+        return None
+
+    totals: list[float] = []
+    for tid in turn_ids:
+        score_docs = (
+            db.collection("cer_scores")
+            .where(filter=FieldFilter("turn_id", "==", tid))
+            .limit(1)
+            .get()
+        )
+        if score_docs:
+            totals.append(float(score_docs[0].to_dict().get("total", 0.0)))
+
+    return round(sum(totals) / len(totals), 6) if totals else None
+
+
+def create_session(
+    user_id: str,
+    topic: str,
+    stance: str,
+    difficulty: str,
+    input_mode: str,
+    topic_category: str | None = None,
+    custom_topic: str | None = None,
+    age_group: str = "adult",
+    debate_level: str = "intermediate",
+    coach_model: str = "socratic_v3",
+    language: str = "vi",
+    response_time: str | None = None,
+    max_turns: int | None = None,
+    display_name: str | None = None,
+) -> dict:
+    init_db()
+    session_id = str(uuid4())
+    resolved_max_turns = int(max_turns or settings.DEFAULT_MAX_TURNS)
+    now = _now()
+    data = {
+        "session_id": session_id,
+        "user_id": user_id,
+        "topic": topic,
+        "topic_category": topic_category,
+        "custom_topic": custom_topic,
+        "stance": stance,
+        "difficulty": _normalize_difficulty(difficulty),
+        "input_mode": input_mode or "text",
+        "age_group": age_group or "adult",
+        "debate_level": debate_level or "intermediate",
+        "coach_model": coach_model or "socratic_v3",
+        "language": language or "vi",
+        "response_time": response_time,
+        "display_name": display_name,
+        "status": "active",
+        "turn_count": 0,
+        "max_turns": resolved_max_turns,
+        "average_score": None,
+        "created_at": now,
+        "updated_at": now,
+        "completed_at": None,
+    }
+    _db().collection("debate_sessions").document(session_id).set(data)
+    return data
+
+
+def get_session(session_id: str, user_id: str | None = None) -> dict | None:
+    init_db()
+    doc = _db().collection("debate_sessions").document(session_id).get()
+    if not doc.exists:
+        return None
+    data = doc.to_dict()
+    if user_id is not None and data.get("user_id") != user_id:
+        return None
+    return data
+
+
+def end_session(session_id: str, user_id: str | None = None) -> dict | None:
+    init_db()
+    db = _db()
+    doc_ref = db.collection("debate_sessions").document(session_id)
+    doc = doc_ref.get()
+    if not doc.exists:
+        return None
+    data = doc.to_dict()
+    if user_id is not None and data.get("user_id") != user_id:
+        return None
+
+    now = _now()
+    avg_score = _compute_session_avg_score(db, session_id)
+    doc_ref.update({
+        "status": "completed",
+        "average_score": avg_score,
+        "updated_at": now,
+        "completed_at": data.get("completed_at") or now,
+    })
+    return doc_ref.get().to_dict()
+
+
+# ---------------------------------------------------------------------------
+# Debate turns
+# ---------------------------------------------------------------------------
+
+def save_debate_turn(
+    session: dict,
+    user_argument: str,
+    ai_rebuttal: str,
+    cer: dict,
+    feedback: dict,
+    content_flags: list | None = None,
+    status: str = "active",
+    count_for_completion: bool = True,
+) -> dict:
+    init_db()
+    db = _db()
+    turn_id = str(uuid4())
+    session_id = session["session_id"]
+    turn_number = int(session.get("turn_count", 0)) + 1
+    cer = normalize_cer_to_100(cer)
+    flags = content_flags or []
+    now = _now()
+
+    # ── atomic batch write for all sub-documents ───────────────────────────
+    batch = db.batch()
+
+    # debate_turns
+    turn_ref = db.collection("debate_turns").document(turn_id)
+    batch.set(turn_ref, {
+        "turn_id": turn_id,
+        "session_id": session_id,
+        "turn_number": turn_number,
+        "user_argument": user_argument,
+        "ai_rebuttal": ai_rebuttal,
+        "status": status,
+        "created_at": now,
+    })
+
+    # cer_scores
+    score_id = str(uuid4())
+    cer_ref = db.collection("cer_scores").document(score_id)
+    batch.set(cer_ref, {
+        "score_id": score_id,
+        "turn_id": turn_id,
+        "claim": float(cer.get("claim", 0.0)),
+        "evidence": float(cer.get("evidence", 0.0)),
+        "reasoning": float(cer.get("reasoning", 0.0)),
+        "total": float(cer.get("total", 0.0)),
+        "created_at": now,
+    })
+
+    # feedback_items
+    for category in ("strengths", "weaknesses", "suggestions"):
+        for message in feedback.get(category, []):
+            feedback_id = str(uuid4())
+            fb_ref = db.collection("feedback_items").document(feedback_id)
+            batch.set(fb_ref, {
+                "feedback_id": feedback_id,
+                "turn_id": turn_id,
+                "category": category,
+                "message": str(message),
+                "created_at": now,
+            })
+
+    # content_flags
+    for flag in flags:
+        flag_id = str(uuid4())
+        flag_ref = db.collection("content_flags").document(flag_id)
+        batch.set(flag_ref, {
+            "flag_id": flag_id,
+            "turn_id": turn_id,
+            "flag_type": flag.get("type", "ai_error"),
+            "severity": flag.get("severity", "low"),
+            "message": flag.get("message", ""),
+            "created_at": now,
+        })
+
+    batch.commit()
+
+    # ── update parent debate_session ───────────────────────────────────────
+    next_turn_count = (
+        turn_number if count_for_completion else int(session.get("turn_count", 0))
+    )
+    next_status = (
+        "completed"
+        if count_for_completion and next_turn_count >= int(session["max_turns"])
+        else "active"
+    )
+    avg_score = _compute_session_avg_score(db, session_id)
+
+    session_ref = db.collection("debate_sessions").document(session_id)
+    session_updates: dict = {
+        "status": next_status,
+        "turn_count": next_turn_count,
+        "average_score": avg_score,
+        "updated_at": now,
+    }
+    if next_status == "completed":
+        current = session_ref.get().to_dict() or {}
+        session_updates["completed_at"] = current.get("completed_at") or now
+
+    session_ref.update(session_updates)
+    updated_session = session_ref.get().to_dict()
+
+    return {
+        "turn_id": turn_id,
+        "turn_number": turn_number,
+        "session": updated_session,
+    }
+
+
+def get_session_turns(session_id: str) -> list[dict]:
+    init_db()
+    db = _db()
+
+    # Requires composite index: session_id ASC, turn_number ASC
+    turn_docs = (
+        db.collection("debate_turns")
+        .where(filter=FieldFilter("session_id", "==", session_id))
+        .order_by("turn_number")
+        .get()
+    )
+    turns = [d.to_dict() for d in turn_docs]
+    if not turns:
+        return []
+
+    turn_ids = [t["turn_id"] for t in turns]
+
+    # Fetch cer_scores keyed by turn_id
+    cer_by_turn: dict[str, dict] = {}
+    for tid in turn_ids:
+        docs = (
+            db.collection("cer_scores")
+            .where(filter=FieldFilter("turn_id", "==", tid))
+            .limit(1)
+            .get()
+        )
+        if docs:
+            cer_by_turn[tid] = docs[0].to_dict()
+
+    # Fetch feedback_items grouped by turn_id
+    # Requires composite index: turn_id ASC, created_at ASC
+    feedback_by_turn: dict[str, dict] = {
+        tid: {"strengths": [], "weaknesses": [], "suggestions": []}
+        for tid in turn_ids
+    }
+    for tid in turn_ids:
+        fb_docs = (
+            db.collection("feedback_items")
+            .where(filter=FieldFilter("turn_id", "==", tid))
+            .order_by("created_at")
+            .get()
+        )
+        for fb_doc in fb_docs:
+            fb = fb_doc.to_dict()
+            cat = fb.get("category")
+            if cat in feedback_by_turn[tid]:
+                feedback_by_turn[tid][cat].append(fb["message"])
+
+    # Attach cer and feedback to each turn
+    for turn in turns:
+        tid = turn["turn_id"]
+        raw = cer_by_turn.get(tid, {})
+        turn["cer"] = normalize_cer_to_100({
+            "claim":     float(raw.get("claim",     0.0)),
+            "evidence":  float(raw.get("evidence",  0.0)),
+            "reasoning": float(raw.get("reasoning", 0.0)),
+            "total":     float(raw.get("total",     0.0)),
+        })
+        turn["feedback"] = feedback_by_turn[tid]
+
+    return turns
+
+
+# ---------------------------------------------------------------------------
+# Summaries and progress
+# ---------------------------------------------------------------------------
+
+def get_session_summary(session_id: str, user_id: str | None = None) -> dict | None:
+    session = get_session(session_id, user_id=user_id)
+    if not session:
+        return None
+
+    turns = get_session_turns(session_id)
+    scored_turns = [t for t in turns if t["status"] not in ("error", "invalid")]
+    cer_scores = [t["cer"] for t in scored_turns]
+    strengths: list[str] = []
+    weaknesses: list[str] = []
+    suggestions: list[str] = []
+    for turn in turns:
+        strengths.extend(turn["feedback"]["strengths"])
+        weaknesses.extend(turn["feedback"]["weaknesses"])
+        suggestions.extend(turn["feedback"]["suggestions"])
+
+    return {
+        "session_id":         session["session_id"],
+        "topic":              session["topic"],
+        "stance":             session["stance"],
+        "difficulty":         session["difficulty"],
+        "turn_count":         int(session["turn_count"]),
+        "max_turns":          int(session["max_turns"]),
+        "status":             session["status"],
+        "avg_claim_score":    _average([s["claim"]     for s in cer_scores]),
+        "avg_evidence_score": _average([s["evidence"]  for s in cer_scores]),
+        "avg_reasoning_score":_average([s["reasoning"] for s in cer_scores]),
+        "overall_score":      _average([s["total"]     for s in cer_scores]),
+        "strength_summary":   _unique_first(strengths),
+        "weakness_summary":   _unique_first(weaknesses),
+        "next_steps":         _unique_first(suggestions),
+    }
+
+
+def get_progress_overview(user_id: str | None = None) -> dict:
+    init_db()
+    db = _db()
+
+    # ── fetch all relevant debate sessions ─────────────────────────────────
+    sessions_ref = db.collection("debate_sessions")
+    if user_id is not None:
+        sessions_ref = sessions_ref.where(filter=FieldFilter("user_id", "==", user_id))
+    sessions = [d.to_dict() for d in sessions_ref.get()]
+
+    total_sessions = len(sessions)
+    completed_sessions = sum(1 for s in sessions if s.get("status") == "completed")
+
+    # Recent topics (up to 5, newest first, non-empty)
+    recent_sessions = sorted(
+        [s for s in sessions if s.get("topic")],
+        key=lambda s: s.get("created_at", ""),
+        reverse=True,
+    )
+    recent_topics = [s["topic"] for s in recent_sessions[:5]]
+
+    # Unique completed calendar days for streak calculation
+    completed_days = list({
+        s["completed_at"][:10]
+        for s in sessions
+        if s.get("completed_at")
+    })
+
+    # ── aggregate CER scores across all valid turns ────────────────────────
+    session_ids = {s["session_id"] for s in sessions}
+    claim_vals:     list[float] = []
+    evidence_vals:  list[float] = []
+    reasoning_vals: list[float] = []
+    total_vals:     list[float] = []
+
+    for sid in session_ids:
+        turn_docs = (
+            db.collection("debate_turns")
+            .where(filter=FieldFilter("session_id", "==", sid))
+            .get()
+        )
+        valid_turn_ids = [
+            d.to_dict()["turn_id"]
+            for d in turn_docs
+            if d.to_dict().get("status") not in ("error", "invalid")
+        ]
+        for tid in valid_turn_ids:
+            score_docs = (
+                db.collection("cer_scores")
+                .where(filter=FieldFilter("turn_id", "==", tid))
+                .limit(1)
+                .get()
+            )
+            if score_docs:
+                s = score_docs[0].to_dict()
+                claim_vals.append(    _normalize_score_value(float(s.get("claim",     0.0))))
+                evidence_vals.append( _normalize_score_value(float(s.get("evidence",  0.0))))
+                reasoning_vals.append(_normalize_score_value(float(s.get("reasoning", 0.0))))
+                total_vals.append(    _normalize_score_value(float(s.get("total",     0.0))))
 
     scores = {
-        "claim_score": round(float(averages["avg_claim_score"] or 0.0), 2),
-        "evidence_score": round(float(averages["avg_evidence_score"] or 0.0), 2),
-        "reasoning_score": round(float(averages["avg_reasoning_score"] or 0.0), 2),
+        "claim_score":     _average(claim_vals),
+        "evidence_score":  _average(evidence_vals),
+        "reasoning_score": _average(reasoning_vals),
     }
 
     return {
-        "total_sessions": int(counts["total_sessions"] or 0),
-        "completed_sessions": int(counts["completed_sessions"] or 0),
-        "avg_claim_score": scores["claim_score"],
-        "avg_evidence_score": scores["evidence_score"],
+        "total_sessions":      total_sessions,
+        "completed_sessions":  completed_sessions,
+        "avg_claim_score":     scores["claim_score"],
+        "avg_evidence_score":  scores["evidence_score"],
         "avg_reasoning_score": scores["reasoning_score"],
-        "overall_score": round(float(averages["overall_score"] or 0.0), 2),
-        "streak_days": _streak_days([row["completed_day"] for row in completed_days]),
-        "recent_topics": [row["topic"] for row in topics],
-        "skill_strength": _skill_label(scores, pick_highest=True),
-        "skill_weakness": _skill_label(scores, pick_highest=False),
+        "overall_score":       _average(total_vals),
+        "streak_days":         _streak_days(completed_days),
+        "recent_topics":       recent_topics,
+        "skill_strength":      _skill_label(scores, pick_highest=True),
+        "skill_weakness":      _skill_label(scores, pick_highest=False),
     }
