@@ -279,9 +279,9 @@ def normalize_language(value) -> str:
             "vn": "vi",
             "vietnamese": "vi",
             "tieng viet": "vi",
-            "en": "en",
-            "eng": "en",
-            "english": "en",
+            "en": "vi",
+            "eng": "vi",
+            "english": "vi",
         },
         "vi",
     )

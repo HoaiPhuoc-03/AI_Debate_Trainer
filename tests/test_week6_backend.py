@@ -136,7 +136,7 @@ class Week6BackendTests(unittest.TestCase):
         self.assertEqual(data["user"]["display_name"], "Minh Nguyen")
         self.assertEqual(data["user"]["age_group"], "teen")
         self.assertEqual(data["user"]["debate_level"], "advanced")
-        self.assertEqual(data["user"]["language"], "en")
+        self.assertEqual(data["user"]["language"], "vi")
 
     def test_register_duplicate_email_returns_error(self):
         self.register_user(email="dupe@example.com")
@@ -223,7 +223,7 @@ class Week6BackendTests(unittest.TestCase):
         self.assertEqual(data["age_group"], "teen")
         self.assertEqual(data["debate_level"], "advanced")
         self.assertEqual(data["coach_model"], "socratic_v3")
-        self.assertEqual(data["language"], "en")
+        self.assertEqual(data["language"], "vi")
         self.assertEqual(data["response_time"], "90 sec")
         self.assertEqual(data["max_turns"], 2)
         self.assertEqual(data["turn_count"], 0)
@@ -399,7 +399,7 @@ class Week6BackendTests(unittest.TestCase):
         self.assertEqual(mocked_ai.call_args.kwargs["debate_level"], "advanced")
         self.assertEqual(mocked_ai.call_args.kwargs["input_mode"], "voice")
         self.assertEqual(mocked_ai.call_args.kwargs["coach_model"], "socratic_v3")
-        self.assertEqual(mocked_ai.call_args.kwargs["language"], "en")
+        self.assertEqual(mocked_ai.call_args.kwargs["language"], "vi")
 
     @mock.patch("app.api.debate.ai_service.generate_debate_analysis")
     def test_authenticated_debate_turn_happy_path_still_works(self, mocked_ai):
