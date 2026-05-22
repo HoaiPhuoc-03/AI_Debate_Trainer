@@ -50,11 +50,29 @@ class Week6BackendTests(unittest.TestCase):
         self.db_path = str(Path(self.temp_dir.name) / "test.db")
         settings.DATABASE_PATH = self.db_path
         settings.DEFAULT_MAX_TURNS = 3
+        self._clear_firestore()
         init_db()
         self.client = TestClient(app)
 
     def tearDown(self):
+        self._clear_firestore()
         self.temp_dir.cleanup()
+
+    def _clear_firestore(self):
+        from app.services.session_store import _db
+        try:
+            db = _db()
+            collections = ["users", "auth_sessions", "debate_sessions", "debate_turns", "cer_scores", "feedback_items", "content_flags"]
+            for coll_name in collections:
+                coll_ref = db.collection(coll_name)
+                docs = list(coll_ref.list_documents())
+                for doc in docs:
+                    if coll_name == "users" and doc.id == "demo-user":
+                        continue
+                    doc.delete()
+        except Exception as e:
+            print(f"Error clearing firestore: {e}")
+
 
     def auth_headers(self, token):
         return {"Authorization": f"Bearer {token}"}
@@ -104,11 +122,33 @@ class Week6BackendTests(unittest.TestCase):
         return response.json()
 
     def count_rows(self, table_name):
-        connection = sqlite3.connect(self.db_path)
+        from app.services.session_store import _db
         try:
-            return connection.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
-        finally:
-            connection.close()
+            db = _db()
+            coll_map = {
+                "users": "users",
+                "auth_sessions": "auth_sessions",
+                "debate_sessions": "debate_sessions",
+                "debate_turns": "debate_turns",
+                "cer_scores": "cer_scores",
+                "feedback_items": "feedback_items",
+                "content_flags": "content_flags",
+            }
+            coll_name = coll_map.get(table_name, table_name)
+            docs = db.collection(coll_name).list_documents()
+            count = sum(1 for _ in docs)
+            # Exclude seeded demo-user if counting users
+            if coll_name == "users":
+                try:
+                    if db.collection("users").document("demo-user").get().exists:
+                        count -= 1
+                except Exception:
+                    pass
+            return count
+        except Exception as e:
+            print(f"Error counting rows: {e}")
+            return 0
+
 
     def submit_turn(self, session_id, argument="Phones can support quick research.", token=None):
         headers = self.auth_headers(token) if token else None

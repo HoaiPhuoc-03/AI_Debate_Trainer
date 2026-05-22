@@ -15,6 +15,7 @@ from app.services.groq_client import (
 )
 from app.services.output_parser import DEFAULT_CER
 from app.services.prompt_builder import build_cer_messages
+from app.services.prompt_builder import build_groq_messages  # noqa: F401
 
 
 DEFAULT_FEEDBACK = {
@@ -63,6 +64,7 @@ def build_messages(
     input_mode: str | None = None,
     language: str = "vi",
     turn_history: list[dict] | None = None,
+    mode: str = "free_debate",
 ) -> list[dict[str, str]]:
     # Use build_cer_messages() which returns a proper [system, user] pair.
     # GEPA design: the system prompt is written IN Vietnamese so the model's
@@ -78,6 +80,7 @@ def build_messages(
         input_mode=input_mode or "text",
         language=language,
         turn_history=turn_history,
+        mode=mode,
     )
 
 
@@ -157,6 +160,7 @@ def generate_debate_analysis(
     language: str = "vi",
     input_mode: str | None = None,
     turn_history: list[dict] | None = None,
+    mode: str = "free_debate",
 ) -> dict:
     validation = validate_user_argument(topic, user_argument)
     if not validation["is_valid"]:
@@ -195,6 +199,7 @@ def generate_debate_analysis(
             input_mode=input_mode or "text",
             language=language or "vi",
             turn_history=turn_history,
+            mode=mode,
         )
         build_prompt_ms = int((time.perf_counter() - build_start) * 1000)
 
@@ -253,6 +258,7 @@ def generate_debate_turn_analysis(
     language: str = "vi",
     input_mode: str | None = None,
     turn_history: list[dict] | None = None,
+    mode: str = "free_debate",
 ) -> dict:
     return generate_debate_analysis(
         topic=topic,
@@ -265,6 +271,7 @@ def generate_debate_turn_analysis(
         language=language,
         input_mode=input_mode,
         turn_history=turn_history,
+        mode=mode,
     )
 
 
@@ -279,6 +286,7 @@ def generate_rebuttal(
     language: str = "vi",
     input_mode: str | None = None,
     turn_history: list[dict] | None = None,
+    mode: str = "free_debate",
 ) -> dict:
     analysis = generate_debate_analysis(
         topic=topic,
@@ -291,6 +299,7 @@ def generate_rebuttal(
         language=language,
         input_mode=input_mode,
         turn_history=turn_history,
+        mode=mode,
     )
     return {
         "ok": analysis["ok"],

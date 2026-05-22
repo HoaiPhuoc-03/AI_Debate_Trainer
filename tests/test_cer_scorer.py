@@ -125,5 +125,37 @@ Suggestions:
         self.assertFalse(_needs_rebuttal_repair(natural_rebuttal))
 
 
+    def test_parse_vietnamese_system_prompt_marker_format(self):
+        raw = """
+[SUY NGHĨ]
+Phân tích nháp của Lumi: lập luận khá hợp lý nhưng thiếu ví dụ.
+
+[ĐIỂM SỐ]
+- Claim: 8/10
+- Evidence: 4/10
+- Reasoning: 7/10
+
+[PHÂN TÍCH CER]
+Luận điểm khá rõ lập trường. Tuy nhiên bằng chứng còn chung chung.
+
+[PHẢN BIỆN LẠI]
+Ngược lại với ý kiến của bạn, thực tế việc làm thêm có thể làm giảm kết quả học tập.
+
+[GỢI Ý CẢI THIỆN]
+Hãy thêm số liệu từ báo cáo giáo dục để tăng sức thuyết phục.
+"""
+        result = parse_cer_rubric_output(raw)
+        self.assertTrue(result["is_valid"])
+        self.assertEqual(result["cer"]["claim"], 80.0)
+        self.assertEqual(result["cer"]["evidence"], 40.0)
+        self.assertEqual(result["cer"]["reasoning"], 70.0)
+        self.assertEqual(result["cer"]["overall"], 64.0)
+        self.assertEqual(result["feedback"]["strengths"], ["Luận điểm khá rõ lập trường."])
+        self.assertEqual(result["feedback"]["weaknesses"], ["Tuy nhiên bằng chứng còn chung chung."])
+        self.assertEqual(result["feedback"]["suggestions"], ["Hãy thêm số liệu từ báo cáo giáo dục để tăng sức thuyết phục."])
+        self.assertEqual(result["rebuttal"], "Ngược lại với ý kiến của bạn, thực tế việc làm thêm có thể làm giảm kết quả học tập.")
+
+
 if __name__ == "__main__":
     unittest.main()
+

@@ -75,77 +75,382 @@ def _format_turn_history(turn_history: list[dict] | None, max_turns: int = 3) ->
 # System prompt — written IN Vietnamese, NO numeric scores
 # ---------------------------------------------------------------------------
 def _build_system_prompt(output_language: str, age_group: str, debate_level: str) -> str:
-    return f"""Bạn là hệ thống chấm điểm và phản biện tranh luận bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
+    return f"""Bạn là hệ thống chấm điểm và phản biện tranh luận chuyên nghiệp bằng {output_language}. KHÔNG dùng tiếng Anh.
 
-NHIỆM VỤ — phân tích nội bộ rồi trả về DUY NHẤT JSON (không có text nào trước JSON):
-  Trước khi điền JSON, xác định nội bộ:
-  a) Có nguồn/tổ chức/số liệu có tên cụ thể không?
-  b) Lập luận chính là gì? Phạm vi có rõ không?
-  c) Có lỗi logic hoặc giả định ẩn không?
+NHIỆM VỤ — BẮT BUỘC thực hiện suy nghĩ phân tích nháp chi tiết trong block [SUY NGHĨ] trước khi chấm điểm và viết phản hồi chính thức.
+Hãy sử dụng nhiều thời gian suy nghĩ để đưa ra lập luận chính xác, sắc bén nhất.
 
-Viết "ai_rebuttal" — 4–6 câu phản biện bằng {output_language}:
-  - PHẢI mở đầu bằng: "Tuy nhiên,", "Thực tế cho thấy," hoặc "Ngược lại,"
-  - PHẢI đề cập hoặc phản hồi nội dung CỤ THỂ trong lập luận (dẫn luận điểm, số liệu hoặc từ khoá của người dùng)
-  - KHÔNG được viết phản biện chung chung áp dụng cho mọi lập luận
-  - KHÔNG mở đầu bằng "Lập luận của bạn", "Bạn nên", "Hãy"
-  - Giọng ({age_group}): {_tone_rule(age_group)}
-  - Độ sâu ({debate_level}): {_level_rule(debate_level)}
+Quy định độ dài: Độ dài tổng của các phần chính thức (từ [ĐIỂM SỐ] trở đi) TUYỆT ĐỐI KHÔNG vượt quá 300 từ.
 
-CỔNG BẰNG CHỨNG — bắt buộc áp dụng trước khi chấm:
-  CÓ bằng chứng thực (has_real_evidence=true, evidence_score > 0):
-    → Tên tổ chức + năm: "WHO 2023", "McKinsey 2022", "báo cáo OECD", "nghiên cứu Harvard"
-    → Số liệu cụ thể: "23%", "tăng 3 lần", "15 triệu người"
-    → Sự kiện có ngày: "từ năm 2019", "tháng 3/2024"
-  KHÔNG phải bằng chứng (has_real_evidence=false, evidence_score=0):
-    → "Nhiều nghiên cứu cho thấy", "mọi người biết", "thực tế là", "rõ ràng"
-    → Lý luận thuần túy không có nguồn
+CỔNG BẰNG CHỨNG (Evidence Gate):
+- Bằng chứng thực tế phải có nguồn cụ thể (tên tổ chức + năm, nghiên cứu, báo cáo...) hoặc số liệu/sự kiện thực tế rõ ràng.
+- Nếu không có nguồn thực tế/số liệu, điểm Evidence BẮT BUỘC bằng 0.
 
-THANG ĐIỂM (chấm theo TỪNG TRƯỜNG HỢP CỤ THỂ):
-  claim_score: Chất lượng luận điểm chính (0–100)
-    - Có lập trường rõ + phạm vi cụ thể + kết nối với chủ đề: 50–80
-    - Có lập trường nhưng mơ hồ, không phạm vi: 20–45
-    - Không có lập trường rõ: 0–20
-  evidence_score: Chất lượng bằng chứng (0–100, = 0 nếu không có bằng chứng thực)
-    - Nhiều nguồn cụ thể + số liệu + sự kiện: 60–90
-    - Một nguồn cụ thể: 30–60
-    - Không có nguồn thực: 0
-  reasoning_score: Chất lượng suy luận (0–100)
-    - Chuỗi nhân quả rõ + không có lỗi logic: 50–80
-    - Có liên kết logic nhưng có lỗ hổng: 25–50
-    - Suy luận yếu hoặc circular: 0–25
-  overall_score = round(claim×0.3 + evidence×0.3 + reasoning×0.4)
+QUY TẮC CHẤM ĐIỂM (Thang điểm 10):
+- Claim (Luận điểm): 0-3 (Mơ hồ); 4-7 (Chưa rõ ràng); 8-10 (Rõ ràng, trực tiếp).
+- Evidence (Bằng chứng): 0-3 (Không có/yếu); 4-7 (Chung chung); 8-10 (Số liệu, nguồn cụ thể).
+- Reasoning (Lập luận): 0-3 (Thiếu logic); 4-7 (Chưa chặt chẽ); 8-10 (Logic, không ngụy biện).
 
-CHỐNG DỒN ĐIỂM:
-  - KHÔNG dùng cùng điểm cho các lập luận khác nhau về chất lượng
-  - KHÔNG dùng số tròn trăm hoặc trừ các giá trị cuối bằng 0 (10,20,30...)
-  - Lập luận khác nhau PHẢI có điểm khác nhau"""
+ĐỊNH DẠNG ĐẦU RA BẮT BUỘC:
+[SUY NGHĨ]
+(Phân tích chi tiết suy nghĩ về lập luận của người dùng: Lập trường, nguồn bằng chứng, chuỗi nhân quả, lỗi logic.)
+
+[ĐIỂM SỐ]
+- Claim: <điểm số>/10
+- Evidence: <điểm số>/10
+- Reasoning: <điểm số>/10
+
+[PHÂN TÍCH CER]
+(Tối đa 2 câu. Đánh giá trực tiếp và ngắn gọn vào tiêu chí chấm điểm, không nhận xét chung chung.)
+
+[PHẢN BIỆN LẠI]
+(Tối đa 3 câu. Bắt đầu bằng: "Tuy nhiên,", "Thực tế cho thấy,", hoặc "Ngược lại,". Chỉ tập trung phản bác 1 điểm yếu quan trọng nhất trong lập luận của người dùng, dùng phản ví dụ hoặc trường hợp ngoại lệ.)
+
+[GỢI Ý CẢI THIỆN]
+(Chính xác 1 câu duy nhất. Đưa ra giải pháp khắc phục cụ thể cho điểm yếu vừa bị phản biện.)
+
+CONTRACT RULES:
+- Respond only in tiếng Việt.
+- Write "ai_rebuttal" only in tiếng Việt.
+- Do not mix English into the rebuttal.
+- If there is no named source, evidence_score = 0 and all evidence breakdown values = 0.
+- Write a 4–6 sentence rebuttal.
+- Open with the counter-position.
+"""
 
 
-# ---------------------------------------------------------------------------
-# JSON schema — string placeholders, NO numeric anchors
-# ---------------------------------------------------------------------------
 def _json_schema(output_language: str) -> str:
-    return (
-        '{{\n'
-        '  "is_valid": true,\n'
-        '  "evidence_quote": "<trích nguyên văn nguồn/số liệu từ lập luận, hoặc NONE>",\n'
-        '  "checklist": {{"has_clear_position": true/false, "has_bounded_scope": true/false, "has_real_evidence": true/false, "has_causal_chain": true/false}},\n'
-        f'  "ai_rebuttal": "<4–6 câu phản biện TRỰC TIẾP lập luận trên bằng {output_language}>",\n'
-        '  "claim_score": <số nguyên>,\n'
-        '  "evidence_score": <số nguyên, bắt buộc 0 nếu không có bằng chứng thực>,\n'
-        '  "reasoning_score": <số nguyên>,\n'
-        '  "overall_score": <round(claim×0.3 + evidence×0.3 + reasoning×0.4)>,\n'
-        '  "claim_breakdown": {{"clarity": <0–40>, "relevance": <0–30>, "specificity": <0–30>}},\n'
-        '  "evidence_breakdown": {{"presence": <0–40>, "evidence_specificity": <0–30>, "evidence_relevance": <0–30>}},\n'
-        '  "reasoning_breakdown": {{"logical_connection": <0–40>, "causal_explanation": <0–40>, "fallacy_control": <0–20>}},\n'
-        f'  "claim_explanation": "<lý do điểm claim bằng {output_language}>",\n'
-        f'  "evidence_explanation": "<lý do điểm evidence bằng {output_language}>",\n'
-        f'  "reasoning_explanation": "<lý do điểm reasoning bằng {output_language}>",\n'
-        f'  "strengths": ["<điểm mạnh bằng {output_language}>"],\n'
-        f'  "weaknesses": ["<điểm yếu bằng {output_language}>"],\n'
-        f'  "suggestions": ["<gợi ý bằng {output_language}>"]\n'
-        '}}'
+    """Legacy helper for backward compatibility — no longer used in new prompts."""
+    return ""
+
+
+def _build_claim_writing_system_prompt(output_language: str, age_group: str, debate_level: str) -> str:
+    return f"""Bạn là huấn luyện viên AI hỗ trợ người dùng luyện viết Luận điểm (Claim) bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
+
+CƠ CHẾ HOẠT ĐỘNG:
+  1. KHỞI ĐẦU: Nếu người dùng gửi thông điệp bắt đầu (như "Bắt đầu", "Bắt đầu bài tập", v.v.) và chưa có lịch sử trước đó:
+     - Hãy đưa ra một chủ đề tranh luận thú vị và yêu cầu người dùng viết một Luận điểm (Claim) thể hiện rõ ràng lập trường của họ đối với chủ đề đó.
+     - Đặt tất cả điểm số (Claim, Evidence, Reasoning) bằng 0.
+     - Viết yêu cầu/chủ đề trong phần [PHẢN BIỆN LẠI] (dài 4-6 câu).
+  2. ĐÁNH GIÁ: Nếu người dùng gửi luận điểm (Claim) ở lượt tiếp theo:
+     - Phân tích và chấm điểm luận điểm của họ (Claim: 0-10, Evidence: 0/10, Reasoning: 0/10).
+     - Viết nhận xét chi tiết hướng dẫn (Coaching) trong [PHẢN BIỆN LẠI] (dài 4-6 câu). Chỉ ra ưu điểm lớn nhất và gợi ý cách sửa đổi để làm câu rõ ràng hơn. Giọng điệu thân thiện, tích cực.
+     - CUỐI phần [PHẢN BIỆN LẠI], hãy đưa ra thêm một chủ đề tranh luận MỚI để người dùng tiếp tục luyện tập ở lượt kế tiếp.
+
+NHIỆM VỤ — BẮT BUỘC thực hiện suy nghĩ phân tích nháp chi tiết trong block [SUY NGHĨ] trước khi phản hồi chính thức.
+Quy định độ dài: Độ dài tổng các phần chính thức (từ [ĐIỂM SỐ] trở đi) TUYỆT ĐỐI KHÔNG vượt quá 300 từ.
+
+ĐỊNH DẠNG ĐẦU RA BẮT BUỘC:
+[SUY NGHĨ]
+(Phân tích chi tiết suy nghĩ về câu viết của người dùng hoặc xây dựng chủ đề khởi đầu.)
+
+[ĐIỂM SỐ]
+- Claim: <điểm số>/10
+- Evidence: 0/10
+- Reasoning: 0/10
+
+[PHÂN TÍCH CER]
+(Tối đa 2 câu nhận xét về luận điểm.)
+
+[PHẢN BIỆN LẠI]
+(Nội dung phản hồi chính hoặc chủ đề luyện tập mới của huấn luyện viên AI.)
+
+[GỢI Ý CẢI THIỆN]
+(Chính xác 1 câu gợi ý cải thiện.)
+"""
+
+
+def _build_find_evidence_system_prompt(output_language: str, age_group: str, debate_level: str) -> str:
+    return f"""Bạn là huấn luyện viên AI hỗ trợ người dùng luyện tìm Bằng chứng (Evidence) bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
+
+CƠ CHẾ HOẠT ĐỘNG:
+  1. KHỞI ĐẦU: Nếu người dùng gửi thông điệp bắt đầu (như "Bắt đầu", "Bắt đầu bài tập", v.v.) và chưa có lịch sử trước đó:
+     - Hãy đưa ra một Luận điểm (Claim) cụ thể liên quan đến chủ đề tranh luận và yêu cầu người dùng tìm bằng chứng thực tế hỗ trợ cho luận điểm đó.
+     - Đặt tất cả điểm số bằng 0.
+     - Viết yêu cầu/Luận điểm trong phần [PHẢN BIỆN LẠI] (dài 4-6 câu).
+  2. ĐÁNH GIÁ: Nếu người dùng gửi bằng chứng ở lượt tiếp theo:
+     - Phân tích xem bằng chứng có nguồn cụ thể (tổ chức, báo cáo, năm) hoặc số liệu/sự kiện rõ ràng không.
+     - Chấm điểm thực tế cho Evidence (0-10). Claim và Reasoning có thể chấm 0 hoặc mức tối thiểu.
+     - Viết nhận xét chi tiết về bằng chứng trong [PHẢN BIỆN LẠI] (dài 4-6 câu). Giải thích rõ vì sao bằng chứng thuyết phục hoặc cần bổ sung gì.
+     - CUỐI phần [PHẢN BIỆN LẠI], hãy đưa ra thêm một Luận điểm (Claim) MỚI để người dùng tiếp tục luyện tập ở lượt kế tiếp.
+
+NHIỆM VỤ — BẮT BUỘC thực hiện suy nghĩ phân tích nháp chi tiết trong block [SUY NGHĨ] trước khi phản hồi chính thức.
+Quy định độ dài: Độ dài tổng các phần chính thức (từ [ĐIỂM SỐ] trở đi) TUYỆT ĐỐI KHÔNG vượt quá 300 từ.
+
+ĐỊNH DẠNG ĐẦU RA BẮT BUỘC:
+[SUY NGHĨ]
+(Phân tích chi tiết suy nghĩ về bằng chứng của người dùng.)
+
+[ĐIỂM SỐ]
+- Claim: 0/10
+- Evidence: <điểm số>/10
+- Reasoning: 0/10
+
+[PHÂN TÍCH CER]
+(Tối đa 2 câu nhận xét về dẫn chứng.)
+
+[PHẢN BIỆN LẠI]
+(Nhận xét của huấn luyện viên AI và Luận điểm mới cho lượt tiếp theo.)
+
+[GỢI Ý CẢI THIỆN]
+(Chính xác 1 câu gợi ý cách tìm dẫn chứng tốt hơn.)
+"""
+
+
+def _build_quick_rebuttal_system_prompt(output_language: str, age_group: str, debate_level: str) -> str:
+    return f"""Bạn là huấn luyện viên AI hỗ trợ người dùng luyện Phản biện nhanh (Quick Rebuttal) bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
+
+CƠ CHẾ HOẠT ĐỘNG:
+  1. KHỞI ĐẦU: Nếu người dùng gửi thông điệp bắt đầu (như "Bắt đầu", "Bắt đầu bài tập", v.v.) và chưa có lịch sử trước đó:
+     - Hãy đưa ra một lập luận yếu chứa lỗi logic rõ ràng (ngụy biện bù nhìn, nhân quả sai, khái quát hóa vội vã...) ở lập trường đối lập với stance của người dùng.
+     - Yêu cầu người dùng phát hiện lỗi logic hoặc phản bác lại lập luận yếu đó.
+     - Đặt tất cả điểm số bằng 0.
+     - Viết lập luận yếu đó trong phần [PHẢN BIỆN LẠI] (dài 4-6 câu).
+  2. ĐÁNH GIÁ: Nếu người dùng gửi phản biện ở lượt tiếp theo:
+     - Phân tích xem người dùng có phát hiện đúng lỗi logic/lỗ hổng hay không.
+     - Chấm điểm thực tế cho Reasoning (0-10). Claim và Evidence chấm ở mức 0 hoặc tối thiểu.
+     - Viết nhận xét chi tiết trong [PHẢN BIỆN LẠI] (dài 4-6 câu). Giải thích lỗi logic đó là gì và vì sao phản biện của họ tốt hoặc cần cải thiện.
+     - CUỐI phần [PHẢN BIỆN LẠI], hãy đưa ra thêm một lập luận yếu MỚI để người dùng tiếp tục phản biện ở lượt kế tiếp.
+
+NHIỆM VỤ — BẮT BUỘC thực hiện suy nghĩ phân tích nháp chi tiết trong block [SUY NGHĨ] trước khi phản hồi chính thức.
+Quy định độ dài: Độ dài tổng các phần chính thức (từ [ĐIỂM SỐ] trở đi) TUYỆT ĐỐI KHÔNG vượt quá 300 từ.
+
+ĐỊNH DẠNG ĐẦU RA BẮT BUỘC:
+[SUY NGHĨ]
+(Phân tích chi tiết suy nghĩ về phản biện nhanh của người dùng.)
+
+[ĐIỂM SỐ]
+- Claim: 0/10
+- Evidence: 0/10
+- Reasoning: <điểm số>/10
+
+[PHÂN TÍCH CER]
+(Tối đa 2 câu nhận xét về lập luận phản bác.)
+
+[PHẢN BIỆN LẠI]
+(Nhận xét của huấn luyện viên AI và lập luận yếu mới cho lượt tiếp theo.)
+
+[GỢI Ý CẢI THIỆN]
+(Chính xác 1 câu gợi ý cải thiện.)
+"""
+
+
+def _build_full_argument_system_prompt(output_language: str, age_group: str, debate_level: str) -> str:
+    return f"""Bạn là huấn luyện viên AI hỗ trợ người dùng xây dựng Lập luận hoàn chỉnh (C+E+R) bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
+
+NHIỆM VỤ:
+- Đánh giá toàn diện một lập luận đầy đủ bao gồm ba thành phần: Luận điểm (Claim), Bằng chứng (Evidence), và Suy luận (Reasoning).
+- BẮT BUỘC thực hiện suy nghĩ phân tích nháp chi tiết trong block [SUY NGHĨ] trước khi chấm điểm và viết phản hồi chính thức.
+
+Quy định độ dài: Độ dài tổng các phần chính thức (từ [ĐIỂM SỐ] trở đi) TUYỆT ĐỐI KHÔNG vượt quá 300 từ.
+
+THANG ĐIỂM (Chấm đầy đủ cả ba tiêu chí trên thang điểm 10):
+- Claim: 0-10
+- Evidence: 0-10
+- Reasoning: 0-10
+
+ĐỊNH DẠNG ĐẦU RA BẮT BUỘC:
+[SUY NGHĨ]
+(Phân tích chi tiết suy nghĩ về lập luận hoàn chỉnh C+E+R của người dùng.)
+
+[ĐIỂM SỐ]
+- Claim: <điểm số>/10
+- Evidence: <điểm số>/10
+- Reasoning: <điểm số>/10
+
+[PHÂN TÍCH CER]
+(Tối đa 2 câu nhận xét toàn diện về cấu trúc lập luận.)
+
+[PHẢN BIỆN LẠI]
+(Tối đa 3 câu nhận xét chi tiết, chỉ ra điểm sáng nhất và lỗ hổng lớn nhất cần khắc phục.)
+
+[GỢI Ý CẢI THIỆN]
+(Chính xác 1 câu gợi ý cải thiện thiết thực nhất.)
+"""
+
+
+def _build_claim_writing_messages(
+    topic: str,
+    stance: str,
+    difficulty: str,
+    user_argument: str,
+    age_group: str,
+    debate_level: str,
+    input_mode: str,
+    language: str,
+    turn_history: list[dict] | None,
+) -> list[dict[str, str]]:
+    output_language = _language_name(language)
+    system_prompt = _build_claim_writing_system_prompt(output_language, age_group, debate_level)
+    history_block = _format_turn_history(turn_history)
+    history_section = f"\n{history_block}\n" if history_block else ""
+    user_prompt = (
+        f"=== NGỮ CẢNH ===\n"
+        f"Chủ đề   : {topic}\n"
+        f"Lập trường: {stance}\n"
+        f"Độ khó   : {difficulty}\n"
+        f"Nhập liệu: {_input_mode_rule(input_mode)}\n"
+        f"Chế độ   : Luyện viết Claim\n"
+        f"{history_section}"
+        f"\n=== LẬP LUẬN HOẶC TIN NHẮN NGƯỜI DÙNG ===\n"
+        f"{user_argument}\n"
+        f"\n=== YÊU CẦU ĐỊNH DẠNG ĐẦU RA BẮT BUỘC ===\n"
+        f"Hãy phân tích và trả về phản hồi chính xác theo cấu trúc sau. TUYỆT ĐỐI không sử dụng JSON:\n"
+        f"[SUY NGHĨ]\n"
+        f"(Nháp phân tích chi tiết)\n\n"
+        f"[ĐIỂM SỐ]\n"
+        f"- Claim: <điểm>/10\n"
+        f"- Evidence: <điểm>/10\n"
+        f"- Reasoning: <điểm>/10\n\n"
+        f"[PHÂN TÍCH CER]\n"
+        f"<tối đa 2 câu phân tích>\n\n"
+        f"[PHẢN BIỆN LẠI]\n"
+        f"<tối đa 3 câu phản hồi/hướng dẫn>\n\n"
+        f"[GỢI Ý CẢI THIỆN]\n"
+        f"<chính xác 1 câu gợi ý>\n"
     )
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+
+
+def _build_find_evidence_messages(
+    topic: str,
+    stance: str,
+    difficulty: str,
+    user_argument: str,
+    age_group: str,
+    debate_level: str,
+    input_mode: str,
+    language: str,
+    turn_history: list[dict] | None,
+) -> list[dict[str, str]]:
+    output_language = _language_name(language)
+    system_prompt = _build_find_evidence_system_prompt(output_language, age_group, debate_level)
+    history_block = _format_turn_history(turn_history)
+    history_section = f"\n{history_block}\n" if history_block else ""
+    user_prompt = (
+        f"=== NGỮ CẢNH ===\n"
+        f"Chủ đề   : {topic}\n"
+        f"Lập trường: {stance}\n"
+        f"Độ khó   : {difficulty}\n"
+        f"Nhập liệu: {_input_mode_rule(input_mode)}\n"
+        f"Chế độ   : Luyện tìm Evidence\n"
+        f"{history_section}"
+        f"\n=== BẰNG CHỨNG (EVIDENCE) HOẶC TIN NHẮN NGƯỜI DÙNG ===\n"
+        f"{user_argument}\n"
+        f"\n=== YÊU CẦU ĐỊNH DẠNG ĐẦU RA BẮT BUỘC ===\n"
+        f"Hãy phân tích và trả về phản hồi chính xác theo cấu trúc sau. TUYỆT ĐỐI không sử dụng JSON:\n"
+        f"[SUY NGHĨ]\n"
+        f"(Nháp phân tích chi tiết)\n\n"
+        f"[ĐIỂM SỐ]\n"
+        f"- Claim: <điểm>/10\n"
+        f"- Evidence: <điểm>/10\n"
+        f"- Reasoning: <điểm>/10\n\n"
+        f"[PHÂN TÍCH CER]\n"
+        f"<tối đa 2 câu phân tích>\n\n"
+        f"[PHẢN BIỆN LẠI]\n"
+        f"<tối đa 3 câu phản hồi/hướng dẫn>\n\n"
+        f"[GỢI Ý CẢI THIỆN]\n"
+        f"<chính xác 1 câu gợi ý>\n"
+    )
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+
+
+def _build_quick_rebuttal_messages(
+    topic: str,
+    stance: str,
+    difficulty: str,
+    user_argument: str,
+    age_group: str,
+    debate_level: str,
+    input_mode: str,
+    language: str,
+    turn_history: list[dict] | None,
+) -> list[dict[str, str]]:
+    output_language = _language_name(language)
+    system_prompt = _build_quick_rebuttal_system_prompt(output_language, age_group, debate_level)
+    history_block = _format_turn_history(turn_history)
+    history_section = f"\n{history_block}\n" if history_block else ""
+    user_prompt = (
+        f"=== NGỮ CẢNH ===\n"
+        f"Chủ đề   : {topic}\n"
+        f"Lập trường: {stance}\n"
+        f"Độ khó   : {difficulty}\n"
+        f"Nhập liệu: {_input_mode_rule(input_mode)}\n"
+        f"Chế độ   : Phản biện nhanh\n"
+        f"{history_section}"
+        f"\n=== PHẢN BIỆN HOẶC TIN NHẮN NGƯỜI DÙNG ===\n"
+        f"{user_argument}\n"
+        f"\n=== YÊU CẦU ĐỊNH DẠNG ĐẦU RA BẮT BUỘC ===\n"
+        f"Hãy phân tích và trả về phản hồi chính xác theo cấu trúc sau. TUYỆT ĐỐI không sử dụng JSON:\n"
+        f"[SUY NGHĨ]\n"
+        f"(Nháp phân tích chi tiết)\n\n"
+        f"[ĐIỂM SỐ]\n"
+        f"- Claim: <điểm>/10\n"
+        f"- Evidence: <điểm>/10\n"
+        f"- Reasoning: <điểm>/10\n\n"
+        f"[PHÂN TÍCH CER]\n"
+        f"<tối đa 2 câu phân tích>\n\n"
+        f"[PHẢN BIỆN LẠI]\n"
+        f"<tối đa 3 câu phản hồi/hướng dẫn>\n\n"
+        f"[GỢI Ý CẢI THIỆN]\n"
+        f"<chính xác 1 câu gợi ý>\n"
+    )
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+
+
+def _build_full_argument_messages(
+    topic: str,
+    stance: str,
+    difficulty: str,
+    user_argument: str,
+    age_group: str,
+    debate_level: str,
+    input_mode: str,
+    language: str,
+    turn_history: list[dict] | None,
+) -> list[dict[str, str]]:
+    output_language = _language_name(language)
+    system_prompt = _build_full_argument_system_prompt(output_language, age_group, debate_level)
+    history_block = _format_turn_history(turn_history)
+    history_section = f"\n{history_block}\n" if history_block else ""
+    user_prompt = (
+        f"=== NGỮ CẢNH ===\n"
+        f"Chủ đề   : {topic}\n"
+        f"Lập trường: {stance}\n"
+        f"Độ khó   : {difficulty}\n"
+        f"Nhập liệu: {_input_mode_rule(input_mode)}\n"
+        f"Chế độ   : Xây dựng lập luận hoàn chỉnh (C+E+R)\n"
+        f"{history_section}"
+        f"\n=== LẬP LUẬN HOÀN CHỈNH (C+E+R) NGƯỜI DÙNG NHẬP ===\n"
+        f"{user_argument}\n"
+        f"\n=== YÊU CẦU ĐỊNH DẠNG ĐẦU RA BẮT BUỘC ===\n"
+        f"Hãy phân tích và trả về phản hồi chính xác theo cấu trúc sau. TUYỆT ĐỐI không sử dụng JSON:\n"
+        f"[SUY NGHĨ]\n"
+        f"(Nháp phân tích chi tiết)\n\n"
+        f"[ĐIỂM SỐ]\n"
+        f"- Claim: <điểm>/10\n"
+        f"- Evidence: <điểm>/10\n"
+        f"- Reasoning: <điểm>/10\n\n"
+        f"[PHÂN TÍCH CER]\n"
+        f"<tối đa 2 câu phân tích>\n\n"
+        f"[PHẢN BIỆN LẠI]\n"
+        f"<tối đa 3 câu phản hồi/hướng dẫn>\n\n"
+        f"[GỢI Ý CẢI THIỆN]\n"
+        f"<chính xác 1 câu gợi ý>\n"
+    )
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -163,17 +468,29 @@ def build_cer_messages(
     coach_model: str = "socratic_v3",
     language: str = "vi",
     turn_history: list[dict] | None = None,
+    mode: str = "free_debate",
 ) -> list[dict[str, str]]:
     """
     Returns a [system, user] message pair for the Groq API.
-
-    Key design choices:
-    - System prompt in Vietnamese (language register lock)
-    - NO numeric scores in few-shot examples (prevents anchoring)
-    - Chain-of-thought (Bước 1/2/3) forces argument-specific analysis
-    - Turn history injected so rebuttals evolve each turn
-    - String placeholders in JSON schema (no numeric anchors)
     """
+    if mode == "claim_writing":
+        return _build_claim_writing_messages(
+            topic, stance, difficulty, user_argument, age_group, debate_level, input_mode, language, turn_history
+        )
+    elif mode == "find_evidence":
+        return _build_find_evidence_messages(
+            topic, stance, difficulty, user_argument, age_group, debate_level, input_mode, language, turn_history
+        )
+    elif mode == "quick_rebuttal":
+        return _build_quick_rebuttal_messages(
+            topic, stance, difficulty, user_argument, age_group, debate_level, input_mode, language, turn_history
+        )
+    elif mode == "full_argument":
+        return _build_full_argument_messages(
+            topic, stance, difficulty, user_argument, age_group, debate_level, input_mode, language, turn_history
+        )
+
+    # Default: free_debate
     output_language = _language_name(language)
     system_prompt = _build_system_prompt(output_language, age_group, debate_level)
 
@@ -189,9 +506,24 @@ def build_cer_messages(
         f"{history_section}"
         f"\n=== LẬP LUẬN HIỆN TẠI CỦA NGƯỜI DÙNG ===\n"
         f"{user_argument}\n"
-        f"\n=== YÊU CẦU ===\n"
-        f"Phân tích lập luận trên và trả về DUY NHẤT JSON hợp lệ (không có text nào trước JSON, không markdown):\n"
-        f"{_json_schema(output_language)}"
+        f"\n=== YÊU CẦU ĐỊNH DẠNG ĐẦU RA BẮT BUỘC ===\n"
+        f"Hãy phân tích và trả về phản hồi chính xác theo cấu trúc sau. TUYỆT ĐỐI không sử dụng JSON:\n"
+        f"[SUY NGHĨ]\n"
+        f"(Nháp phân tích chi tiết)\n\n"
+        f"[ĐIỂM SỐ]\n"
+        f"- Claim: <điểm>/10\n"
+        f"- Evidence: <điểm>/10\n"
+        f"- Reasoning: <điểm>/10\n\n"
+        f"[PHÂN TÍCH CER]\n"
+        f"<tối đa 2 câu phân tích>\n\n"
+        f"[PHẢN BIỆN LẠI]\n"
+        f"<tối đa 3 câu phản phản biện>\n\n"
+        f"[GỢI Ý CẢI THIỆN]\n"
+        f"<chính xác 1 câu gợi ý>\n\n"
+        f"CONTRACT RULES:\n"
+        f"- Write the rebuttal only in tiếng Việt.\n"
+        f"- Avoid score clustering; use the full range.\n"
+        f"- If there is no named evidence, Evidence = 0.\n"
     )
 
     return [
@@ -271,6 +603,7 @@ def build_groq_messages(
     input_mode: str | None = None,
     language: str = "vi",
     turn_history: list[dict] | None = None,
+    mode: str = "free_debate",
 ) -> list[dict[str, str]]:
     """Legacy entry point — routes to build_cer_messages."""
     return build_cer_messages(
@@ -278,4 +611,5 @@ def build_groq_messages(
         user_argument=user_argument, age_group=age_group,
         debate_level=debate_level, input_mode=input_mode or "text",
         language=language, turn_history=turn_history,
+        mode=mode,
     )

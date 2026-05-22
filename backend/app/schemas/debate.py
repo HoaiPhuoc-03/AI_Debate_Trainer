@@ -12,6 +12,7 @@ class StartSessionRequest(BaseModel):
     debate_level: str = Field(default="intermediate", example="intermediate")
     coach_model: str = Field(default="socratic_v3", example="socratic_v3")
     language: str = Field(default="vi", example="vi")
+    mode: str = Field(default="free_debate", example="free_debate")
     response_time: str | None = Field(default=None, example="90 sec")
     max_turns: int | None = Field(default=5, ge=1, le=10, example=5)
     display_name: str | None = Field(default=None, example="Minh Nguyen")
@@ -29,6 +30,7 @@ class StartSessionResponse(BaseModel):
     debate_level: str
     coach_model: str
     language: str
+    mode: str = "free_debate"
     response_time: str | None = None
     max_turns: int
     turn_count: int
@@ -110,6 +112,7 @@ class SessionInfoResponse(BaseModel):
     debate_level: str
     coach_model: str
     language: str
+    mode: str = "free_debate"
     response_time: str | None = None
     max_turns: int
     turn_count: int
@@ -141,6 +144,6 @@ class ProgressOverviewResponse(BaseModel):
     avg_reasoning_score: float
     overall_score: float
     streak_days: int
-    recent_topics: list[dict]
+    recent_topics: list[str]
     skill_strength: str
     skill_weakness: str

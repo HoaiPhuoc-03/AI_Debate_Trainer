@@ -344,6 +344,7 @@ def create_session(
     debate_level: str = "intermediate",
     coach_model: str = "socratic_v3",
     language: str = "vi",
+    mode: str = "free_debate",
     response_time: str | None = None,
     max_turns: int | None = None,
     display_name: str | None = None,
@@ -365,6 +366,7 @@ def create_session(
         "debate_level": debate_level or "intermediate",
         "coach_model": coach_model or "socratic_v3",
         "language": language or "vi",
+        "mode": mode or "free_debate",
         "response_time": response_time,
         "display_name": display_name,
         "status": "active",
@@ -692,13 +694,7 @@ def get_progress_overview(user_id: str | None = None) -> dict:
         
         session_scores[sid] = _average(sess_total_vals) if sess_total_vals else 0.0
 
-    recent_topics = [
-        {
-            "topic": s["topic"],
-            "score": session_scores.get(s["session_id"], 0.0)
-        }
-        for s in recent_sessions[:5]
-    ]
+    recent_topics = [s["topic"] for s in recent_sessions[:5]]
 
     scores = {
         "claim_score":     _average(claim_vals),

@@ -80,15 +80,21 @@ def _clean_list(value: Any, default: list[str] | None = None) -> list[str]:
 
 def _extract_section(text: str, section_name: str) -> str:
     section = re.escape(section_name)
-    pattern = rf"\[{section}\]\s*(.*?)(?=\n\[[A-Z_]+\]\s*|\Z)"
+    pattern = rf"\[{section}\]\s*(.*?)(?=\n\s*\[[^\]]+\]|\Z)"
     match = re.search(pattern, text or "", flags=re.IGNORECASE | re.DOTALL)
     return match.group(1).strip() if match else ""
 
 
 def _parse_marker_score(label: str, text: str) -> float:
-    pattern = rf"{re.escape(label)}\s*:\s*(-?\d+(?:\.\d+)?)\s*(?:/100)?"
+    pattern = rf"{re.escape(label)}\s*:\s*(-?\d+(?:\.\d+)?)(?:\s*/\s*(\d+))?"
     match = re.search(pattern, text or "", flags=re.IGNORECASE)
-    return _score_to_100(match.group(1)) if match else 0.0
+    if match:
+        val = float(match.group(1))
+        denom = match.group(2)
+        if denom == "10":
+            return val * 10.0
+        return _score_to_100(val)
+    return 0.0
 
 
 def _feedback_subsection(feedback_text: str, label: str) -> str:
@@ -112,9 +118,13 @@ def _proportional_breakdown(score: float, weights: dict[str, float]) -> dict[str
 
 
 def _parse_marker_rubric_output(raw_text: str) -> dict:
-    rebuttal = _extract_section(raw_text, "REBUTTAL")
-    cer_text = _extract_section(raw_text, "CER")
+    rebuttal = _extract_section(raw_text, "PHẢN BIỆN LẠI") or _extract_section(raw_text, "REBUTTAL")
+    cer_text = _extract_section(raw_text, "ĐIỂM SỐ") or _extract_section(raw_text, "CER")
+    
+    feedback_analysis = _extract_section(raw_text, "PHÂN TÍCH CER")
+    feedback_suggestion = _extract_section(raw_text, "GỢI Ý CẢI THIỆN")
     feedback_text = _extract_section(raw_text, "FEEDBACK")
+    
     if not rebuttal or not cer_text:
         result = fallback_cer_result("missing_marker_sections")
         result["raw_scoring_text"] = raw_text or ""
@@ -125,9 +135,15 @@ def _parse_marker_rubric_output(raw_text: str) -> dict:
     reasoning = _parse_marker_score("Reasoning", cer_text)
     overall = _parse_marker_score("Overall", cer_text) or _weighted_overall(claim, evidence, reasoning)
 
-    strengths = _parse_bullets(_feedback_subsection(feedback_text, "Strengths"))
-    weaknesses = _parse_bullets(_feedback_subsection(feedback_text, "Weaknesses"))
-    suggestions = _parse_bullets(_feedback_subsection(feedback_text, "Suggestions"))
+    if feedback_analysis or feedback_suggestion:
+        sentences = [s.strip() for s in re.split(r'[.!?]+', feedback_analysis) if s.strip()]
+        strengths = [sentences[0] + "."] if len(sentences) > 0 else []
+        weaknesses = [sentences[1] + "."] if len(sentences) > 1 else []
+        suggestions = [feedback_suggestion.strip()] if feedback_suggestion.strip() else []
+    else:
+        strengths = _parse_bullets(_feedback_subsection(feedback_text, "Strengths"))
+        weaknesses = _parse_bullets(_feedback_subsection(feedback_text, "Weaknesses"))
+        suggestions = _parse_bullets(_feedback_subsection(feedback_text, "Suggestions"))
 
     return {
         "is_valid": True,
@@ -174,6 +190,7 @@ def _parse_marker_rubric_output(raw_text: str) -> dict:
         "raw_scoring_text": raw_text or "",
         "scoring_error": "",
     }
+
 
 
 def _weighted_overall(claim: float, evidence: float, reasoning: float) -> float:
@@ -271,7 +288,7 @@ def parse_cer_rubric_output(raw_text: str) -> dict:
     try:
         payload = json.loads(strip_json_code_block(raw_text))
     except (TypeError, ValueError, json.JSONDecodeError) as exc:
-        if _extract_section(raw_text, "REBUTTAL"):
+        if _extract_section(raw_text, "REBUTTAL") or _extract_section(raw_text, "PHẢN BIỆN LẠI"):
             return _parse_marker_rubric_output(raw_text)
         result = fallback_cer_result(str(exc))
         result["raw_scoring_text"] = raw_text or ""

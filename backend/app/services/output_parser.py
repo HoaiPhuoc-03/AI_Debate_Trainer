@@ -25,15 +25,21 @@ def clamp_score(value) -> float:
 
 def extract_section(text: str, section_name: str) -> str:
     section = re.escape(section_name)
-    pattern = rf"\[{section}\]\s*(.*?)(?=\n\[[A-Z_]+\]\s*|\Z)"
+    pattern = rf"\[{section}\]\s*(.*?)(?=\n\s*\[[^\]]+\]|\Z)"
     match = re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL)
     return match.group(1).strip() if match else ""
 
 
 def parse_score(label: str, text: str) -> float:
-    pattern = rf"{re.escape(label)}\s*:\s*(-?\d+(?:\.\d+)?)"
+    pattern = rf"{re.escape(label)}\s*:\s*(-?\d+(?:\.\d+)?)(?:\s*/\s*(\d+))?"
     match = re.search(pattern, text, flags=re.IGNORECASE)
-    return clamp_score(match.group(1)) if match else 0.0
+    if match:
+        val = float(match.group(1))
+        denom = match.group(2)
+        if denom == "10":
+            return val * 10.0
+        return clamp_score(val)
+    return 0.0
 
 
 def parse_bullets(section_text: str) -> list[str]:
@@ -106,8 +112,11 @@ def parse_debate_output(raw_text: str) -> dict:
             "raw_text": raw_text,
         }
 
-    rebuttal = extract_section(raw_text, "REBUTTAL")
-    cer_text = extract_section(raw_text, "CER")
+    rebuttal = extract_section(raw_text, "PHẢN BIỆN LẠI") or extract_section(raw_text, "REBUTTAL")
+    cer_text = extract_section(raw_text, "ĐIỂM SỐ") or extract_section(raw_text, "CER")
+    
+    feedback_analysis = extract_section(raw_text, "PHÂN TÍCH CER")
+    feedback_suggestion = extract_section(raw_text, "GỢI Ý CẢI THIỆN")
     feedback_text = extract_section(raw_text, "FEEDBACK")
 
     if not rebuttal:
@@ -120,13 +129,25 @@ def parse_debate_output(raw_text: str) -> dict:
         }
 
     cer = _build_cer(cer_text) if cer_text else DEFAULT_CER.copy()
-    feedback = _build_feedback(feedback_text)
 
-    ok = bool(cer_text and feedback_text)
+    if feedback_analysis or feedback_suggestion:
+        sentences = [s.strip() for s in re.split(r'[.!?]+', feedback_analysis) if s.strip()]
+        strengths = [sentences[0] + "."] if len(sentences) > 0 else []
+        weaknesses = [sentences[1] + "."] if len(sentences) > 1 else []
+        suggestions = [feedback_suggestion.strip()] if feedback_suggestion.strip() else []
+        feedback = {
+            "strengths": strengths,
+            "weaknesses": weaknesses or ["Cần làm rõ hơn bằng chứng và suy luận."],
+            "suggestions": suggestions or ["Bổ sung ví dụ cụ thể và giải thích quan hệ nhân quả."],
+        }
+    else:
+        feedback = _build_feedback(feedback_text)
+
+    ok = bool(cer_text and (feedback_text or feedback_analysis or feedback_suggestion))
     return {
         "ok": ok,
         "rebuttal": rebuttal,
         "cer": cer,
         "feedback": feedback,
         "raw_text": raw_text,
-    }
+    }

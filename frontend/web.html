@@ -486,6 +486,160 @@
   .choice-grid.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .choice-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
+  .mode-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+  }
+  .mode-card {
+    position: relative;
+    padding: 22px 20px;
+    border-radius: var(--radius);
+    background: rgba(17, 26, 46, 0.86);
+    border: 1px solid var(--line-soft);
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.25s ease;
+  }
+  .mode-card:hover {
+    border-color: rgba(59, 130, 246, 0.48);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  }
+  .mode-card.selected {
+    border-color: rgba(59, 130, 246, 0.78);
+    background: linear-gradient(135deg, rgba(44, 82, 163, 0.42), rgba(3, 64, 69, 0.26));
+    box-shadow: 0 12px 32px rgba(37, 99, 235, 0.18);
+  }
+  .mode-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-size: 24px;
+    background: rgba(148, 163, 184, 0.1);
+    margin-bottom: 14px;
+  }
+  .mode-card.selected .mode-card-icon {
+    background: rgba(59, 130, 246, 0.36);
+  }
+  .mode-card-name {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+  .mode-card-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+  .mode-card-radio {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 22px;
+    height: 22px;
+    border: 2px solid rgba(148, 163, 184, 0.34);
+    border-radius: 999px;
+  }
+  .mode-card.selected .mode-card-radio {
+    border-color: #60a5fa;
+    box-shadow: inset 0 0 0 5px rgba(59, 130, 246, 0.24);
+  }
+  .mode-card-tag {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .mode-card-tag.current {
+    background: rgba(32, 231, 209, 0.15);
+    color: var(--cyan);
+  }
+  .mode-card-tag.focus-claim {
+    background: rgba(250, 204, 21, 0.15);
+    color: var(--yellow);
+  }
+  .mode-card-tag.focus-evidence {
+    background: rgba(139, 92, 246, 0.15);
+    color: #d8b4fe;
+  }
+  .mode-card-tag.focus-reasoning {
+    background: rgba(251, 113, 133, 0.15);
+    color: var(--pink);
+  }
+  .mode-card-tag.focus-all {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93bbfc;
+  }
+
+  body[data-theme="blue-pastel"] .mode-card {
+    background: #ffffff;
+    border-color: #d7e6f5;
+  }
+  body[data-theme="blue-pastel"] .mode-card:hover {
+    border-color: #a8d4f6;
+    box-shadow: 0 8px 20px rgba(79, 158, 232, 0.12);
+  }
+  body[data-theme="blue-pastel"] .mode-card.selected {
+    background: #dceeff;
+    border-color: #8fc8f4;
+    box-shadow: 0 10px 24px rgba(79, 158, 232, 0.12);
+  }
+  body[data-theme="blue-pastel"] .mode-card-icon {
+    background: #eef6ff;
+  }
+  body[data-theme="blue-pastel"] .mode-card.selected .mode-card-icon {
+    background: #9dcdf2;
+  }
+  body[data-theme="blue-pastel"] .mode-card-desc {
+    color: #60758f;
+  }
+  body[data-theme="blue-pastel"] .mode-card.selected .mode-card-radio {
+    border-color: #4da3ff;
+    box-shadow: inset 0 0 0 5px #dceeff;
+  }
+
+  .countdown-timer {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border-radius: 14px;
+    background: rgba(32, 231, 209, 0.08);
+    border: 1px solid rgba(32, 231, 209, 0.24);
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--cyan);
+    margin-bottom: 16px;
+    animation: timerPulse 1s infinite;
+  }
+  .countdown-timer.active { display: flex; }
+  .countdown-timer.urgent {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.34);
+    color: var(--danger);
+    animation: timerUrgent 0.5s infinite;
+  }
+  .countdown-timer .timer-icon { font-size: 22px; }
+  .countdown-timer .timer-value { font-size: 28px; font-weight: 800; min-width: 50px; }
+  .countdown-timer .timer-label { color: var(--muted); font-size: 14px; font-weight: 600; }
+  @keyframes timerPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+  }
+  @keyframes timerUrgent {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
   .choice-card, .panel, .summary-card, .progress-card {
     background: rgba(17, 26, 46, 0.86);
     border: 1px solid var(--line-soft);
@@ -1762,6 +1916,9 @@
     .main { height: auto; min-height: 100vh; }
     .content { overflow: visible; padding: 28px 22px; }
     .choice-grid.three, .choice-grid.five, .topic-row, .config-grid, .arena-layout, .summary-layout, .progress-layout, .summary-grid, .metric-grid {
+      grid-template-columns: 1fr;
+    }
+    .mode-grid {
       grid-template-columns: 1fr;
     }
     .theme-toggle { padding: 6px 8px; }
@@ -3443,7 +3600,10 @@
         <h1 class="page-title">Thiết lập phiên tranh biện</h1>
         <p class="page-copy">Chọn chủ đề, lập trường và độ khó để huấn luyện viên AI tạo phiên tranh biện phù hợp với trình độ của bạn.</p>
 
-        <div class="panel session-card">
+        <h2 class="section-title">Chế độ luyện tập</h2>
+        <div class="mode-grid" id="mode-selector"></div>
+
+        <div class="panel session-card" id="session-topic-panel">
           <div class="panel-head">
             <h2 class="section-title topic-heading" style="margin:0">
               <span class="battle-icon" aria-hidden="true">
@@ -3566,6 +3726,11 @@
                 <span class="soft-pill" id="char-count">0 / 1200</span>
               </div>
               <div id="form-error" class="screen-error"></div>
+              <div class="countdown-timer" id="countdown-timer">
+                <span class="timer-icon">⏳</span>
+                <span class="timer-value" id="timer-value">60</span>
+                <span class="timer-label">giây còn lại</span>
+              </div>
               <textarea class="arena-textarea" id="user-input" placeholder="Nhập lập luận của bạn tại đây..." maxlength="1200" oninput="updateCharCount()"></textarea>
               <div class="argument-footer">
                 <div class="hint">💡 <span>Gợi ý: <strong>Luận điểm → Bằng chứng → Lập luận</strong></span></div>
@@ -3588,8 +3753,8 @@
           <div class="arena-stack">
             <div class="panel arena-panel">
               <div class="panel-head">
-                <div class="panel-title"><span class="lumi-title-token" aria-hidden="true"><img src="assets/lumi-paper-dragon-cutout.png" alt=""></span> Phản biện của Lumi</div>
-                <span class="chip purple">Phản biện</span>
+                <div class="panel-title"><span class="lumi-title-token" aria-hidden="true"><img src="assets/lumi-paper-dragon-cutout.png" alt=""></span> <span id="ai-response-title">Phản biện của Lumi</span></div>
+                <span class="chip purple" id="ai-response-chip">Phản biện</span>
               </div>
               <div id="ai-output" class="empty-message">Chờ lập luận đầu tiên của bạn. Huấn luyện viên AI sẽ phản biện và giải thích điểm cần cải thiện.</div>
             </div>
@@ -3741,6 +3906,7 @@
     age: "Adult",
     level: "Intermediate",
     inputMode: "Text",
+    debateMode: "free_debate",
     topic: "",
     stance: "Ủng hộ",
     difficulty: "Intermediate",
@@ -3756,6 +3922,8 @@
   let activeRebuttalAnimation = 0;
   let voiceRecognition = null;
   let voiceDraft = "";
+  let countdownInterval = null;
+  let secondsLeft = 60;
 
   const profiles = [
     ["Teen", "13-17 tuổi", "Giọng khích lệ, ví dụ gần gũi", "☃"],
@@ -3775,6 +3943,50 @@
   const difficulties = [["Basic", "●○○"], ["Intermediate", "●●○"], ["Advanced", "●●●"]];
   const times = [["60 sec", "Luyện nhanh"], ["90 sec", "Nhịp cân bằng"], ["3 min", "Suy luận sâu"]];
   const authLanguages = [["English", ""], ["Tiếng Việt", ""], ["Auto-detect", ""]];
+
+  const debateModes = [
+    {
+      key: "free_debate",
+      name: "Tranh biện tự do",
+      desc: "Luân phiên phản biện cùng Lumi và nhận điểm CER chi tiết.",
+      icon: "⚔️",
+      tag: "Toàn diện",
+      tagClass: "focus-all"
+    },
+    {
+      key: "claim_writing",
+      name: "Luyện viết Claim",
+      desc: "Lumi đưa chủ đề, bạn viết Claim. Tập trung vào tính rõ ràng và lập trường.",
+      icon: "✍️",
+      tag: "Trọng tâm: Claim",
+      tagClass: "focus-claim"
+    },
+    {
+      key: "find_evidence",
+      name: "Luyện tìm Evidence",
+      desc: "Lumi đưa Claim, bạn tìm bằng chứng thuyết phục hỗ trợ.",
+      icon: "🔍",
+      tag: "Trọng tâm: Evidence",
+      tagClass: "focus-evidence"
+    },
+    {
+      key: "quick_rebuttal",
+      name: "Phản biện nhanh",
+      desc: "Lumi đưa lập luận yếu, bạn tìm và bẻ gãy lỗi logic trong 60 giây.",
+      icon: "⚡",
+      tag: "Trọng tâm: Reasoning",
+      tagClass: "focus-reasoning"
+    },
+    {
+      key: "full_argument",
+      name: "Lập luận hoàn chỉnh",
+      desc: "Viết lập luận đầy đủ C+E+R. Lumi chấm điểm và nhận xét toàn diện.",
+      icon: "🏗️",
+      tag: "Toàn diện CER",
+      tagClass: "focus-all"
+    }
+  ];
+
   const displayLabels = {
     "Guest": "Khách",
     "Account": "Tài khoản",
@@ -3799,6 +4011,11 @@
     "claim": "Luận điểm",
     "evidence": "Bằng chứng",
     "reasoning": "Lập luận",
+    "free_debate": "Tranh biện tự do",
+    "claim_writing": "Luyện viết Claim",
+    "find_evidence": "Luyện tìm Evidence",
+    "quick_rebuttal": "Phản biện nhanh",
+    "full_argument": "Lập luận hoàn chỉnh",
     "-": "-",
   };
 
@@ -4154,6 +4371,44 @@
     document.getElementById("stance-options").innerHTML = stances.map(([name, icon]) => lineChoice("stance", name, icon)).join("");
     document.getElementById("difficulty-options").innerHTML = difficulties.map(([name, dots]) => lineChoice("difficulty", name, dots)).join("");
     document.getElementById("time-options").innerHTML = times.map(([name, desc]) => lineChoice("responseTime", name, desc)).join("");
+    renderModeSelector();
+  }
+
+  function renderModeSelector() {
+    const container = document.getElementById("mode-selector");
+    if (!container) return;
+    container.innerHTML = debateModes.map(mode => {
+      const selected = state.debateMode === mode.key ? "selected" : "";
+      return `
+        <button class="mode-card ${selected}" onclick="selectMode('${mode.key}')" type="button">
+          <span class="mode-card-icon">${mode.icon}</span>
+          <span class="mode-card-name" style="display: block;">${mode.name}</span>
+          <span class="mode-card-desc" style="display: block;">${mode.desc}</span>
+          <span class="mode-card-tag ${mode.tagClass}">${mode.tag}</span>
+          <span class="mode-card-radio"></span>
+        </button>
+      `;
+    }).join("");
+  }
+
+  function selectMode(modeKey) {
+    state.debateMode = modeKey;
+    const isAuto = (modeKey === "claim_writing" || modeKey === "find_evidence" || modeKey === "quick_rebuttal");
+    if (isAuto) {
+      state.topic = "Lumi hãy tự động đưa ra một chủ đề tranh luận có nên thực hiện hay không?";
+      const panel = document.getElementById("session-topic-panel");
+      if (panel) panel.style.display = "none";
+    } else {
+      if (state.topic === "Lumi hãy tự động đưa ra một chủ đề tranh luận có nên thực hiện hay không?") {
+        state.topic = "";
+        const input = document.getElementById("session-topic-input");
+        if (input) input.value = "";
+      }
+      const panel = document.getElementById("session-topic-panel");
+      if (panel) panel.style.display = "block";
+    }
+    renderModeSelector();
+    updateSessionSummary();
   }
 
   function choiceCard(key, name, meta, desc, icon, size = "", tone = "teal") {
@@ -4203,8 +4458,11 @@
   }
 
   function updateSessionSummary() {
-    const topic = getTopic();
-    document.getElementById("session-ready").textContent = `${topic ? "Phiên sẵn sàng" : "Cần nhập chủ đề"} · ${topic ? displayValue(topic) : "Chưa có topic"} · ${displayValue(state.stance)} · ${displayValue(state.difficulty)}`;
+    const modeKey = state.debateMode;
+    const isAutoTopic = (modeKey === "claim_writing" || modeKey === "find_evidence" || modeKey === "quick_rebuttal");
+    const topic = isAutoTopic ? "Chủ đề tự động" : getTopic();
+    const readyText = isAutoTopic ? "Phiên sẵn sàng" : (topic ? "Phiên sẵn sàng" : "Cần nhập chủ đề");
+    document.getElementById("session-ready").textContent = `${readyText} · ${displayValue(topic)} · ${displayValue(state.stance)} · ${displayValue(state.difficulty)} · ${displayValue(state.debateMode)}`;
     renderHomeHub();
     renderLumiCompanion();
   }
@@ -4250,6 +4508,7 @@
   }
 
   function goToView(view) {
+    stopCountdownTimer();
     closeUserMenu();
     state.view = view;
     document.body.dataset.view = view;
@@ -4273,6 +4532,12 @@
     const [section, label] = breadcrumbs[view] || breadcrumbs.profile;
     document.getElementById("breadcrumb").innerHTML = `${section} <strong>${label}</strong>`;
     renderLumiCompanion();
+    if (view === "session") {
+      const modeKey = state.debateMode;
+      const isAuto = (modeKey === "claim_writing" || modeKey === "find_evidence" || modeKey === "quick_rebuttal");
+      const panel = document.getElementById("session-topic-panel");
+      if (panel) panel.style.display = isAuto ? "none" : "block";
+    }
     if (view === "home") {
       renderHomeHub();
       renderProgressTopics();
@@ -4383,11 +4648,14 @@
   async function startDebate() {
     const button = document.getElementById("start-btn");
     hideError("start-error");
-    const topicError = validateSessionTopic(state.topic);
-    if (topicError) {
-      showError("start-error", topicError);
-      document.getElementById("session-topic-input")?.focus();
-      return;
+    const isAutoTopic = (state.debateMode === "claim_writing" || state.debateMode === "find_evidence" || state.debateMode === "quick_rebuttal");
+    if (!isAutoTopic) {
+      const topicError = validateSessionTopic(state.topic);
+      if (topicError) {
+        showError("start-error", topicError);
+        document.getElementById("session-topic-input")?.focus();
+        return;
+      }
     }
     setLoading(button, true, "Đang tạo phiên...");
 
@@ -4403,6 +4671,7 @@
           debate_level: state.level,
           language: state.language,
           response_time: state.responseTime,
+          mode: state.debateMode,
         },
       });
 
@@ -4415,6 +4684,11 @@
       renderArenaShell();
       goToView("arena");
       await syncSessionStatus();
+
+      if (state.debateMode === "claim_writing" || state.debateMode === "quick_rebuttal" || state.debateMode === "find_evidence") {
+        document.getElementById("user-input").value = "Bắt đầu bài tập";
+        await submitArgument({ isStartupTrigger: true });
+      }
     } catch (error) {
       const message = error.message || "";
       const isTopicError = /topic|vui lòng|chủ đề/i.test(message);
@@ -4425,6 +4699,8 @@
   }
 
   function renderArenaShell() {
+    stopCountdownTimer();
+    updateAIResponseLabels();
     renderSessionChips();
     renderArenaStage();
     renderArgumentControls();
@@ -4471,11 +4747,28 @@
     if (replayButton) replayButton.disabled = !state.latest?.ai_rebuttal;
   }
 
+  function updateAIResponseLabels() {
+    const titleEl = document.getElementById("ai-response-title");
+    const chipEl = document.getElementById("ai-response-chip");
+    if (!titleEl || !chipEl) return;
+    
+    if (state.debateMode === "claim_writing" || state.debateMode === "find_evidence") {
+      titleEl.textContent = "Đánh giá của Lumi";
+      chipEl.textContent = "Đánh giá";
+      chipEl.className = "chip teal";
+    } else {
+      titleEl.textContent = "Phản biện của Lumi";
+      chipEl.textContent = "Phản biện";
+      chipEl.className = "chip purple";
+    }
+  }
+
   function renderSessionChips() {
     document.getElementById("session-chips").innerHTML = `
       <span class="chip teal">${escapeHtml(displayValue(getTopic()))}</span>
       <span class="chip purple">Lập trường: ${escapeHtml(displayValue(state.stance))}</span>
       <span class="chip yellow">${escapeHtml(displayValue(state.difficulty))}</span>
+      <span class="chip">${escapeHtml(displayLabels[state.debateMode] || state.debateMode)}</span>
       <span class="chip">Lượt ${state.roundCount} / 3</span>
     `;
     renderHomeHub();
@@ -4611,9 +4904,14 @@
     if (!argument) return showError("form-error", "Hãy nhập lập luận trước khi gửi.");
     if (state.sessionStatus === "completed") return showError("form-error", "Phiên này đã hoàn tất. Hãy xem tổng kết hoặc tạo chủ đề mới.");
 
+    const isStartTrigger = options.isStartupTrigger || ["bắt đầu bài tập", "bắt đầu", "start", "initiate", "bắt đầu luyện tập"].includes(argument.toLowerCase().trim());
+
     state.isSubmitting = true;
     input.disabled = true;
     const button = document.getElementById("debate-btn");
+    
+    stopCountdownTimer();
+
     setLoading(button, true, "Đang suy nghĩ...");
     renderLoadingState();
 
@@ -4623,18 +4921,30 @@
         body: { session_id: state.sessionId, user_argument: argument },
       });
       const turn = normalizeTurnResponse(data, argument);
-      state.roundCount += 1;
+      
+      if (!isStartTrigger) {
+        state.roundCount += 1;
+      }
       state.sessionStatus = turn.status;
       state.latest = turn;
 
       input.value = "";
       updateCharCount();
       renderArenaShell();
-      renderCER(turn.cer);
-      renderFeedback(turn.feedback);
+      
+      if (!isStartTrigger) {
+        renderCER(turn.cer);
+        renderFeedback(turn.feedback);
+      } else {
+        renderCER(null);
+        renderFeedback(null);
+      }
       setLoading(button, true, "AI đang trả lời...");
       await renderRebuttal(turn.ai_rebuttal, { animate: true });
-      state.history.push(turn);
+      
+      if (!isStartTrigger) {
+        state.history.push(turn);
+      }
       renderTranscript();
       if (options.fromVoice) speakLatestRebuttal();
 
@@ -4798,8 +5108,25 @@
     const animationId = activeRebuttalAnimation;
     if (!text) {
       output.className = "empty-message";
-      output.textContent = "Chờ lập luận đầu tiên của bạn. Huấn luyện viên AI sẽ phản biện và giải thích điểm cần cải thiện.";
-      setText("voice-ai-status", "Lumi sẽ phản biện bằng giọng nói sau khi nhận lượt của bạn.");
+      let placeholderText = "Chờ lập luận đầu tiên của bạn. Huấn luyện viên AI sẽ phản biện và giải thích điểm cần cải thiện.";
+      let voiceStatus = "Lumi sẽ phản biện bằng giọng nói sau khi nhận lượt của bạn.";
+
+      if (state.debateMode === "claim_writing") {
+        placeholderText = "Chờ Luận điểm (Claim) của bạn dựa trên chủ đề được giao. Huấn luyện viên AI sẽ chấm điểm và gợi ý cải thiện.";
+        voiceStatus = "Lumi sẽ nhận xét luận điểm bằng giọng nói sau khi nhận lượt của bạn.";
+      } else if (state.debateMode === "find_evidence") {
+        placeholderText = "Huấn luyện viên AI đã đưa ra Luận điểm. Hãy nhập Bằng chứng (Evidence) thuyết phục để chứng minh cho luận điểm này.";
+        voiceStatus = "Lumi sẽ nhận xét bằng chứng bằng giọng nói sau khi nhận lượt của bạn.";
+      } else if (state.debateMode === "quick_rebuttal") {
+        placeholderText = "Huấn luyện viên AI đã đưa ra một lập luận yếu có lỗ hổng logic. Hãy phát hiện lỗi sai và phản biện trong vòng 60 giây!";
+        voiceStatus = "Lumi sẽ nhận xét phản biện nhanh bằng giọng nói sau khi nhận lượt của bạn.";
+      } else if (state.debateMode === "full_argument") {
+        placeholderText = "Hãy xây dựng một lập luận hoàn chỉnh gồm Luận điểm (Claim) + Bằng chứng (Evidence) + Giải thích (Reasoning). Huấn luyện viên AI sẽ đánh giá toàn diện.";
+        voiceStatus = "Lumi sẽ đánh giá lập luận hoàn chỉnh bằng giọng nói sau khi nhận lượt của bạn.";
+      }
+
+      output.textContent = placeholderText;
+      setText("voice-ai-status", voiceStatus);
       return;
     }
     setText("voice-ai-status", text);
@@ -4919,7 +5246,7 @@
   function renderSummary() {
     const average = getAverageCER();
     document.getElementById("summary-topic").textContent = displayValue(getTopic());
-    document.getElementById("summary-tags").textContent = `${displayValue(state.topic)} · ${displayValue(state.stance)}`;
+    document.getElementById("summary-tags").textContent = `${displayValue(state.topic)} · ${displayValue(state.stance)} · ${displayValue(state.debateMode)}`;
     document.getElementById("summary-turns").textContent = state.history.length;
     document.getElementById("summary-average").textContent = average;
     const cer = state.latest?.cer || { claim: 0, evidence: 0, reasoning: 0, total: 0 };
@@ -4977,6 +5304,45 @@
   function updateCharCount() {
     const count = document.getElementById("user-input").value.length;
     document.getElementById("char-count").textContent = `${count} / 1200`;
+    if (state.debateMode === "quick_rebuttal" && count > 0 && !countdownInterval) {
+      startCountdownTimer();
+    }
+  }
+
+  function startCountdownTimer() {
+    stopCountdownTimer();
+    secondsLeft = 60;
+    const timerContainer = document.getElementById("countdown-timer");
+    const timerValue = document.getElementById("timer-value");
+    if (!timerContainer || !timerValue) return;
+
+    timerContainer.classList.add("active");
+    timerContainer.classList.remove("urgent");
+    timerValue.textContent = secondsLeft;
+
+    countdownInterval = setInterval(() => {
+      secondsLeft -= 1;
+      timerValue.textContent = secondsLeft;
+      if (secondsLeft <= 15) {
+        timerContainer.classList.add("urgent");
+      }
+      if (secondsLeft <= 0) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+        timerValue.textContent = 0;
+      }
+    }, 1000);
+  }
+
+  function stopCountdownTimer() {
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+    const timerContainer = document.getElementById("countdown-timer");
+    if (timerContainer) {
+      timerContainer.classList.remove("active", "urgent");
+    }
   }
 
   function setLoading(button, loading, text) {
