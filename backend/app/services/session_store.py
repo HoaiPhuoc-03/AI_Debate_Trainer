@@ -637,13 +637,12 @@ def get_progress_overview(user_id: str | None = None) -> dict:
     total_sessions = len(sessions)
     completed_sessions = sum(1 for s in sessions if s.get("status") == "completed")
 
-    # Recent topics (up to 5, newest first, non-empty)
+    # Recent sessions (up to 5, newest first, non-empty)
     recent_sessions = sorted(
         [s for s in sessions if s.get("topic")],
         key=lambda s: s.get("created_at", ""),
         reverse=True,
     )
-    recent_topics = [s["topic"] for s in recent_sessions[:5]]
 
     # Unique completed calendar days for streak calculation
     completed_days = list({
@@ -654,6 +653,7 @@ def get_progress_overview(user_id: str | None = None) -> dict:
 
     # ── aggregate CER scores across all valid turns ────────────────────────
     session_ids = {s["session_id"] for s in sessions}
+    session_scores = {}
     claim_vals:     list[float] = []
     evidence_vals:  list[float] = []
     reasoning_vals: list[float] = []
@@ -670,6 +670,7 @@ def get_progress_overview(user_id: str | None = None) -> dict:
             for d in turn_docs
             if d.to_dict().get("status") not in ("error", "invalid")
         ]
+        sess_total_vals = []
         for tid in valid_turn_ids:
             score_docs = (
                 db.collection("cer_scores")
@@ -679,10 +680,25 @@ def get_progress_overview(user_id: str | None = None) -> dict:
             )
             if score_docs:
                 s = score_docs[0].to_dict()
-                claim_vals.append(    _normalize_score_value(float(s.get("claim",     0.0))))
-                evidence_vals.append( _normalize_score_value(float(s.get("evidence",  0.0))))
-                reasoning_vals.append(_normalize_score_value(float(s.get("reasoning", 0.0))))
-                total_vals.append(    _normalize_score_value(float(s.get("total",     0.0))))
+                c = _normalize_score_value(float(s.get("claim",     0.0)))
+                e = _normalize_score_value(float(s.get("evidence",  0.0)))
+                r = _normalize_score_value(float(s.get("reasoning", 0.0)))
+                t = _normalize_score_value(float(s.get("total",     0.0)))
+                claim_vals.append(c)
+                evidence_vals.append(e)
+                reasoning_vals.append(r)
+                total_vals.append(t)
+                sess_total_vals.append(t)
+        
+        session_scores[sid] = _average(sess_total_vals) if sess_total_vals else 0.0
+
+    recent_topics = [
+        {
+            "topic": s["topic"],
+            "score": session_scores.get(s["session_id"], 0.0)
+        }
+        for s in recent_sessions[:5]
+    ]
 
     scores = {
         "claim_score":     _average(claim_vals),

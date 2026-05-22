@@ -22,6 +22,7 @@ from app.services.session_store import (
     get_progress_overview,
     get_session,
     get_session_summary,
+    get_session_turns,
     save_debate_turn,
 )
 
@@ -79,6 +80,12 @@ def debate_turn(
     if normalize_status(session["status"]) == "completed":
         raise HTTPException(status_code=400, detail="Session is already completed")
 
+    # Fetch recent turns for conversation history.
+    # Limit to last 3 to keep the prompt size bounded while giving enough
+    # context for the LLM to produce evolving, non-repetitive rebuttals.
+    prior_turns = get_session_turns(payload.session_id)
+    turn_history = prior_turns[-3:] if prior_turns else []
+
     result = ai_service.generate_debate_analysis(
         topic=session["topic"],
         stance=session["stance"],
@@ -89,6 +96,7 @@ def debate_turn(
         coach_model=session.get("coach_model"),
         language=session.get("language"),
         input_mode=session.get("input_mode"),
+        turn_history=turn_history,
     )
     result["cer"] = normalize_cer_to_100(result.get("cer"))
     ai_done_ms = int((time.perf_counter() - turn_start) * 1000)

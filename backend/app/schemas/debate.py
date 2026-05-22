@@ -141,6 +141,6 @@ class ProgressOverviewResponse(BaseModel):
     avg_reasoning_score: float
     overall_score: float
     streak_days: int
-    recent_topics: list[str]
+    recent_topics: list[dict]
     skill_strength: str
     skill_weakness: str

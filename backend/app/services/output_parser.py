@@ -10,8 +10,8 @@ DEFAULT_CER = {
 }
 DEFAULT_FEEDBACK = {
     "strengths": [],
-    "weaknesses": ["AI output was missing structured feedback."],
-    "suggestions": ["Try again with a clearer argument or regenerate the response."],
+    "weaknesses": ["Phản hồi AI chưa có cấu trúc đầy đủ."],
+    "suggestions": ["Hãy thử lại với lập luận rõ ràng hơn hoặc tạo lại phản hồi."],
 }
 
 
@@ -20,7 +20,7 @@ def clamp_score(value) -> float:
         score = float(value)
     except (TypeError, ValueError):
         return 0.0
-    return max(0.0, min(10.0, score))
+    return max(0.0, min(100.0, score))
 
 
 def extract_section(text: str, section_name: str) -> str:
@@ -59,12 +59,14 @@ def _build_cer(cer_text: str) -> dict:
     claim = parse_score("Claim", cer_text)
     evidence = parse_score("Evidence", cer_text)
     reasoning = parse_score("Reasoning", cer_text)
+    # Use the same weighted formula as cer_scorer: claim*0.3 + evidence*0.3 + reasoning*0.4
+    overall = round(claim * 0.3 + evidence * 0.3 + reasoning * 0.4, 1)
     return {
         "claim": claim,
         "evidence": evidence,
         "reasoning": reasoning,
-        "overall": round((claim + evidence + reasoning) / 3, 2),
-        "total": round((claim + evidence + reasoning) / 3, 2),
+        "overall": overall,
+        "total": overall,
     }
 
 
@@ -72,8 +74,8 @@ def _build_feedback(feedback_text: str) -> dict:
     if not feedback_text:
         return {
             "strengths": [],
-            "weaknesses": ["AI output was missing feedback."],
-            "suggestions": ["Ask the AI to regenerate the response in the required format."],
+            "weaknesses": ["AI chưa tạo được phản hồi chi tiết."],
+            "suggestions": ["Vui lòng yêu cầu AI tạo lại phản hồi theo đúng định dạng."],
         }
     return {
         "strengths": parse_bullets(_feedback_subsection(feedback_text, "Strengths")),
@@ -98,8 +100,8 @@ def parse_debate_output(raw_text: str) -> dict:
             "cer": DEFAULT_CER.copy(),
             "feedback": {
                 "strengths": [],
-                "weaknesses": ["AI output was empty."],
-                "suggestions": ["Please try again after the AI service is ready."],
+                "weaknesses": ["Phản hồi AI trống rỗng."],
+                "suggestions": ["Vui lòng thử lại sau khi dịch vụ AI sẵn sàng."],
             },
             "raw_text": raw_text,
         }
