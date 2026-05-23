@@ -73,7 +73,7 @@ python --version
 ### Bước 1 — Clone repo
 
 ```powershell
-git clone <repo-url> AI_Debate_Trainer
+git clone https://github.com/HoaiPhuoc-03/AI_Debate_Trainer.git
 cd AI_Debate_Trainer
 ```
 
