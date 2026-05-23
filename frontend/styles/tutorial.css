@@ -13,7 +13,7 @@ body[data-theme="dark"] {
 }
 
 .hub-row.knowledge {
-  grid-template-columns: clamp(68px, 5.7vw, 80px) minmax(0, 1fr) minmax(156px, auto);
+  grid-template-columns: clamp(84px, 7vw, 96px) minmax(0, 1fr) minmax(156px, auto);
   min-height: 142px;
   padding: 14px 20px;
   gap: 18px;
@@ -66,43 +66,42 @@ body[data-theme="dark"] {
 
 .knowledge-mascot {
   position: relative;
-  width: clamp(68px, 5.7vw, 80px);
-  height: clamp(68px, 5.7vw, 80px);
-  border: 1px solid color-mix(in srgb, var(--tutorial-border) 72%, transparent);
-  border-radius: 21px;
-  background:
-    radial-gradient(circle at 32% 18%, rgba(255,255,255,.82), rgba(255,255,255,0) 52%),
-    linear-gradient(145deg, color-mix(in srgb, var(--arena-cyan, #38d5e8) 8%, transparent), color-mix(in srgb, var(--arena-violet, #8b7cff) 8%, transparent));
-  box-shadow: 0 11px 28px rgba(69, 113, 164, .10);
+  width: clamp(84px, 7vw, 96px);
+  height: clamp(84px, 7vw, 96px);
+  border: 0;
+  border-radius: 22px;
+  background: transparent;
+  box-shadow: none;
   display: grid;
   place-items: center;
   overflow: visible;
-  transition: transform .3s ease, box-shadow .3s ease;
+  transition: transform .3s ease, filter .3s ease;
 }
 
 .knowledge-mascot::after {
   content: "";
   position: absolute;
-  inset: 14px;
+  inset: 14px 10px 8px;
   z-index: -1;
-  border-radius: inherit;
-  background: color-mix(in srgb, var(--arena-cyan, #38d5e8) 22%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--arena-cyan, #38d5e8) 16%, transparent);
   filter: blur(16px);
-  opacity: .22;
+  opacity: .28;
 }
 
 .knowledge-mascot:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 13px 30px rgba(69, 113, 164, .13);
+  transform: translateY(-2px);
+  filter: drop-shadow(0 12px 18px rgba(70, 185, 216, .12));
 }
 
 .knowledge-mascot img {
-  width: 92%;
-  height: 92%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   object-position: center;
   display: block;
-  filter: saturate(.93) drop-shadow(0 7px 12px rgba(48, 76, 116, .13));
+  border-radius: 20px;
+  filter: saturate(.96) drop-shadow(0 8px 13px rgba(48, 76, 116, .14));
 }
 
 .knowledge-nudge {
@@ -357,7 +356,7 @@ body[data-theme="dark"] {
 
 @media (max-width: 1080px) {
   .hub-row.knowledge {
-    grid-template-columns: 68px minmax(0, 1fr);
+    grid-template-columns: 84px minmax(0, 1fr);
     gap: 14px;
   }
 
@@ -368,8 +367,8 @@ body[data-theme="dark"] {
   }
 
   .knowledge-mascot {
-    width: 68px;
-    height: 68px;
+    width: 84px;
+    height: 84px;
   }
 
   .knowledge-grid {
@@ -379,15 +378,19 @@ body[data-theme="dark"] {
 
 @media (max-width: 820px) {
   .hub-row.knowledge {
-    grid-template-columns: 56px minmax(0, 1fr);
+    grid-template-columns: 68px minmax(0, 1fr);
     padding: 15px;
     gap: 12px;
   }
 
   .knowledge-mascot {
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
+    width: 68px;
+    height: 68px;
+    border-radius: 18px;
+  }
+
+  .knowledge-mascot img {
+    border-radius: 17px;
   }
 
   .hub-row.knowledge .hub-title {

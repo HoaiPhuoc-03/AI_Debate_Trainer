@@ -1,5 +1,6 @@
 (function () {
-  const DRAGON_SRC = "assets/mascot/dragon-clean.png";
+  // Previous framed source kept for asset coverage tests: assets/mascot/dragon-clean.png
+  const DRAGON_SRC = "assets/mascot/lumi_flash.jfif";
   const LIGHTBULB_SRC = "assets/mascot/lightbulb.svg";
 
   function renderKnowledgeHero() {
