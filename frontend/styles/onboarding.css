@@ -1,0 +1,311 @@
+body.onboarding-open {
+  overflow: hidden;
+}
+
+.onboarding-overlay.hidden {
+  display: none;
+}
+
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.onboarding-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 15, 30, .58);
+  backdrop-filter: blur(16px);
+}
+
+.onboarding-dialog {
+  position: relative;
+  width: min(980px, 100%);
+  min-height: 560px;
+  border: 1px solid color-mix(in srgb, var(--border, #d7e6f5) 76%, transparent);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 12% 14%, color-mix(in srgb, var(--arena-cyan, #38d5e8) 14%, transparent), transparent 32%),
+    color-mix(in srgb, var(--card, #ffffff) 94%, transparent);
+  box-shadow: 0 26px 70px rgba(15, 23, 42, .24);
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  overflow: hidden;
+  outline: none;
+  animation: onboardingEnter .24s ease both;
+}
+
+body[data-theme="dark"] .onboarding-dialog {
+  background:
+    radial-gradient(circle at 12% 14%, color-mix(in srgb, var(--arena-cyan, #38d5e8) 12%, transparent), transparent 32%),
+    color-mix(in srgb, var(--card, #111827) 94%, #ffffff 3%);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, .44);
+}
+
+.onboarding-rail {
+  padding: 28px;
+  border-right: 1px solid color-mix(in srgb, var(--border, #d7e6f5) 64%, transparent);
+  background: color-mix(in srgb, var(--arena-cyan, #38d5e8) 7%, transparent);
+  display: grid;
+  align-content: start;
+  gap: 26px;
+}
+
+.onboarding-logo {
+  width: 78px;
+  height: 78px;
+  border-radius: 24px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 22px;
+  background: linear-gradient(135deg, var(--arena-cyan, #38d5e8), var(--arena-violet, #8b7cff));
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--arena-cyan, #38d5e8) 24%, transparent);
+}
+
+.onboarding-progress {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--border, #d7e6f5) 55%, transparent);
+}
+
+.onboarding-progress-bar {
+  width: var(--progress, 20%);
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--arena-cyan, #38d5e8), var(--arena-green, #32d583));
+  transition: width .28s ease;
+}
+
+.onboarding-dots {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.onboarding-dots button {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted, #64748b) 28%, transparent);
+  cursor: pointer;
+}
+
+.onboarding-dots button.active {
+  width: 28px;
+  background: var(--arena-cyan, #38d5e8);
+}
+
+.onboarding-main {
+  position: relative;
+  padding: 34px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 20px;
+}
+
+.onboarding-skip {
+  justify-self: end;
+  border: 0;
+  background: transparent;
+  color: var(--muted, #64748b);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.onboarding-step-body {
+  align-self: center;
+}
+
+.onboarding-eyebrow {
+  color: var(--muted, #64748b);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.onboarding-step-body h2 {
+  max-width: 680px;
+  margin: 0;
+  color: var(--arena-ink, var(--text, #0f172a));
+  font-size: clamp(36px, 5vw, 62px);
+  line-height: .98;
+  letter-spacing: 0;
+}
+
+.onboarding-step-body p {
+  max-width: 690px;
+  margin: 16px 0 0;
+  color: var(--muted, #64748b);
+  font-size: 18px;
+  line-height: 1.52;
+}
+
+.onboarding-card-grid,
+.onboarding-cer-grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.onboarding-mini-card,
+.onboarding-cer-grid div,
+.onboarding-example {
+  border: 1px solid color-mix(in srgb, var(--border, #d7e6f5) 72%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--card, #ffffff) 84%, transparent);
+  padding: 16px;
+  color: var(--arena-ink, var(--text, #0f172a));
+  box-shadow: 0 10px 26px rgba(69, 113, 164, .08);
+  animation: onboardingItemIn .32s ease both;
+}
+
+.onboarding-cer-grid div {
+  display: grid;
+  gap: 6px;
+}
+
+.onboarding-cer-grid span {
+  color: var(--muted, #64748b);
+  line-height: 1.4;
+}
+
+.onboarding-example {
+  margin-top: 12px;
+  color: var(--muted, #64748b);
+  line-height: 1.48;
+}
+
+.onboarding-flow {
+  margin-top: 26px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.onboarding-flow-step {
+  min-height: 112px;
+  border: 1px solid color-mix(in srgb, var(--border, #d7e6f5) 72%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--arena-cyan, #38d5e8) 7%, var(--card, #ffffff));
+  padding: 14px;
+  display: grid;
+  align-content: center;
+  gap: 9px;
+}
+
+.onboarding-flow-step span {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--arena-cyan, #38d5e8), var(--arena-violet, #8b7cff));
+  font-weight: 900;
+}
+
+.onboarding-flow-step strong {
+  color: var(--arena-ink, var(--text, #0f172a));
+  line-height: 1.2;
+}
+
+.onboarding-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.onboarding-actions button {
+  min-height: 48px;
+}
+
+.onboarding-back:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+@keyframes onboardingEnter {
+  from { opacity: 0; transform: translateY(12px) scale(.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes onboardingItemIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 860px) {
+  .onboarding-dialog {
+    min-height: 0;
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-rail {
+    padding: 18px 22px;
+    border-right: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border, #d7e6f5) 64%, transparent);
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+
+  .onboarding-logo {
+    width: 54px;
+    height: 54px;
+    border-radius: 18px;
+    font-size: 16px;
+  }
+
+  .onboarding-dots {
+    grid-column: 1 / -1;
+  }
+
+  .onboarding-main {
+    padding: 24px;
+  }
+
+  .onboarding-step-body h2 {
+    font-size: clamp(30px, 9vw, 44px);
+  }
+
+  .onboarding-card-grid,
+  .onboarding-cer-grid,
+  .onboarding-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-flow-step {
+    min-height: 76px;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+
+  .onboarding-actions,
+  .onboarding-actions button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-dialog,
+  .onboarding-mini-card,
+  .onboarding-cer-grid div,
+  .onboarding-example,
+  .onboarding-progress-bar {
+    animation: none !important;
+    transition: none !important;
+  }
+}
