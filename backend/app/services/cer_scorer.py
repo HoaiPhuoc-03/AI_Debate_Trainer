@@ -48,6 +48,22 @@ def _clamp(value: Any, minimum: float = 0.0, maximum: float = 100.0) -> float:
 
 
 def _score_to_100(value: Any) -> float:
+    """Convert any score value to 0–100 float.
+
+    Handles:
+    - int/float: used directly
+    - str: strip non-numeric chars and parse (handles '37', '"37"', '<37>')
+    - fractional (0, 1]: multiply by 100
+    Returns 0.0 on failure.
+    """
+    if isinstance(value, str):
+        # Strip surrounding quotes, angle brackets, whitespace, and non-numeric
+        # characters except period and minus (for negative guard)
+        cleaned = re.sub(r'[^0-9.\-]', '', value.strip().strip('"\"<>'))
+        try:
+            value = float(cleaned) if cleaned else 0.0
+        except (ValueError, TypeError):
+            return 0.0
     number = _clamp(value)
     if 0.0 < number <= 1.0:
         number *= 100.0
@@ -269,35 +285,70 @@ def parse_cer_rubric_output(raw_text: str) -> dict:
 
     rebuttal = str(payload.get("ai_rebuttal") or payload.get("rebuttal") or "").strip()
 
+    # Python-side evidence gate: if the model found no evidence (quote is
+    # "NONE" or absent, or checklist says has_real_evidence=False), hard-zero
+    # the entire evidence breakdown regardless of what scores the model output.
+    evidence_quote = str(payload.get("evidence_quote") or "").strip().upper()
+    checklist = payload.get("checklist") or {}
+    has_real_evidence = bool(checklist.get("has_real_evidence", True))
+    evidence_gate_zero = (evidence_quote == "NONE") or (not has_real_evidence)
+
     claim_breakdown = payload.get("claim_breakdown") or {}
     evidence_breakdown = payload.get("evidence_breakdown") or {}
     reasoning_breakdown = payload.get("reasoning_breakdown") or {}
+
+    # Helper: parse a breakdown sub-score, clamped to its sub-dimension cap.
+    # Uses _score_to_100 so string values like "<0–40>" or "\"18\"" are safely
+    # stripped to numeric before clamping — handles models that echo the template.
+    def _bd(group: dict, key: str, cap: float) -> float:
+        raw = group.get(key)
+        val = _score_to_100(raw)
+        return round(min(val, cap), 1)
+
     breakdown = {
         "claim": {
-            "clarity": round(_clamp(claim_breakdown.get("clarity"), 0.0, 40.0), 1),
-            "relevance": round(_clamp(claim_breakdown.get("relevance"), 0.0, 30.0), 1),
-            "specificity": round(_clamp(claim_breakdown.get("specificity"), 0.0, 30.0), 1),
+            "clarity": _bd(claim_breakdown, "clarity", 40.0),
+            "relevance": _bd(claim_breakdown, "relevance", 30.0),
+            "specificity": _bd(claim_breakdown, "specificity", 30.0),
         },
         "evidence": {
-            "presence": round(_clamp(evidence_breakdown.get("presence"), 0.0, 40.0), 1),
-            "specificity": round(_clamp(evidence_breakdown.get("specificity"), 0.0, 30.0), 1),
-            "relevance": round(_clamp(evidence_breakdown.get("relevance"), 0.0, 30.0), 1),
+            # Gate: zero out all evidence sub-scores when no real evidence was found.
+            "presence": 0.0 if evidence_gate_zero else _bd(evidence_breakdown, "presence", 40.0),
+            "specificity": 0.0 if evidence_gate_zero else _bd(
+                evidence_breakdown,
+                "evidence_specificity" if "evidence_specificity" in evidence_breakdown else "specificity",
+                30.0),
+            "relevance": 0.0 if evidence_gate_zero else _bd(
+                evidence_breakdown,
+                "evidence_relevance" if "evidence_relevance" in evidence_breakdown else "relevance",
+                30.0),
         },
         "reasoning": {
-            "logical_connection": round(_clamp(reasoning_breakdown.get("logical_connection"), 0.0, 40.0), 1),
-            "causal_explanation": round(_clamp(reasoning_breakdown.get("causal_explanation"), 0.0, 40.0), 1),
-            "fallacy_control": round(_clamp(reasoning_breakdown.get("fallacy_control"), 0.0, 20.0), 1),
+            "logical_connection": _bd(reasoning_breakdown, "logical_connection", 40.0),
+            "causal_explanation": _bd(reasoning_breakdown, "causal_explanation", 40.0),
+            "fallacy_control": _bd(reasoning_breakdown, "fallacy_control", 20.0),
         },
     }
 
+
     claim = _score_to_100(payload.get("claim_score"))
-    evidence = _score_to_100(payload.get("evidence_score"))
+    # If the evidence gate zeroed the breakdown, the top-level score must also be 0.
+    evidence = 0.0 if evidence_gate_zero else _score_to_100(payload.get("evidence_score"))
     reasoning = _score_to_100(payload.get("reasoning_score"))
-    if claim == 0.0:
+
+    # Only fall back to breakdown summation when the score is genuinely absent
+    # (i.e. the key is missing or the value is literally None/empty-string).
+    # Do NOT fall back just because the value is 0 — evidence can legitimately
+    # be 0, and claim/reasoning can be 0 for very poor arguments.
+    claim_raw = payload.get("claim_score")
+    evidence_raw = payload.get("evidence_score")
+    reasoning_raw = payload.get("reasoning_score")
+
+    if claim_raw is None or str(claim_raw).strip() in ("", "null"):
         claim = _sum_breakdown(breakdown["claim"], {"clarity": 40, "relevance": 30, "specificity": 30})
-    if evidence == 0.0:
+    if not evidence_gate_zero and (evidence_raw is None or str(evidence_raw).strip() in ("", "null")):
         evidence = _sum_breakdown(breakdown["evidence"], {"presence": 40, "specificity": 30, "relevance": 30})
-    if reasoning == 0.0:
+    if reasoning_raw is None or str(reasoning_raw).strip() in ("", "null"):
         reasoning = _sum_breakdown(
             breakdown["reasoning"],
             {"logical_connection": 40, "causal_explanation": 40, "fallacy_control": 20},

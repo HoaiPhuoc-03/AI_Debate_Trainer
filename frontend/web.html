@@ -5665,7 +5665,12 @@
       document.getElementById("progress-weakness").textContent = labelFor(data.skill_weakness || "-");
       document.getElementById("progress-strength-note").textContent = data.skill_strength ? `Trung bình ${scoreForSkill(data.skill_strength, { claim, evidence, reasoning })}` : "Chưa có dữ liệu";
       document.getElementById("progress-weakness-note").textContent = data.skill_weakness ? `Trung bình ${scoreForSkill(data.skill_weakness, { claim, evidence, reasoning })}` : "Chưa có dữ liệu";
-      const topicRows = toList(data.recent_topics).map((topic, index) => [topic, overall || scoreForIndex(index), "gần đây"]);
+      const rawTopics = Array.isArray(data.recent_topics) ? data.recent_topics : [];
+      const topicRows = rawTopics.map((item, index) => {
+        const name = typeof item === 'object' && item ? item.topic : item;
+        const score = typeof item === 'object' && item ? Math.round(item.score || 0) : (overall || scoreForIndex(index));
+        return [name, score, "gần đây"];
+      });
       if (!topicRows.length) {
         output.innerHTML = `<div class="empty-message">Tài khoản này chưa có dữ liệu tiến độ.</div>`;
         return;
