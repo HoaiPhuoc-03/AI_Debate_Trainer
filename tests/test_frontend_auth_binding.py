@@ -203,6 +203,69 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertNotIn("loginDragonFloat", html)
         self.assertIn("goToAuthView('login')", html)
 
+    def test_frontend_loads_onboarding_tutorial_assets(self):
+        html = read_frontend()
+
+        self.assertIn('href="styles/onboarding.css"', html)
+        self.assertIn('href="styles/tutorial.css"', html)
+        self.assertIn('href="styles/tooltips.css"', html)
+        self.assertIn('src="scripts/onboarding.js"', html)
+        self.assertIn('src="scripts/tutorial.js"', html)
+        self.assertIn('src="scripts/demoSession.js"', html)
+        self.assertIn('src="components/knowledge/knowledgeHero.js"', html)
+
+        for path in [
+            "frontend/assets/mascot/dragon-clean.png",
+            "frontend/assets/mascot/lightbulb.svg",
+            "frontend/styles/onboarding.css",
+            "frontend/styles/tutorial.css",
+            "frontend/styles/tooltips.css",
+            "frontend/scripts/onboarding.js",
+            "frontend/scripts/tutorial.js",
+            "frontend/scripts/demoSession.js",
+            "frontend/components/knowledge/knowledgeHero.js",
+            "frontend/components/onboarding/README.md",
+            "frontend/components/tooltips/README.md",
+            "frontend/components/tutorial/README.md",
+            "frontend/components/knowledge/README.md",
+            "frontend/components/demo/README.md",
+        ]:
+            self.assertTrue((ROOT_DIR / path).exists(), path)
+
+    def test_onboarding_tutorial_assets_expose_required_features(self):
+        onboarding = (ROOT_DIR / "frontend" / "scripts" / "onboarding.js").read_text(encoding="utf-8")
+        tutorial = (ROOT_DIR / "frontend" / "scripts" / "tutorial.js").read_text(encoding="utf-8")
+        demo = (ROOT_DIR / "frontend" / "scripts" / "demoSession.js").read_text(encoding="utf-8")
+        knowledge_hero = (ROOT_DIR / "frontend" / "components" / "knowledge" / "knowledgeHero.js").read_text(encoding="utf-8")
+
+        self.assertIn("ai_debate_trainer.onboarding.seen", onboarding)
+        self.assertIn("Chào mừng đến với AI Debate Trainer", onboarding)
+        self.assertIn("Xem phiên demo", onboarding)
+        self.assertIn("Bắt đầu tranh biện", onboarding)
+        self.assertIn("window.enterApp = function wrappedEnterApp", onboarding)
+
+        self.assertIn("Kiến thức nền tảng để tranh biện", tutorial)
+        self.assertIn("AIDebateKnowledgeHero?.render", tutorial)
+        self.assertIn("Kiến thức nền tảng để tranh biện", knowledge_hero)
+        self.assertIn("Nếu bạn là người chưa từng tranh biện, hãy đọc phần này cùng Lumi", knowledge_hero)
+        self.assertIn("assets/mascot/dragon-clean.png", knowledge_hero)
+        self.assertIn("assets/mascot/lightbulb.svg", knowledge_hero)
+        self.assertIn("knowledge-mascot", knowledge_hero)
+        self.assertIn("knowledge-copy", knowledge_hero)
+        self.assertIn("knowledge-nudge", knowledge_hero)
+        self.assertIn("function analyzeArgument", tutorial)
+        self.assertIn("Strong reasoning detected.", tutorial)
+        self.assertIn("CER_HELP", tutorial)
+        self.assertIn("No debate sessions yet", tutorial)
+
+        self.assertIn("frontend-only", demo)
+        self.assertIn("Replay demo", demo)
+        self.assertIn("Start real session", demo)
+        self.assertIn("claim: 78", demo)
+        self.assertIn("evidence: 65", demo)
+        self.assertIn("reasoning: 74", demo)
+        self.assertNotIn("/api/v1/debate/turn", demo)
+
 
 if __name__ == "__main__":
     unittest.main()

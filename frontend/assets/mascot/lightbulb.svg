@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lightbulb idea icon">
+  <defs>
+    <radialGradient id="bulbGlow" cx="45%" cy="32%" r="62%">
+      <stop offset="0" stop-color="#fff9c7"/>
+      <stop offset=".52" stop-color="#ffd86e"/>
+      <stop offset="1" stop-color="#f3a63c"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="14" x2="50" y1="8" y2="48">
+      <stop offset="0" stop-color="#fffdf1"/>
+      <stop offset=".5" stop-color="#ffeaa0"/>
+      <stop offset="1" stop-color="#ffc84d"/>
+    </linearGradient>
+    <linearGradient id="base" x1="22" x2="42" y1="43" y2="58">
+      <stop offset="0" stop-color="#8aa0bd"/>
+      <stop offset="1" stop-color="#52647d"/>
+    </linearGradient>
+    <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 1  0 .74 0 0 .64  0 0 .18 0 .18  0 0 0 .72 0"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <circle cx="32" cy="30" r="26" fill="url(#bulbGlow)" opacity=".18"/>
+  <path fill="none" stroke="#ffe6a3" stroke-linecap="round" stroke-width="3" d="M32 5v5M15 12l4 4M49 12l-4 4M8 30h5M56 30h-5"/>
+  <g filter="url(#softGlow)">
+    <path fill="url(#glass)" stroke="#ffe9a7" stroke-width="1.5" d="M45 28c0 6-3.5 10.2-7.4 13.5-1.6 1.4-2.2 2.6-2.2 4.1h-6.8c0-1.5-.6-2.7-2.2-4.1C22.5 38.2 19 34 19 28c0-7.4 5.7-13 13-13s13 5.6 13 13Z"/>
+    <path fill="none" stroke="#fff8d8" stroke-linecap="round" stroke-width="3" d="M27 22c-2.1 1.4-3.4 3.6-3.6 6.2"/>
+    <path fill="none" stroke="#f4b83d" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="m27 31 5 5 5-9"/>
+  </g>
+  <path fill="url(#base)" d="M27 45h10v4H27zM25 50h14v4H25zM28 55h8v4h-8z"/>
+</svg>
