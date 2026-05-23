@@ -592,6 +592,55 @@
     padding: 36px;
     margin-bottom: 30px;
   }
+  .mode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .mode-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 18px 14px;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.03);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    color: var(--text-secondary);
+  }
+  .mode-card:hover {
+    border-color: rgba(32,231,209,0.35);
+    background: rgba(32,231,209,0.06);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+  .mode-card.selected {
+    border-color: var(--cyan);
+    background: rgba(32,231,209,0.1);
+    color: var(--text-primary);
+    box-shadow: 0 0 20px rgba(32,231,209,0.12);
+  }
+  .mode-icon {
+    font-size: 1.7rem;
+    line-height: 1;
+  }
+  .mode-name {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: inherit;
+  }
+  .mode-desc {
+    font-size: 0.72rem;
+    opacity: 0.65;
+    line-height: 1.3;
+  }
+  .mode-card.selected .mode-name {
+    color: var(--cyan);
+  }
   .topic-heading {
     display: inline-flex;
     align-items: center;
@@ -3735,7 +3784,17 @@
         <h1 class="page-title">Thiết lập phiên tranh biện</h1>
         <p class="page-copy">Chọn chủ đề, lập trường và độ khó để huấn luyện viên AI tạo phiên tranh biện phù hợp với trình độ của bạn.</p>
 
-        <div class="panel session-card">
+        <div class="panel session-card mode-selection-card">
+          <div class="panel-head">
+            <h2 class="section-title" style="margin:0">
+              <span>🎯 Chế độ luyện tập</span>
+            </h2>
+            <span class="soft-pill">Chọn 1</span>
+          </div>
+          <div class="mode-grid" id="training-mode-options"></div>
+        </div>
+
+        <div class="panel session-card" id="topic-panel">
           <div class="panel-head">
             <h2 class="section-title topic-heading" style="margin:0">
               <span class="battle-icon" aria-hidden="true">
@@ -3935,8 +3994,8 @@
 
             <div class="panel arena-panel">
               <div class="panel-head">
-                <div class="panel-title"><span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> Điểm CER</div>
-                <div><div style="color:var(--muted);text-align:right">Tổng</div><div class="score-total" id="cer-total">0</div></div>
+                <div class="panel-title" id="cer-panel-title"><span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> Điểm CER</div>
+                <div id="cer-total-container"><div style="color:var(--muted);text-align:right">Tổng</div><div class="score-total" id="cer-total">0</div></div>
               </div>
               <div id="cer-output" class="empty-message">Điểm CER sẽ xuất hiện sau phản hồi của AI.</div>
             </div>
@@ -3960,7 +4019,7 @@
         <div class="summary-grid">
           <div class="summary-card"><div class="metric-label">Chủ đề</div><div class="metric-value" id="summary-topic">-</div><div class="metric-note" id="summary-tags">-</div></div>
           <div class="summary-card"><div class="metric-label">Tổng số lượt</div><div class="metric-value" id="summary-turns">0</div><div class="metric-note">lượt phản biện đã xử lý</div></div>
-          <div class="summary-card"><div class="metric-label">CER trung bình</div><div class="metric-value" id="summary-average">0</div><div class="metric-note">tính từ phiên hiện tại</div></div>
+          <div class="summary-card"><div class="metric-label" id="summary-average-label">CER trung bình</div><div class="metric-value" id="summary-average">0</div><div class="metric-note">tính từ phiên hiện tại</div></div>
         </div>
 
         <div class="summary-layout">
@@ -4093,6 +4152,7 @@
     pendingVoiceTranscript: "",
     history: [],
     latest: null,
+    mode: "free_debate",
   };
   let activeRebuttalAnimation = 0;
   let mediaRecorder = null;
@@ -4133,6 +4193,21 @@
   const difficulties = [["Basic", "●○○"], ["Intermediate", "●●○"], ["Advanced", "●●●"]];
   const times = [["60 sec", "Luyện nhanh"], ["90 sec", "Nhịp cân bằng"], ["3 min", "Suy luận sâu"]];
   const authLanguages = [["Tiếng Việt", "Mặc định"]];
+  const trainingModes = [
+    ["free_debate", "Tranh biện tự do", "User vs AI, luân phiên phản biện", "⚔"],
+    ["claim_writing", "Luyện viết Claim", "AI cho chủ đề → viết claim → AI chấm", "✍"],
+    ["find_evidence", "Luyện tìm Evidence", "AI cho claim → tìm bằng chứng → AI đánh giá", "🔍"],
+    ["quick_rebuttal", "Phản biện nhanh", "AI đưa lập luận yếu → tìm lỗ hổng", "⚡"],
+    ["full_argument", "Xây dựng lập luận", "Xây 1 lập luận C+E+R đầy đủ → AI chấm", "🏗"],
+  ];
+  const MODE_METRICS = {
+    free_debate: ["claim", "evidence", "reasoning"],
+    claim_writing: ["claim"],
+    find_evidence: ["evidence"],
+    quick_rebuttal: ["reasoning"],
+    full_argument: ["claim", "evidence", "reasoning"],
+  };
+  const AUTO_TOPIC_MODES = ["claim_writing", "find_evidence", "quick_rebuttal"];
   const displayLabels = {
     "Guest": "Khách",
     "Account": "Tài khoản",
@@ -4513,6 +4588,88 @@
     document.getElementById("stance-options").innerHTML = stances.map(([name, icon]) => lineChoice("stance", name, icon)).join("");
     document.getElementById("difficulty-options").innerHTML = difficulties.map(([name, dots]) => lineChoice("difficulty", name, dots)).join("");
     document.getElementById("time-options").innerHTML = times.map(([name, desc]) => lineChoice("responseTime", name, desc)).join("");
+    renderModeOptions();
+  }
+
+  function renderModeOptions() {
+    const container = document.getElementById("training-mode-options");
+    if (!container) return;
+    container.innerHTML = trainingModes.map(([id, name, desc, icon]) => {
+      const selected = state.mode === id ? "selected" : "";
+      return `
+        <button class="mode-card ${selected}" onclick="selectMode('${id}')">
+          <span class="mode-icon">${icon}</span>
+          <span class="mode-name">${name}</span>
+          <span class="mode-desc">${desc}</span>
+        </button>
+      `;
+    }).join("");
+    syncTopicPanelVisibility();
+  }
+
+  const AUTO_TOPICS = {
+    claim_writing: [
+      "Có nên cấm sử dụng điện thoại di động trong trường học?",
+      "Có nên miễn học phí đại học cho tất cả sinh viên?",
+      "Có nên áp thuế tiêu thụ đặc biệt đối với đồ uống có đường?",
+      "Có nên thay thế sách giáo khoa giấy bằng máy tính bảng?",
+      "Có nên cho phép học sinh trung học đánh giá giáo viên?",
+      "Mạng xã hội có nên yêu cầu xác minh danh tính bằng căn cước?",
+      "Có nên áp dụng chế độ làm việc 4 ngày một tuần?",
+      "Có nên cấm hoàn toàn túi nilon dùng một lần?"
+    ],
+    find_evidence: [
+      "Sử dụng năng lượng hạt nhân giúp giảm phát thải khí nhà kính.",
+      "Học trực tuyến không mang lại hiệu quả cao bằng học trực tiếp.",
+      "Nuôi thú cưng giúp giảm mức độ căng thẳng và lo âu ở người.",
+      "Làm việc tại nhà (remote) giúp tăng năng suất lao động.",
+      "Chơi game cải thiện phản xạ và khả năng giải quyết vấn đề.",
+      "Đọc sách giấy giúp ghi nhớ tốt hơn so với đọc sách điện tử.",
+      "Tập thể dục buổi sáng giúp cải thiện hiệu suất làm việc cả ngày.",
+      "Ăn chay hoàn toàn giúp kéo dài tuổi thọ trung bình."
+    ],
+    quick_rebuttal: [
+      "Nên cấm xe máy vì tai nạn giao thông đường bộ xảy ra mỗi ngày.",
+      "Không cần học đại học vì tỷ phú Bill Gates cũng bỏ học giữa chừng.",
+      "Nên cấm ăn thịt động vật vì loài hổ cũng ăn thịt các con vật khác.",
+      "Xem tivi giúp trẻ em thông minh hơn vì có nhiều kênh khoa học.",
+      "Điện thoại vô hại vì tôi dùng 10 năm nay không hề bị bệnh gì.",
+      "Không cần bảo vệ rừng vì lượng oxy chủ yếu đến từ tảo đại dương.",
+      "Học tiếng Anh là vô ích vì các công cụ dịch thuật AI đã rất phát triển.",
+      "Nên tiêu tiền thay vì tiết kiệm vì ngày mai chúng ta có thể sẽ chết."
+    ]
+  };
+
+  function selectMode(modeId) {
+    state.mode = modeId;
+    renderModeOptions();
+    if (AUTO_TOPIC_MODES.includes(modeId)) {
+      const list = AUTO_TOPICS[modeId];
+      if (list && list.length > 0) {
+        const randomIndex = Math.floor(Math.random() * list.length);
+        state.topic = list[randomIndex];
+      } else {
+        state.topic = "AI tự chọn chủ đề";
+      }
+      const input = document.getElementById("session-topic-input");
+      if (input) input.value = state.topic;
+    } else {
+      const allAutoTopics = Object.values(AUTO_TOPICS).flat();
+      if (allAutoTopics.includes(state.topic) || state.topic === "AI tự chọn chủ đề") {
+        state.topic = "";
+        const input = document.getElementById("session-topic-input");
+        if (input) input.value = "";
+      }
+    }
+    hideError("start-error");
+    updateSessionSummary();
+  }
+
+  function syncTopicPanelVisibility() {
+    const topicPanel = document.getElementById("topic-panel");
+    if (topicPanel) {
+      topicPanel.style.display = AUTO_TOPIC_MODES.includes(state.mode) ? "none" : "";
+    }
   }
 
   function choiceCard(key, name, meta, desc, icon, size = "", tone = "teal") {
@@ -4740,11 +4897,14 @@
   async function startDebate() {
     const button = document.getElementById("start-btn");
     hideError("start-error");
-    const topicError = validateSessionTopic(state.topic);
-    if (topicError) {
-      showError("start-error", topicError);
-      document.getElementById("session-topic-input")?.focus();
-      return;
+    const isAutoTopic = AUTO_TOPIC_MODES.includes(state.mode);
+    if (!isAutoTopic) {
+      const topicError = validateSessionTopic(state.topic);
+      if (topicError) {
+        showError("start-error", topicError);
+        document.getElementById("session-topic-input")?.focus();
+        return;
+      }
     }
     setLoading(button, true, "Đang tạo phiên...");
 
@@ -4760,6 +4920,7 @@
           debate_level: state.level,
           language: "vi",
           response_time: state.responseTime,
+          mode: state.mode,
         },
       });
 
@@ -4857,7 +5018,9 @@
   }
 
   function renderSessionChips() {
+    const modeLabel = (trainingModes.find(([id]) => id === state.mode) || [])[1] || "Tranh biện tự do";
     document.getElementById("session-chips").innerHTML = `
+      <span class="chip cyan">${escapeHtml(modeLabel)}</span>
       <span class="chip teal">${escapeHtml(displayValue(getTopic()))}</span>
       <span class="chip purple">Lập trường: ${escapeHtml(displayValue(state.stance))}</span>
       <span class="chip yellow">${escapeHtml(displayValue(state.difficulty))}</span>
@@ -4897,9 +5060,13 @@
     setText("arena-round-value", round);
     setText("arena-state-label", statusLabel);
     setText("arena-topic-line", topic);
-    updateStageMetric("claim", scores.claim);
-    updateStageMetric("evidence", scores.evidence);
-    updateStageMetric("reasoning", scores.reasoning);
+
+    const activeMetrics = MODE_METRICS[state.mode] || MODE_METRICS.free_debate;
+    ["claim", "evidence", "reasoning"].forEach(key => {
+      const meter = document.getElementById(`arena-${key}-metric`)?.closest(".stage-meter");
+      if (meter) meter.style.display = activeMetrics.includes(key) ? "" : "none";
+      updateStageMetric(key, activeMetrics.includes(key) ? scores[key] : 0);
+    });
   }
 
   function updateStageMetric(key, value) {
@@ -5546,25 +5713,46 @@
   }
 
   function renderCER(cer) {
+    const activeMetrics = MODE_METRICS[state.mode] || MODE_METRICS.free_debate;
     const total = cer ? Math.round(cer.overall ?? cer.total) : 0;
+    
+    const titleEl = document.getElementById("cer-panel-title");
+    if (titleEl) {
+      if (state.mode === "claim_writing") {
+        titleEl.innerHTML = `<span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> Điểm Luận điểm`;
+      } else if (state.mode === "find_evidence") {
+        titleEl.innerHTML = `<span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> Điểm Bằng chứng`;
+      } else if (state.mode === "quick_rebuttal") {
+        titleEl.innerHTML = `<span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> Điểm Lập luận`;
+      } else {
+        titleEl.innerHTML = `<span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> Điểm CER`;
+      }
+    }
+    const totalContainer = document.getElementById("cer-total-container");
+    if (totalContainer) {
+      const showTotal = ["free_debate", "full_argument"].includes(state.mode);
+      totalContainer.style.display = showTotal ? "" : "none";
+    }
+    
     document.getElementById("cer-total").textContent = total;
     if (!state.isSubmitting) syncLumiState(getLumiStateForContext());
     renderArenaStage(cer);
     const output = document.getElementById("cer-output");
     if (!cer) {
       output.className = "empty-message";
-      output.textContent = "Điểm CER sẽ xuất hiện sau phản hồi của AI.";
+      output.textContent = "Điểm sẽ xuất hiện sau phản hồi của AI.";
       return;
     }
 
-    const rows = [
-      ["Luận điểm", cer.claim, ""],
-      ["Bằng chứng", cer.evidence, "evidence"],
-      ["Lập luận", cer.reasoning, "reasoning"],
+    const allRows = [
+      ["claim", "Luận điểm", cer.claim, ""],
+      ["evidence", "Bằng chứng", cer.evidence, "evidence"],
+      ["reasoning", "Lập luận", cer.reasoning, "reasoning"],
     ];
+    const rows = allRows.filter(([key]) => activeMetrics.includes(key));
     output.className = "";
     output.innerHTML = `
-      ${rows.map(([label, score, tone]) => {
+      ${rows.map(([, label, score, tone]) => {
         const percent = Math.round(score);
         return `
           <div class="score-row">
@@ -5574,7 +5762,7 @@
         `;
       }).join("")}
       <div class="score-tiles">
-        ${rows.map(([label, score]) => `<div class="score-tile"><small>${label}</small><strong>${Math.round(score)}</strong><span>${score >= 70 ? "Vững" : "Cần luyện"}</span></div>`).join("")}
+        ${rows.map(([, label, score]) => `<div class="score-tile"><small>${label}</small><strong>${Math.round(score)}</strong><span>${score >= 70 ? "Vững" : "Cần luyện"}</span></div>`).join("")}
       </div>
     `;
   }
@@ -5645,11 +5833,29 @@
     document.getElementById("summary-topic").textContent = displayValue(getTopic());
     document.getElementById("summary-tags").textContent = `${displayValue(state.topic)} · ${displayValue(state.stance)}`;
     document.getElementById("summary-turns").textContent = state.history.length;
+    
+    const labelEl = document.getElementById("summary-average-label");
+    if (labelEl) {
+      if (state.mode === "claim_writing") {
+        labelEl.textContent = "Luận điểm trung bình";
+      } else if (state.mode === "find_evidence") {
+        labelEl.textContent = "Bằng chứng trung bình";
+      } else if (state.mode === "quick_rebuttal") {
+        labelEl.textContent = "Lập luận trung bình";
+      } else {
+        labelEl.textContent = "CER trung bình";
+      }
+    }
+    
     document.getElementById("summary-average").textContent = average;
     const cer = state.latest?.cer || { claim: 0, evidence: 0, reasoning: 0, total: 0 };
-    document.getElementById("summary-focus").textContent = cer.evidence <= cer.claim ? "Luyện bổ sung bằng chứng" : "Luyện suy luận chặt chẽ hơn";
+    const activeMetrics = MODE_METRICS[state.mode] || MODE_METRICS.free_debate;
+    const focusMetrics = activeMetrics.filter(k => (cer[k] || 0) < 70);
+    document.getElementById("summary-focus").textContent = focusMetrics.length
+      ? `Cần luyện: ${focusMetrics.map(k => labelFor(k)).join(", ")}`
+      : "Tất cả kỹ năng đều vững!";
     document.getElementById("summary-cer").innerHTML = `
-      ${["claim", "evidence", "reasoning"].map(key => {
+      ${activeMetrics.map(key => {
         const value = Math.round(cer[key] || 0);
         return `<div class="score-row"><div class="score-line"><span>${labelFor(key)}</span><strong>${value}/100</strong></div><div class="bar"><div class="bar-fill ${key}" style="--value:${value}%"></div></div></div>`;
       }).join("")}

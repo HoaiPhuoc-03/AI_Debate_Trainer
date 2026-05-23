@@ -43,6 +43,7 @@ def _session_response(session: dict) -> dict:
         "debate_level": session.get("debate_level") or "intermediate",
         "coach_model": session.get("coach_model") or "socratic_v3",
         "language": session.get("language") or "vi",
+        "mode": session.get("mode") or "free_debate",
         "response_time": session.get("response_time"),
         "max_turns": int(session.get("max_turns") or 0),
         "turn_count": int(session.get("turn_count") or 0),
@@ -97,6 +98,7 @@ def debate_turn(
         language=session.get("language"),
         input_mode=session.get("input_mode"),
         turn_history=turn_history,
+        mode=session.get("mode", "free_debate"),
     )
     result["cer"] = normalize_cer_to_100(result.get("cer"))
     ai_done_ms = int((time.perf_counter() - turn_start) * 1000)

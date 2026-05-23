@@ -88,21 +88,28 @@ def _session_user(auth_session: dict) -> dict:
     }
 
 
-def _expires_at() -> str:
-    expires = datetime.now(timezone.utc) + timedelta(days=SESSION_DAYS)
-    return expires.isoformat()
+def _expires_at() -> datetime:
+    return datetime.now(timezone.utc) + timedelta(days=SESSION_DAYS)
 
 
-def _is_expired(expires_at: str | None) -> bool:
+def _is_expired(expires_at: str | datetime | None) -> bool:
     if not expires_at:
         return False
-    try:
-        expires = datetime.fromisoformat(expires_at)
-    except ValueError:
-        return True
+    if isinstance(expires_at, datetime):
+        expires = expires_at
+    else:
+        try:
+            val_str = str(expires_at).strip()
+            if " " in val_str:
+                expires = datetime.strptime(val_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+            else:
+                expires = datetime.fromisoformat(val_str)
+        except (ValueError, TypeError):
+            return True
     if expires.tzinfo is None:
         expires = expires.replace(tzinfo=timezone.utc)
     return expires <= datetime.now(timezone.utc)
+
 
 
 def issue_token_for_user(user: dict) -> dict:

@@ -319,6 +319,35 @@ def normalize_coach_model(value) -> str:
     )
 
 
+
+def normalize_mode(value) -> str:
+    return _lookup(
+        value,
+        {
+            "free_debate": "free_debate",
+            "free debate": "free_debate",
+            "tranh bien tu do": "free_debate",
+            "claim_writing": "claim_writing",
+            "claim writing": "claim_writing",
+            "claim": "claim_writing",
+            "luyen viet claim": "claim_writing",
+            "find_evidence": "find_evidence",
+            "find evidence": "find_evidence",
+            "evidence": "find_evidence",
+            "luyen tim evidence": "find_evidence",
+            "quick_rebuttal": "quick_rebuttal",
+            "quick rebuttal": "quick_rebuttal",
+            "quick": "quick_rebuttal",
+            "phan bien nhanh": "quick_rebuttal",
+            "full_argument": "full_argument",
+            "full argument": "full_argument",
+            "full": "full_argument",
+            "xay dung lap luan": "full_argument",
+        },
+        "free_debate",
+    )
+
+
 def normalize_max_turns(value) -> int:
     try:
         turns = int(value)
@@ -346,7 +375,9 @@ def normalize_session_payload(payload) -> dict:
         "debate_level": debate_level,
         "coach_model": normalize_coach_model(getattr(payload, "coach_model", None)),
         "language": normalize_language(payload.language),
+        "mode": normalize_mode(getattr(payload, "mode", "free_debate")),
         "response_time": optional_text(payload.response_time),
         "max_turns": normalize_max_turns(payload.max_turns),
         "display_name": optional_text(payload.display_name),
     }
+

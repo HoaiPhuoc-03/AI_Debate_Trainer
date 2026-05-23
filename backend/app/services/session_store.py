@@ -82,9 +82,44 @@ def _db() -> firestore.Client:
 # Timestamp helpers
 # ---------------------------------------------------------------------------
 
-def _now() -> str:
-    """ISO-like UTC timestamp matching SQLite's CURRENT_TIMESTAMP format."""
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+def _now() -> datetime:
+    """UTC datetime object representing the current time."""
+    return datetime.now(timezone.utc)
+
+
+def _parse_datetime(val) -> datetime | None:
+    if not val:
+        return None
+    if isinstance(val, datetime):
+        if val.tzinfo is None:
+            return val.replace(tzinfo=timezone.utc)
+        return val
+    # If string:
+    try:
+        val_str = str(val).strip()
+        if " " in val_str:
+            return datetime.strptime(val_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        return datetime.fromisoformat(val_str).replace(tzinfo=timezone.utc)
+    except Exception:
+        return None
+
+
+def _parse_date(val) -> date | None:
+    if not val:
+        return None
+    if isinstance(val, date) and not isinstance(val, datetime):
+        return val
+    if isinstance(val, datetime):
+        return val.date()
+    # If string:
+    try:
+        val_str = str(val).strip()
+        dt = _parse_datetime(val_str)
+        if dt:
+            return dt.date()
+        return date.fromisoformat(val_str[:10])
+    except Exception:
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -119,8 +154,8 @@ def _skill_label(scores: dict[str, float], pick_highest: bool) -> str:
     return key.replace("_score", "")
 
 
-def _streak_days(completed_days: list[str]) -> int:
-    parsed_days = {date.fromisoformat(day) for day in completed_days if day}
+def _streak_days(completed_days: list) -> int:
+    parsed_days = {d for d in (_parse_date(day) for day in completed_days) if d}
     if not parsed_days:
         return 0
     cursor = max(parsed_days)
@@ -129,6 +164,7 @@ def _streak_days(completed_days: list[str]) -> int:
         streak += 1
         cursor -= timedelta(days=1)
     return streak
+
 
 
 def _normalize_score_value(value: float) -> float:
@@ -254,7 +290,7 @@ def _enrich_auth_session(session_data: dict) -> dict:
 def create_auth_session(
     user_id: str,
     token: str,
-    expires_at: str | None = None,
+    expires_at: datetime | str | None = None,
 ) -> dict:
     init_db()
     session_id = str(uuid4())
@@ -263,7 +299,7 @@ def create_auth_session(
         "user_id": user_id,
         "token": token,
         "created_at": _now(),
-        "expires_at": expires_at,
+        "expires_at": _parse_datetime(expires_at),
         "is_active": 1,
     }
     _db().collection("auth_sessions").document(session_id).set(data)
@@ -344,6 +380,7 @@ def create_session(
     debate_level: str = "intermediate",
     coach_model: str = "socratic_v3",
     language: str = "vi",
+    mode: str = "free_debate",
     response_time: str | None = None,
     max_turns: int | None = None,
     display_name: str | None = None,
@@ -365,6 +402,7 @@ def create_session(
         "debate_level": debate_level or "intermediate",
         "coach_model": coach_model or "socratic_v3",
         "language": language or "vi",
+        "mode": mode or "free_debate",
         "response_time": response_time,
         "display_name": display_name,
         "status": "active",
@@ -407,7 +445,7 @@ def end_session(session_id: str, user_id: str | None = None) -> dict | None:
         "status": "completed",
         "average_score": avg_score,
         "updated_at": now,
-        "completed_at": data.get("completed_at") or now,
+        "completed_at": _parse_datetime(data.get("completed_at")) or now,
     })
     return doc_ref.get().to_dict()
 
@@ -511,7 +549,7 @@ def save_debate_turn(
     }
     if next_status == "completed":
         current = session_ref.get().to_dict() or {}
-        session_updates["completed_at"] = current.get("completed_at") or now
+        session_updates["completed_at"] = _parse_datetime(current.get("completed_at")) or now
 
     session_ref.update(session_updates)
     updated_session = session_ref.get().to_dict()
@@ -637,22 +675,27 @@ def get_progress_overview(user_id: str | None = None) -> dict:
     total_sessions = len(sessions)
     completed_sessions = sum(1 for s in sessions if s.get("status") == "completed")
 
+    def _created_at_sort_key(s: dict) -> datetime:
+        dt = _parse_datetime(s.get("created_at"))
+        return dt or datetime.min.replace(tzinfo=timezone.utc)
+
     # Recent sessions (up to 5, newest first, non-empty)
     recent_sessions = sorted(
         [s for s in sessions if s.get("topic")],
-        key=lambda s: s.get("created_at", ""),
+        key=_created_at_sort_key,
         reverse=True,
     )
 
     # Unique completed calendar days for streak calculation
     completed_days = list({
-        s["completed_at"][:10]
+        s["completed_at"]
         for s in sessions
         if s.get("completed_at")
     })
 
     # ── aggregate CER scores across all valid turns ────────────────────────
     session_ids = {s["session_id"] for s in sessions}
+    session_modes = {s["session_id"]: s.get("mode", "free_debate") for s in sessions}
     session_scores = {}
     claim_vals:     list[float] = []
     evidence_vals:  list[float] = []
@@ -671,6 +714,7 @@ def get_progress_overview(user_id: str | None = None) -> dict:
             if d.to_dict().get("status") not in ("error", "invalid")
         ]
         sess_total_vals = []
+        mode = session_modes.get(sid, "free_debate")
         for tid in valid_turn_ids:
             score_docs = (
                 db.collection("cer_scores")
@@ -688,7 +732,14 @@ def get_progress_overview(user_id: str | None = None) -> dict:
                 evidence_vals.append(e)
                 reasoning_vals.append(r)
                 total_vals.append(t)
-                sess_total_vals.append(t)
+                if mode == "claim_writing":
+                    sess_total_vals.append(c)
+                elif mode == "find_evidence":
+                    sess_total_vals.append(e)
+                elif mode == "quick_rebuttal":
+                    sess_total_vals.append(r)
+                else:
+                    sess_total_vals.append(t)
         
         session_scores[sid] = _average(sess_total_vals) if sess_total_vals else 0.0
 
