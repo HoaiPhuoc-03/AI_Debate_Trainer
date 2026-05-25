@@ -1,10 +1,15 @@
 import json
 import re
 import asyncio
+import logging
+from concurrent.futures import ThreadPoolExecutor
 
 from app.core.config import settings
+from app.services.elevenlabs_stt_client import transcribe_audio as transcribe_elevenlabs_audio
 from app.services.groq_client import call_groq
 from app.services.groq_stt_client import transcribe_groq_audio
+
+logger = logging.getLogger(__name__)
 
 
 SUPPORTED_AUDIO_TYPES = {
@@ -13,6 +18,8 @@ SUPPORTED_AUDIO_TYPES = {
     "audio/wav": "speech.wav",
     "audio/wave": "speech.wav",
     "audio/x-wav": "speech.wav",
+    "audio/flac": "speech.flac",
+    "audio/x-flac": "speech.flac",
     "audio/mpeg": "speech.mp3",
     "audio/mp3": "speech.mp3",
     "audio/mp4": "speech.m4a",
@@ -29,6 +36,9 @@ EDGE_TTS_FRIENDLY_ERROR = (
     "Edge TTS hiện không phản hồi. "
     "Vui lòng kiểm tra kết nối internet hoặc thử lại sau."
 )
+INVALID_STT_PROVIDER_ERROR = (
+    "VOICE_STT_PROVIDER không hợp lệ. Chỉ hỗ trợ 'groq' hoặc 'elevenlabs'."
+)
 
 
 def normalize_speech_language(language: str | None) -> str:
@@ -36,6 +46,26 @@ def normalize_speech_language(language: str | None) -> str:
     if normalized.startswith("vi"):
         return "vi"
     return "vi"
+
+
+def normalize_voice_provider(provider: str | None) -> str:
+    normalized = str(provider or "").strip().lower().replace("_", "-")
+    aliases = {
+        "edge-tts": "edge",
+        "groq-whisper": "groq",
+        "eleven-labs": "elevenlabs",
+    }
+    return aliases.get(normalized, normalized)
+
+
+def run_async_blocking(async_fn, *args, **kwargs):
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(async_fn(*args, **kwargs))
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        return executor.submit(lambda: asyncio.run(async_fn(*args, **kwargs))).result()
 
 
 def validate_audio_request(audio_bytes: bytes, content_type: str) -> tuple[bool, str, str]:
@@ -150,31 +180,7 @@ def cleanup_voice_transcript(raw_text: str, *, session_context: dict | None = No
         "error": result.get("error", ""),
     }
 
-def transcribe_audio(
-    audio_bytes: bytes,
-    *,
-    content_type: str,
-    language: str | None = None,
-    session_context: dict | None = None,
-) -> dict:
-    is_valid, message, error_code = validate_audio_request(audio_bytes, content_type)
-    if not is_valid:
-        return {
-            "ok": False,
-            "text": "",
-            "provider": "groq",
-            "model": settings.GROQ_STT_MODEL,
-            "error": message,
-            "error_code": error_code,
-        }
-
-    result = transcribe_groq_audio(
-        audio_bytes,
-        filename=SUPPORTED_AUDIO_TYPES[content_type],
-        content_type=content_type,
-        language=normalize_speech_language(language),
-        prompt=build_groq_stt_prompt(session_context),
-    )
+def _apply_transcript_cleanup(result: dict, *, session_context: dict | None = None) -> dict:
     if result.get("ok"):
         cleanup = cleanup_voice_transcript(result["text"], session_context=session_context)
         result["raw_text"] = cleanup["raw_text"]
@@ -185,20 +191,119 @@ def transcribe_audio(
     return result
 
 
-async def synthesize_text(text: str) -> dict:
-    """
-    Tổng hợp giọng nói bằng edge-tts (Microsoft Edge TTS).
-    Trả về bytes audio MP3 trực tiếp trong memory — không ghi file.
-    """
-    import edge_tts
+def _transcribe_with_groq(
+    audio_bytes: bytes,
+    *,
+    content_type: str,
+    language: str | None = None,
+    session_context: dict | None = None,
+) -> dict:
+    logger.info("[STT] Using provider: groq")
+    result = transcribe_groq_audio(
+        audio_bytes,
+        filename=SUPPORTED_AUDIO_TYPES[content_type],
+        content_type=content_type,
+        language=normalize_speech_language(language),
+        prompt=build_groq_stt_prompt(session_context),
+    )
+    return _apply_transcript_cleanup(result, session_context=session_context)
 
-    clean = str(text or "").strip()
+
+def _transcribe_with_elevenlabs(
+    audio_bytes: bytes,
+    *,
+    content_type: str,
+    session_context: dict | None = None,
+) -> dict:
+    logger.info("[STT] Using provider: elevenlabs")
+    text = run_async_blocking(
+        transcribe_elevenlabs_audio,
+        audio_bytes,
+        filename=SUPPORTED_AUDIO_TYPES[content_type],
+    )
+    result = {
+        "ok": True,
+        "text": text,
+        "provider": "elevenlabs",
+        "model": settings.ELEVENLABS_STT_MODEL,
+        "error": "",
+        "error_code": "",
+    }
+    return _apply_transcript_cleanup(result, session_context=session_context)
+
+
+def transcribe_audio(
+    audio_bytes: bytes,
+    *,
+    content_type: str,
+    language: str | None = None,
+    session_context: dict | None = None,
+) -> dict:
+    provider = normalize_voice_provider(settings.VOICE_STT_PROVIDER) or "groq"
+    fallback = normalize_voice_provider(settings.VOICE_STT_FALLBACK)
+
+    is_valid, message, error_code = validate_audio_request(audio_bytes, content_type)
+    if not is_valid:
+        return {
+            "ok": False,
+            "text": "",
+            "provider": provider,
+            "model": settings.GROQ_STT_MODEL if provider == "groq" else settings.ELEVENLABS_STT_MODEL,
+            "error": message,
+            "error_code": error_code,
+        }
+
+    if provider == "groq":
+        return _transcribe_with_groq(
+            audio_bytes,
+            content_type=content_type,
+            language=language,
+            session_context=session_context,
+        )
+
+    if provider == "elevenlabs":
+        try:
+            return _transcribe_with_elevenlabs(
+                audio_bytes,
+                content_type=content_type,
+                session_context=session_context,
+            )
+        except Exception as exc:
+            if fallback == "groq":
+                logger.info("[STT] ElevenLabs failed, fallback to Groq Whisper")
+                return _transcribe_with_groq(
+                    audio_bytes,
+                    content_type=content_type,
+                    language=language,
+                    session_context=session_context,
+                )
+            return {
+                "ok": False,
+                "text": "",
+                "provider": "elevenlabs",
+                "model": settings.ELEVENLABS_STT_MODEL,
+                "error": str(exc),
+                "error_code": "PROVIDER_ERROR",
+            }
+
+    return {
+        "ok": False,
+        "text": "",
+        "provider": provider,
+        "model": "",
+        "error": INVALID_STT_PROVIDER_ERROR,
+        "error_code": "INVALID_PROVIDER",
+    }
+
+
+async def synthesize_text(text: str) -> dict:
+    clean = sanitize_tts_text(text)
     if not clean:
         return {
             "ok": False,
             "audio": b"",
             "content_type": "audio/mpeg",
-            "provider": "edge_tts",
+            "provider": "edge",
             "model": settings.EDGE_TTS_VOICE,
             "error": EMPTY_TTS_TEXT_ERROR,
             "error_code": "EMPTY_TEXT",
@@ -208,12 +313,33 @@ async def synthesize_text(text: str) -> dict:
             "ok": False,
             "audio": b"",
             "content_type": "audio/mpeg",
-            "provider": "edge_tts",
+            "provider": "edge",
             "model": settings.EDGE_TTS_VOICE,
             "error": TOO_LONG_TTS_TEXT_ERROR,
             "error_code": "TEXT_TOO_LONG",
         }
 
+    return await _synthesize_with_edge(clean)
+
+
+def sanitize_tts_text(text: str) -> str:
+    clean = str(text or "").strip()
+    clean = re.sub(r"```(?:\w+)?\s*([\s\S]*?)```", r"\1", clean)
+    clean = re.sub(r"`([^`]+)`", r"\1", clean)
+    clean = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", clean)
+    clean = re.sub(r"[*_#>]+", "", clean)
+    clean = re.sub(r"\s+", " ", clean)
+    return clean.strip()
+
+
+async def _synthesize_with_edge(clean: str) -> dict:
+    """
+    Tổng hợp giọng nói bằng edge-tts (Microsoft Edge TTS).
+    Trả về bytes audio MP3 trực tiếp trong memory - không ghi file.
+    """
+    import edge_tts
+
+    logger.info("[TTS] Using provider: edge")
     try:
         communicate = edge_tts.Communicate(
             text=clean,
@@ -231,7 +357,7 @@ async def synthesize_text(text: str) -> dict:
                 "ok": False,
                 "audio": b"",
                 "content_type": "audio/mpeg",
-                "provider": "edge_tts",
+                "provider": "edge",
                 "model": settings.EDGE_TTS_VOICE,
                 "error": EDGE_TTS_FRIENDLY_ERROR,
                 "error_code": "EMPTY_AUDIO_RESPONSE",
@@ -241,7 +367,7 @@ async def synthesize_text(text: str) -> dict:
             "ok": True,
             "audio": audio_bytes,
             "content_type": "audio/mpeg",
-            "provider": "edge_tts",
+            "provider": "edge",
             "model": settings.EDGE_TTS_VOICE,
             "error": "",
             "error_code": "",
@@ -251,7 +377,7 @@ async def synthesize_text(text: str) -> dict:
             "ok": False,
             "audio": b"",
             "content_type": "audio/mpeg",
-            "provider": "edge_tts",
+            "provider": "edge",
             "model": settings.EDGE_TTS_VOICE,
             "error": EDGE_TTS_FRIENDLY_ERROR,
             "error_code": "TIMEOUT",
@@ -261,7 +387,7 @@ async def synthesize_text(text: str) -> dict:
             "ok": False,
             "audio": b"",
             "content_type": "audio/mpeg",
-            "provider": "edge_tts",
+            "provider": "edge",
             "model": settings.EDGE_TTS_VOICE,
             "error": str(exc) or EDGE_TTS_FRIENDLY_ERROR,
             "error_code": "UNKNOWN_ERROR",

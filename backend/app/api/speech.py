@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from starlette.concurrency import run_in_threadpool
 
 from app.schemas.speech import SpeechSynthesisRequest, SpeechTranscriptionResponse
 from app.services.auth_service import get_debate_user
@@ -19,6 +20,7 @@ from app.services.speech_service import (
 router = APIRouter()
 
 
+@router.post("/stt", response_model=SpeechTranscriptionResponse)
 @router.post("/transcribe", response_model=SpeechTranscriptionResponse)
 async def transcribe_speech(
     request: Request,
@@ -35,7 +37,8 @@ async def transcribe_speech(
         session_context = get_session(session_id, user_id=current_user["id"])
 
     audio_bytes = await request.body()
-    result = transcribe_audio(
+    result = await run_in_threadpool(
+        transcribe_audio,
         audio_bytes,
         content_type=content_type,
         language=normalize_speech_language(language),
@@ -55,6 +58,7 @@ async def transcribe_speech(
     )
 
 
+@router.post("/tts")
 @router.post("/synthesize")
 async def synthesize_speech(
     payload: SpeechSynthesisRequest,
@@ -65,7 +69,12 @@ async def synthesize_speech(
     if not result["ok"]:
         error_code = result.get("error_code", "UNKNOWN_ERROR")
         # Client validation errors -> 400, Server/Network errors -> 502
-        status_code = 400 if error_code in {"EMPTY_TEXT", "TEXT_TOO_LONG"} else 502
+        if error_code in {"EMPTY_TEXT", "TEXT_TOO_LONG"}:
+            status_code = 400
+        elif error_code == "RATE_LIMIT":
+            status_code = 429
+        else:
+            status_code = 502
         raise HTTPException(status_code=status_code, detail=result["error"])
 
     return Response(

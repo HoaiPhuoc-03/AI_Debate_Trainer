@@ -104,3 +104,81 @@ Swagger UI: Khi kiểm tra trên Swagger, nhập trực tiếp session_id vào t
 Validation: Trường user_argument là bắt buộc, không được để trống.
 
 CORS: Đảm bảo Backend đã cấu hình cho phép Frontend truy cập.
+## 7. Topic Bank
+
+### Endpoint: GET /api/v1/debate/topics
+
+Query params:
+
+JSON
+{
+  "category": "Giáo dục",
+  "difficulty": "Trung cấp",
+  "q": "AI",
+  "tag": "học tập",
+  "limit": 20
+}
+
+Response Body:
+
+JSON
+{
+  "status": "success",
+  "topics": [
+    {
+      "id": "edu_ai_homework",
+      "title": "Học sinh có nên được dùng AI để làm bài tập?",
+      "category": "Giáo dục",
+      "difficulty": "Trung cấp",
+      "tags": ["AI", "học tập", "đạo đức học thuật"],
+      "description": "Chủ đề xoay quanh việc sử dụng AI trong học tập và ranh giới giữa hỗ trợ và gian lận.",
+      "suggested_stance": ["Ủng hộ", "Phản đối"],
+      "is_active": true,
+      "created_at": "2026-05-25T00:00:00+00:00"
+    }
+  ],
+  "total": 1
+}
+
+### Endpoint: GET /api/v1/debate/topic-categories
+
+Response Body:
+
+JSON
+{
+  "status": "success",
+  "categories": [
+    {
+      "id": "education",
+      "name": "Giáo dục",
+      "description": "Các chủ đề liên quan đến trường học, học tập, phương pháp giáo dục.",
+      "count": 5
+    }
+  ]
+}
+
+### Endpoint: GET /api/v1/debate/topics/recommended
+
+Query params:
+
+JSON
+{
+  "user_id": "optional-user-id",
+  "difficulty": "Nâng cao",
+  "category": "Đạo đức",
+  "limit": 12
+}
+
+Hiện tại endpoint này ưu tiên theo độ khó và danh mục từ seed topic local. Tham số user_id được giữ để sau này có thể xếp hạng theo lịch sử trong Firestore mà không đổi contract.
+
+### Start Session Topic Metadata
+
+POST /api/v1/debate/session vẫn tương thích payload cũ chỉ có topic text. Nếu frontend chọn topic từ ngân hàng, có thể gửi thêm:
+
+JSON
+{
+  "topic_id": "edu_ai_homework",
+  "topic": "Học sinh có nên được dùng AI để làm bài tập?",
+  "topic_category": "Giáo dục",
+  "topic_tags": ["AI", "học tập", "đạo đức học thuật"]
+}

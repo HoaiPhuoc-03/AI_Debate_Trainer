@@ -45,6 +45,25 @@ def optional_text(value) -> str | None:
     return text or None
 
 
+def optional_text_list(value) -> list[str] | None:
+    if value is None:
+        return None
+    if not isinstance(value, list):
+        return None
+    items: list[str] = []
+    seen: set[str] = set()
+    for item in value:
+        text = optional_text(item)
+        if not text:
+            continue
+        key = text.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        items.append(text)
+    return items or None
+
+
 def validate_debate_topic(topic: str | None) -> dict:
     text = " ".join(_clean_text(topic).split())
     key = _key(text)
@@ -364,9 +383,12 @@ def normalize_session_payload(payload) -> dict:
     debate_level = normalize_debate_level(payload.debate_level)
     difficulty = normalize_difficulty(payload.difficulty) if payload.difficulty else difficulty_label_from_level(debate_level)
     topic = normalize_topic(payload.topic, payload.topic_category, payload.custom_topic)
+    topic_id = optional_text(getattr(payload, "topic_id", None))
     return {
         "topic": topic,
-        "topic_category": None,
+        "topic_id": topic_id,
+        "topic_category": optional_text(getattr(payload, "topic_category", None)) if topic_id else None,
+        "topic_tags": optional_text_list(getattr(payload, "topic_tags", None)) if topic_id else None,
         "custom_topic": None,
         "stance": normalize_stance(payload.stance),
         "difficulty": difficulty,

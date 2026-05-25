@@ -24,6 +24,18 @@
     --pink: #fb7185;
     --danger: #ef4444;
     --success: #10b981;
+    --topic-primary: #5AA9FF;
+    --topic-secondary: #9B8CFF;
+    --topic-accent: #5ED6D6;
+    --topic-card-bg: linear-gradient(135deg, #f8fbff 0%, #eef4ff 55%, #f6f1ff 100%);
+    --topic-card-border: rgba(120, 170, 255, 0.22);
+    --topic-card-shadow: 0 10px 30px rgba(130, 160, 220, 0.10);
+    --topic-card-selected-bg: linear-gradient(135deg, #edf7ff 0%, #e9f2ff 45%, #f4efff 100%);
+    --topic-title: #1c2940;
+    --topic-description: #5f6f86;
+    --topic-helper: #7a8aa0;
+    --topic-tag-bg: #f1ebff;
+    --topic-tag-text: #7a5bd3;
     --radius: 20px;
     --radius-sm: 14px;
     --sidebar: 390px;
@@ -67,6 +79,18 @@
     --pink: #ff7da8;
     --danger: #ff6b7a;
     --success: #2eb896;
+    --topic-primary: #5AA9FF;
+    --topic-secondary: #9B8CFF;
+    --topic-accent: #5ED6D6;
+    --topic-card-bg: linear-gradient(135deg, #f8fbff 0%, #eef4ff 55%, #f6f1ff 100%);
+    --topic-card-border: rgba(120, 170, 255, 0.22);
+    --topic-card-shadow: 0 10px 30px rgba(130, 160, 220, 0.10);
+    --topic-card-selected-bg: linear-gradient(135deg, #edf7ff 0%, #e9f2ff 45%, #f4efff 100%);
+    --topic-title: #1c2940;
+    --topic-description: #5f6f86;
+    --topic-helper: #7a8aa0;
+    --topic-tag-bg: #f1ebff;
+    --topic-tag-text: #7a5bd3;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -676,6 +700,236 @@
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 18px;
   }
+  .topic-bank {
+    display: grid;
+    gap: 18px;
+  }
+  .topic-toolbar {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) minmax(180px, 240px);
+    gap: 14px;
+    align-items: center;
+  }
+  .topic-search {
+    min-height: 56px;
+    font-size: 18px;
+    border-radius: 16px;
+  }
+  .topic-filter-select {
+    width: 100%;
+    min-height: 56px;
+    padding: 0 18px;
+    border-radius: 16px;
+    color: var(--topic-title);
+    background: rgba(248, 251, 255, 0.92);
+    border: 1px solid rgba(120, 170, 255, 0.22);
+    font-size: 17px;
+    font-weight: 800;
+    outline: none;
+  }
+  .topic-filter-select:focus {
+    border-color: rgba(90, 169, 255, 0.72);
+    box-shadow: 0 0 0 3px rgba(90, 169, 255, 0.12);
+  }
+  .topic-category-strip {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+  }
+  .topic-chip {
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(120, 170, 255, 0.22);
+    background: rgba(248, 251, 255, 0.84);
+    color: var(--topic-title);
+    font-size: 15px;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(130, 160, 220, 0.08);
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  }
+  .topic-chip:hover {
+    transform: translateY(-1px);
+    border-color: rgba(90, 169, 255, 0.42);
+    box-shadow: 0 12px 24px rgba(130, 160, 220, 0.12);
+  }
+  .topic-chip.active {
+    border-color: rgba(94, 214, 214, 0.62);
+    background: linear-gradient(135deg, rgba(232, 255, 244, 0.98), rgba(237, 247, 255, 0.98));
+    color: #169b68;
+    box-shadow: 0 0 0 3px rgba(94, 214, 214, 0.14), 0 12px 26px rgba(90, 169, 255, 0.10);
+  }
+  .topic-bank-status {
+    min-height: 22px;
+    color: var(--topic-helper);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .topic-bank-status.warning {
+    color: var(--yellow);
+  }
+  .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+  }
+  .topic-grid-shell {
+    display: grid;
+    gap: 14px;
+  }
+  .topic-load-more-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 2px;
+  }
+  .topic-count-note {
+    color: var(--topic-helper);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .topic-load-more {
+    min-height: 46px;
+    padding: 0 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(120, 170, 255, 0.28);
+    background: rgba(248, 251, 255, 0.92);
+    color: var(--topic-title);
+    font-size: 15px;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(130, 160, 220, 0.10);
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  }
+  .topic-load-more:hover {
+    transform: translateY(-1px);
+    border-color: rgba(90, 169, 255, 0.54);
+    background: linear-gradient(135deg, #f8fbff, #eef4ff);
+    box-shadow: 0 16px 32px rgba(90, 169, 255, 0.16);
+  }
+  .topic-card {
+    min-height: 210px;
+    padding: 18px;
+    display: grid;
+    gap: 12px;
+    align-content: start;
+    border-radius: 18px;
+    border: 1px solid var(--topic-card-border);
+    background: var(--topic-card-bg);
+    color: var(--topic-title);
+    text-align: left;
+    cursor: pointer;
+    position: relative;
+    box-shadow: var(--topic-card-shadow);
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  }
+  .topic-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(90, 169, 255, 0.5);
+    box-shadow: 0 18px 42px rgba(100, 140, 210, 0.18);
+  }
+  .topic-card.active {
+    border: 1.5px solid #6fb8ff;
+    background: var(--topic-card-selected-bg);
+    box-shadow: 0 0 0 3px rgba(111, 184, 255, 0.12), 0 18px 42px rgba(100, 140, 210, 0.18);
+  }
+  .topic-card-check {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    border: 1.5px solid rgba(90, 169, 255, 0.42);
+    background: rgba(255, 255, 255, 0.72);
+    color: transparent;
+  }
+  .topic-card.active .topic-card-check {
+    color: white;
+    background: linear-gradient(135deg, var(--topic-primary), var(--topic-secondary));
+    border-color: transparent;
+    box-shadow: 0 8px 18px rgba(90, 169, 255, 0.24);
+  }
+  .topic-card-title {
+    padding-right: 34px;
+    font-size: 18px;
+    line-height: 1.32;
+    font-weight: 900;
+    color: var(--topic-title);
+  }
+  .topic-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .topic-badge {
+    min-height: 36px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .topic-category-badge {
+    background: #e8fff4;
+    color: #169b68;
+    border: 1px solid #bcefd8;
+  }
+  .topic-difficulty-badge.basic {
+    background: #fff7df;
+    color: #c27a00;
+    border: 1px solid #f2d48a;
+  }
+  .topic-difficulty-badge.intermediate {
+    background: #eef3ff;
+    color: #4d6fe8;
+    border: 1px solid #cfd9ff;
+  }
+  .topic-difficulty-badge.advanced {
+    background: #fff0f4;
+    color: #d35b86;
+    border: 1px solid #f3bfd0;
+  }
+  .topic-card-desc {
+    color: var(--topic-description);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .topic-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .topic-tag {
+    min-height: 24px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    color: var(--topic-tag-text);
+    background: var(--topic-tag-bg);
+    border: 1px solid #ddd0ff;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .topic-empty-state {
+    min-height: 90px;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    border-radius: 18px;
+    color: var(--topic-description);
+    background: linear-gradient(135deg, #f8fbff, #f6f1ff);
+    border: 1px dashed rgba(120, 170, 255, 0.3);
+    box-shadow: var(--topic-card-shadow);
+  }
   .custom-topic {
     margin-top: 30px;
     padding: 24px;
@@ -782,8 +1036,96 @@
     gap: 30px;
     align-items: start;
   }
+  .debate-topic-bar {
+    width: min(100%, 980px);
+    min-height: 86px;
+    margin: 0 auto 24px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #f5fbff 0%, #edf4ff 50%, #f5f0ff 100%);
+    border: 1px solid rgba(120, 170, 255, 0.22);
+    box-shadow: 0 10px 24px rgba(120, 150, 220, 0.10);
+  }
+  .debate-topic-bar__icon {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    color: #ffffff;
+    background: linear-gradient(135deg, #5AA9FF, #9B8CFF);
+    box-shadow: 0 10px 22px rgba(90, 169, 255, 0.24);
+    font-size: 22px;
+  }
+  .debate-topic-bar__body {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+    text-align: center;
+  }
+  .debate-topic-bar__label {
+    color: #6f87a6;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .debate-topic-bar__title {
+    max-width: 680px;
+    color: #1f2a44;
+    font-size: 19px;
+    line-height: 1.35;
+    font-weight: 800;
+  }
+  .debate-topic-bar__meta {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .debate-topic-badge {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #4d6fe8;
+    background: #eef3ff;
+    border: 1px solid #cfd9ff;
+  }
+  .debate-topic-badge.category {
+    color: #169b68;
+    background: #e8fff4;
+    border-color: #bcefd8;
+  }
+  .debate-topic-badge.difficulty {
+    color: #7a5bd3;
+    background: #f1ebff;
+    border-color: #ddd0ff;
+  }
   .arena-stack { display: grid; gap: 30px; }
   .arena-panel { padding: 30px; }
+  .debate-card--support {
+    border-top: 4px solid #38c98b;
+    box-shadow: 0 14px 36px rgba(56, 201, 139, 0.10);
+  }
+  .debate-card--oppose {
+    border-top: 4px solid #f06d8f;
+    box-shadow: 0 14px 36px rgba(240, 109, 143, 0.10);
+  }
+  .debate-card--neutral {
+    border-top: 4px solid #9B8CFF;
+    box-shadow: 0 14px 36px rgba(155, 140, 255, 0.10);
+  }
   .panel-head {
     display: flex;
     align-items: center;
@@ -798,6 +1140,43 @@
     font-size: 28px;
     font-weight: 800;
   }
+  .panel-title-group {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .panel-title-group .panel-title {
+    min-width: 0;
+  }
+  .stance-badge {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 13px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .stance-badge--support {
+    background: #e9fff4;
+    color: #169b68;
+    border: 1px solid #bcefd8;
+  }
+  .stance-badge--oppose {
+    background: #fff1f3;
+    color: #d25b78;
+    border: 1px solid #f1c3cf;
+  }
+  .stance-badge--neutral,
+  .stance-badge--unknown,
+  .stance-badge--opposite {
+    background: #f1ebff;
+    color: #7a5bd3;
+    border: 1px solid #ddd0ff;
+  }
   .arena-textarea {
     width: 100%;
     min-height: 350px;
@@ -811,342 +1190,116 @@
     line-height: 1.45;
     outline: none;
   }
-  .voice-arena-panel {
-    display: none;
-    margin-top: 30px;
-    padding: 30px;
-  }
-  .voice-duel-grid {
+  .voice-draft-bar {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 24px;
-  }
-  .voice-side {
-    min-height: 260px;
-    display: grid;
-    align-content: center;
-    justify-items: center;
-    gap: 18px;
-    padding: 28px;
-    border: 1px solid var(--line-soft);
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    margin-top: 14px;
+    padding: 14px 16px;
+    border: 1px solid rgba(70, 185, 216, 0.28);
     border-radius: 18px;
-    background: rgba(15, 23, 42, 0.42);
-    text-align: center;
+    background:
+      linear-gradient(135deg, rgba(70, 185, 216, 0.12), rgba(139, 124, 255, 0.10)),
+      rgba(255, 255, 255, 0.58);
+    box-shadow: 0 14px 36px rgba(30, 41, 59, 0.08);
   }
-  /* ── Lumi AI Column – New Layout ── */
-  .voice-side.ai {
-    background: rgba(37, 99, 235, 0.09);
-    border-color: rgba(59, 130, 246, 0.22);
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
-    text-align: left;
-    min-height: 420px;
-    gap: 0;
-    padding: 0;
-    overflow: hidden;
+  body[data-theme="dark"] .voice-draft-bar {
+    background:
+      linear-gradient(135deg, rgba(32, 231, 209, 0.10), rgba(139, 124, 255, 0.12)),
+      rgba(15, 23, 42, 0.54);
+    border-color: rgba(148, 163, 184, 0.18);
   }
-
-  /* Transcript section – scrollable, takes all available space */
-  .voice-ai-rebuttal {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px 22px 14px;
-    min-height: 0;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(59,130,246,0.35) transparent;
-  }
-  .voice-ai-rebuttal::-webkit-scrollbar { width: 5px; }
-  .voice-ai-rebuttal::-webkit-scrollbar-track { background: transparent; }
-  .voice-ai-rebuttal::-webkit-scrollbar-thumb {
-    background: rgba(59,130,246,0.38);
-    border-radius: 99px;
-  }
-  .voice-ai-rebuttal-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-    color: var(--muted-2);
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
-  }
-  .voice-ai-rebuttal-label::before {
-    content: '';
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--blue);
-    box-shadow: 0 0 6px var(--blue);
-    flex-shrink: 0;
-  }
-  .voice-ai-rebuttal-text {
-    font-size: 15.5px;
-    line-height: 1.72;
-    color: var(--text);
-    white-space: pre-wrap;
-    word-break: break-word;
-    letter-spacing: 0.01em;
-  }
-  body[data-theme="dark"] .voice-ai-rebuttal-text { color: #e2e8f0; }
-  body[data-theme="blue-pastel"] .voice-ai-rebuttal-text { color: #1e3a5f; }
-
-  /* Placeholder / waiting state inside transcript area */
-  .voice-ai-rebuttal-empty {
-    color: var(--muted-2);
-    font-size: 14px;
-    font-style: italic;
-    line-height: 1.6;
-    padding: 20px 0;
-    text-align: center;
-  }
-
-  /* ── TTS Skeleton Loading (shown while synthesising audio) ── */
-  .voice-lumi-tts-skeleton {
-    padding: 0 22px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .voice-lumi-tts-skeleton .skel-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--muted-2);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  .skel-pulse {
-    border-radius: 8px;
-    background: linear-gradient(
-      90deg,
-      rgba(59,130,246,0.10) 25%,
-      rgba(59,130,246,0.22) 50%,
-      rgba(59,130,246,0.10) 75%
-    );
-    background-size: 200% 100%;
-    animation: skelShimmer 1.4s ease-in-out infinite;
-  }
-  @keyframes skelShimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-  .skel-audio-bar {
-    height: 38px;
-    border-radius: 12px;
-  }
-  .skel-status-line {
-    height: 12px;
-    width: 68%;
-    border-radius: 6px;
-    margin: 0 auto;
-  }
-
-  /* Lumi generating indicator (replaces old loading box) */
-  .voice-lumi-loading {
-    padding: 14px 22px 10px;
+  .voice-draft-status {
     display: flex;
     align-items: center;
     gap: 10px;
+    min-width: 0;
     color: var(--muted);
-    font-size: 13.5px;
+    font-size: 15px;
+    line-height: 1.35;
   }
-  .voice-lumi-loading .loading-spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(59,130,246,0.25);
-    border-top-color: var(--blue);
-    border-radius: 50%;
-    animation: spin 0.75s linear infinite;
-    flex-shrink: 0;
+  .voice-dot {
+    width: 12px;
+    height: 12px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    box-shadow: 0 0 0 4px rgba(70, 185, 216, 0.12);
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ── Footer: compact avatar + audio + replay ── */
-  .voice-lumi-footer {
-    flex-shrink: 0;
-    padding: 14px 20px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: stretch;
-    border-top: 1px solid rgba(148,163,184,0.10);
-    background: rgba(8,13,28,0.26);
+  .voice-draft-bar.is-recording .voice-dot {
+    background: linear-gradient(135deg, var(--coral), var(--yellow));
+    animation: voicePulse 1s ease-in-out infinite;
   }
-  .voice-lumi-footer-identity {
+  .voice-draft-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
-  .voice-lumi-avatar-sm {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--blue), var(--cyan));
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-    box-shadow: 0 4px 14px rgba(32,231,209,0.18);
-  }
-  .voice-lumi-avatar-sm img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-  .voice-lumi-identity-text {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-  .voice-lumi-name {
-    font-size: 14px;
-    font-weight: 800;
-    color: var(--text);
-    line-height: 1.2;
-  }
-  .voice-lumi-status-text {
-    font-size: 11.5px;
-    color: var(--muted-2);
-    line-height: 1.4;
-  }
-  .voice-lumi-footer .chips {
+  .voice-draft-button {
+    min-width: 118px;
     justify-content: center;
   }
-
-  /* Legacy header – kept hidden when new layout active */
-  .voice-lumi-header { display: none; }
-  .voice-lumi-footer .voice-source-audio {
-    margin-top: 0;
-  }
-  .voice-avatar {
-    width: 92px;
-    height: 92px;
-    display: grid;
-    place-items: center;
-    border-radius: 999px;
-    color: #ffffff;
-    font-size: 42px;
-    font-weight: 900;
+  .voice-draft-button.is-recording {
     background: linear-gradient(135deg, var(--coral), var(--yellow));
-    box-shadow: 0 18px 44px rgba(251, 113, 133, 0.2);
+    color: #111827;
   }
-  .voice-side.ai .voice-avatar {
-    background: linear-gradient(135deg, var(--blue), var(--cyan));
-  }
-  .voice-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-  .voice-title {
-    font-size: 24px;
-    font-weight: 850;
-  }
-  .voice-status {
-    min-height: 52px;
-    color: var(--muted);
-    font-size: 17px;
-    line-height: 1.5;
-  }
-  .voice-transcript {
-    width: 100%;
-    min-height: 76px;
-    padding: 14px 16px;
-    border: 1px solid rgba(70, 185, 216, 0.22);
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.58);
-    color: var(--arena-ink);
-    font-size: 16px;
-    line-height: 1.45;
-    text-align: left;
-    overflow-wrap: anywhere;
-  }
-  body[data-theme="dark"] .voice-transcript {
-    background: rgba(15, 23, 42, 0.52);
-    color: var(--text);
-  }
-  .voice-transcript-label {
-    display: block;
-    margin-bottom: 6px;
+  .voice-draft-note {
+    grid-column: 1 / -1;
+    display: none;
+    margin-top: -2px;
     color: var(--muted-2);
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-size: 13px;
+    line-height: 1.45;
   }
-  .voice-transcript textarea {
-    width: 100%;
-    min-height: 104px;
-    resize: vertical;
-    border: 0;
-    outline: none;
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    line-height: inherit;
+  .voice-draft-note.visible {
+    display: block;
   }
-  .voice-source-audio {
-    display: grid;
-    grid-template-columns: minmax(120px, max-content) minmax(180px, 1fr);
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    margin-top: 12px;
-    padding: 10px 12px;
-    border: 1px solid rgba(30, 41, 59, 0.12);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.44);
-    color: var(--muted);
-    font-size: 14px;
-    font-weight: 700;
-  }
-  body[data-theme="dark"] .voice-source-audio {
-    background: rgba(15, 23, 42, 0.36);
-    border-color: rgba(148, 163, 184, 0.2);
-  }
-  .voice-source-audio audio {
-    width: 100%;
-    height: 36px;
-    min-width: 0;
-  }
-  @media (max-width: 640px) {
-    .voice-source-audio {
-      grid-template-columns: 1fr;
+  @keyframes voicePulse {
+    50% {
+      transform: scale(1.22);
+      box-shadow: 0 0 0 10px rgba(251, 113, 133, 0.14);
     }
   }
-  #voice-lumi-audio {
-    margin-top: 12px;
-  }
-  #voice-lumi-audio > span {
-    color: var(--accent-teal, #7fffe8);
-    font-weight: 700;
-    font-size: 13px;
-    white-space: nowrap;
-  }
-  body[data-theme="dark"] #voice-lumi-audio > span {
-    color: #a5f3e8;
-  }
-  #voice-lumi-player {
-    width: 100%;
-    height: 36px;
-    min-width: 0;
-  }
-  .voice-action {
-    min-width: 180px;
-    justify-content: center;
-  }
-  body[data-view="arena"][data-input-mode="voice"] .arena-layout {
+  .rebuttal-audio-box {
     display: none;
+    margin-top: 18px;
+    padding: 14px 16px;
+    border: 1px solid rgba(70, 185, 216, 0.22);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.50);
+    color: var(--muted);
   }
-  body[data-view="arena"][data-input-mode="voice"] .voice-arena-panel {
-    display: block;
+  body[data-theme="dark"] .rebuttal-audio-box {
+    background: rgba(15, 23, 42, 0.46);
+    border-color: rgba(148, 163, 184, 0.18);
+  }
+  .rebuttal-audio-box.visible {
+    display: grid;
+    gap: 10px;
+  }
+  .rebuttal-audio-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .rebuttal-audio-status {
+    color: var(--muted-2);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .rebuttal-audio-status.warning {
+    color: #f59e0b;
+  }
+  .rebuttal-audio-box audio {
+    width: 100%;
+    min-width: 0;
+    height: 38px;
   }
   .argument-footer {
     display: flex;
@@ -1679,6 +1832,18 @@
     --pink: #e85d8c;
     --danger: #e11d48;
     --success: #059669;
+    --topic-primary: #5AA9FF;
+    --topic-secondary: #9B8CFF;
+    --topic-accent: #5ED6D6;
+    --topic-card-bg: linear-gradient(135deg, #f8fbff 0%, #eef4ff 55%, #f6f1ff 100%);
+    --topic-card-border: rgba(120, 170, 255, 0.22);
+    --topic-card-shadow: 0 10px 30px rgba(130, 160, 220, 0.10);
+    --topic-card-selected-bg: linear-gradient(135deg, #edf7ff 0%, #e9f2ff 45%, #f4efff 100%);
+    --topic-title: #1c2940;
+    --topic-description: #5f6f86;
+    --topic-helper: #7a8aa0;
+    --topic-tag-bg: #f1ebff;
+    --topic-tag-text: #7a5bd3;
   }
 
   body[data-theme="blue-pastel"] .main {
@@ -2091,8 +2256,18 @@
     .streak-card { display: none; }
     .main { height: auto; min-height: 100vh; }
     .content { overflow: visible; padding: 28px 22px; }
-    .choice-grid.three, .choice-grid.five, .topic-row, .config-grid, .arena-layout, .summary-layout, .progress-layout, .summary-grid, .metric-grid {
+    .choice-grid.three, .choice-grid.five, .topic-row, .topic-toolbar, .config-grid, .arena-layout, .summary-layout, .progress-layout, .summary-grid, .metric-grid {
       grid-template-columns: 1fr;
+    }
+    .debate-topic-bar {
+      width: 100%;
+      border-radius: 24px;
+      flex-direction: column;
+      padding: 14px 16px;
+    }
+    .debate-topic-bar__title {
+      max-width: 100%;
+      font-size: 17px;
     }
     .theme-toggle { padding: 6px 8px; }
     .top-actions { gap: 12px; }
@@ -3255,6 +3430,21 @@
     background: linear-gradient(90deg, var(--arena-coral), var(--arena-gold), var(--arena-cyan), var(--arena-violet));
     opacity: 0.82;
   }
+  .arena-panel.debate-card--support::before {
+    height: 4px;
+    background: #38c98b;
+    opacity: 1;
+  }
+  .arena-panel.debate-card--oppose::before {
+    height: 4px;
+    background: #f06d8f;
+    opacity: 1;
+  }
+  .arena-panel.debate-card--neutral::before {
+    height: 4px;
+    background: #9B8CFF;
+    opacity: 1;
+  }
 
   .arena-textarea {
     background:
@@ -3398,10 +3588,6 @@
     }
 
     .stage-metrics {
-      grid-template-columns: 1fr;
-    }
-
-    .voice-duel-grid {
       grid-template-columns: 1fr;
     }
 
@@ -3701,7 +3887,7 @@
             <div>
               <div class="hub-kicker">Cá nhân hóa</div>
               <h2 class="hub-title">Thiết lập hồ sơ</h2>
-              <p class="hub-copy">Cập nhật nhóm tuổi, trình độ, ngôn ngữ và cách nhập lập luận để AI điều chỉnh phản hồi đúng mức.</p>
+              <p class="hub-copy">Cập nhật nhóm tuổi và trình độ để AI điều chỉnh phản hồi đúng mức.</p>
             </div>
             <div class="hub-side">
               <span class="status-chip"><span class="dot"></span><span id="hub-profile-status">Hồ sơ sẵn sàng</span></span>
@@ -3770,11 +3956,8 @@
         <h2 class="section-title">Trình độ tranh biện</h2>
         <div class="choice-grid three" id="level-options"></div>
 
-        <h2 class="section-title">Cách nhập lập luận</h2>
-        <div class="choice-grid two" id="mode-options"></div>
-
         <div class="setup-footer">
-          <div class="setup-summary">Hồ sơ: <strong id="profile-summary">Người lớn · Trung cấp · Văn bản</strong></div>
+          <div class="setup-summary">Hồ sơ: <strong id="profile-summary">Người lớn · Trung cấp</strong></div>
           <button class="primary-btn" onclick="goToView('session')">Tiếp tục →</button>
         </div>
       </section>
@@ -3810,10 +3993,27 @@
             </h2>
             <span class="soft-pill">Bắt buộc</span>
           </div>
+          <div class="topic-bank">
+            <div class="topic-toolbar">
+              <input class="text-input topic-search" id="topic-search-input" type="search" placeholder="Tìm theo tên, danh mục hoặc tag..." oninput="setTopicSearch(this.value)">
+              <select class="topic-filter-select" id="topic-difficulty-filter" onchange="setTopicDifficultyFilter(this.value)">
+                <option value="">Tất cả độ khó</option>
+                <option value="Cơ bản">Cơ bản</option>
+                <option value="Trung cấp">Trung cấp</option>
+                <option value="Nâng cao">Nâng cao</option>
+              </select>
+            </div>
+            <div class="topic-category-strip" id="topic-category-strip"></div>
+            <div class="topic-bank-status" id="topic-bank-status">Đang tải ngân hàng chủ đề...</div>
+            <div class="topic-grid-shell" id="topic-grid-shell">
+              <div class="topic-grid" id="topic-grid"></div>
+              <div class="topic-load-more-row" id="topic-load-more-row"></div>
+            </div>
+          </div>
           <div class="custom-topic">
-            <label for="session-topic-input">Topic chính của phiên tranh biện</label>
+            <label for="session-topic-input">Nhập chủ đề của riêng bạn</label>
             <textarea class="text-input topic-input" id="session-topic-input" maxlength="180" placeholder="Ví dụ: Có nên cho học sinh dùng AI trong học tập?" oninput="setSessionTopic(this.value)"></textarea>
-            <div class="topic-guidance">Nhập một mệnh đề/chủ đề có thể tranh biện rõ ràng. Hệ thống sẽ từ chối nội dung quá ngắn, sai định dạng, gõ lỗi nặng hoặc vi phạm an toàn.</div>
+            <div class="topic-guidance">Nếu bạn nhập chủ đề riêng, nội dung này sẽ thay thế chủ đề đã chọn ở phía trên.</div>
           </div>
         </div>
 
@@ -3887,88 +4087,41 @@
           </div>
         </div>
 
-        <div class="panel arena-panel voice-arena-panel" id="voice-arena-panel" aria-live="polite">
-          <div class="panel-head">
-            <div class="panel-title">🎙 Phiên voice</div>
-            <span class="chip teal">Voice-only</span>
+        <div class="debate-topic-bar" id="debate-topic-bar" aria-live="polite">
+          <div class="debate-topic-bar__icon" aria-hidden="true">&#127919;</div>
+          <div class="debate-topic-bar__body">
+            <div class="debate-topic-bar__label">Chủ đề tranh biện</div>
+            <div class="debate-topic-bar__title" id="debate-topic-bar-title">Chưa có chủ đề tranh biện</div>
           </div>
-          <div id="voice-error" class="screen-error"></div>
-          <div class="voice-duel-grid">
-            <div class="voice-side">
-              <div class="voice-avatar">B</div>
-              <div class="voice-title" id="voice-user-title">Bạn</div>
-              <div class="voice-status" id="voice-user-status">Bấm mic để nói lập luận. Hệ thống sẽ chuyển giọng nói thành transcript và gửi vào phiên.</div>
-              <div class="voice-transcript hidden" id="voice-live-transcript" aria-live="polite">
-                <span class="voice-transcript-label">Transcript của bạn</span>
-                <textarea id="voice-live-transcript-text" rows="4" oninput="updatePendingVoiceTranscriptFromEditor()" aria-label="Transcript của bạn"></textarea>
-                <div class="voice-source-audio hidden" id="voice-source-audio">
-                  <span>Âm thanh gốc đã lưu</span>
-                  <audio id="voice-source-player" controls preload="metadata" aria-label="Âm thanh gốc đã lưu"></audio>
-                </div>
-              </div>
-              <div class="chips">
-                <button class="primary-btn voice-action hidden" id="voice-submit-btn" type="button" onclick="submitPendingVoiceTranscript()">Gửi transcript</button>
-                <button class="primary-btn voice-action" id="voice-record-btn" type="button" onclick="startVoiceTurn()">🎙 Nói lượt này</button>
-              </div>
-            </div>
-            <div class="voice-side ai" id="voice-lumi-side">
-
-              <!-- ① Transcript box (top, scrollable) -->
-              <div class="voice-ai-rebuttal hidden" id="voice-ai-rebuttal">
-                <div class="voice-ai-rebuttal-label">Phản biện của Lumi</div>
-                <div class="voice-ai-rebuttal-text" id="voice-ai-rebuttal-text"></div>
-              </div>
-
-              <!-- Waiting for transcript (initial state) -->
-              <div class="voice-lumi-loading" id="voice-lumi-loading">
-                <div class="loading-spinner"></div>
-                <span id="voice-ai-status">Lumi sẽ phản biện sau khi nhận transcript của bạn.</span>
-              </div>
-
-              <!-- ② Skeleton shown while TTS is being synthesised -->
-              <div class="voice-lumi-tts-skeleton hidden" id="voice-lumi-tts-skeleton">
-                <div class="skel-label">🔊 Đang tổng hợp âm thanh...</div>
-                <div class="skel-pulse skel-audio-bar"></div>
-                <div class="skel-pulse skel-status-line"></div>
-              </div>
-
-              <!-- ③ Footer: compact avatar + audio player + replay button (bottom) -->
-              <div class="voice-lumi-footer">
-                <div class="voice-lumi-footer-identity">
-                  <div class="voice-lumi-avatar-sm">
-                    <img src="assets/lumi-paper-dragon-cutout.png" alt="Lumi">
-                  </div>
-                  <div class="voice-lumi-identity-text">
-                    <div class="voice-lumi-name">Lumi</div>
-                    <div class="voice-lumi-status-text" id="voice-lumi-footer-status">AI Debate Coach</div>
-                  </div>
-                </div>
-                <div class="voice-source-audio hidden" id="voice-lumi-audio">
-                  <span>Phản biện đã lưu</span>
-                  <audio id="voice-lumi-player" controls preload="metadata" aria-label="Phản biện của Lumi"></audio>
-                </div>
-                <div class="chips">
-                  <button class="secondary-btn voice-action hidden" id="voice-replay-btn" type="button" onclick="playLatestRebuttalSpeech()">▶ Phát lại phản biện</button>
-                </div>
-              </div>
-
-            </div>
-          </div>
+          <div class="debate-topic-bar__meta" id="debate-topic-bar-meta"></div>
         </div>
 
         <div class="arena-layout">
           <div class="arena-stack">
-            <div class="panel arena-panel">
+            <div class="panel arena-panel" id="user-argument-panel">
               <div class="panel-head">
-                <div class="panel-title">▣ Lập luận của bạn</div>
+                <div class="panel-title-group">
+                  <div class="panel-title">▣ Lập luận của bạn</div>
+                  <span class="stance-badge stance-badge--unknown" id="user-stance-badge">Bạn · Chưa chọn lập trường</span>
+                </div>
                 <span class="soft-pill" id="char-count">0 / 1200</span>
               </div>
               <div id="form-error" class="screen-error"></div>
               <textarea class="arena-textarea" id="user-input" placeholder="Nhập lập luận của bạn tại đây..." maxlength="1200" oninput="updateCharCount()"></textarea>
+              <div class="voice-draft-bar" id="voice-draft-bar" aria-live="polite">
+                <div class="voice-draft-status">
+                  <span class="voice-dot" aria-hidden="true"></span>
+                  <span id="voice-draft-status">Nhập bằng giọng nói</span>
+                </div>
+                <div class="voice-draft-actions">
+                  <button class="secondary-btn voice-draft-button" id="voice-draft-button" type="button" onclick="startVoiceDraft()">🎙 Nói</button>
+                  <button class="secondary-btn voice-draft-button hidden" id="voice-retry-button" type="button" onclick="startVoiceDraft()">Ghi lại</button>
+                </div>
+                <div class="voice-draft-note" id="voice-draft-note"></div>
+              </div>
               <div class="argument-footer">
                 <div class="hint">💡 <span>Gợi ý: <strong>Luận điểm → Bằng chứng → Lập luận</strong></span></div>
                 <div class="chips" id="argument-actions">
-                  <button class="secondary-btn" id="voice-input-btn" type="button" onclick="startVoiceTurn()">🎙 Giọng nói</button>
                   <button class="primary-btn" id="debate-btn" onclick="submitArgument()">✈ Gửi</button>
                 </div>
               </div>
@@ -3984,12 +4137,22 @@
           </div>
 
           <div class="arena-stack">
-            <div class="panel arena-panel">
+            <div class="panel arena-panel" id="lumi-rebuttal-panel">
               <div class="panel-head">
-                <div class="panel-title"><span class="lumi-title-token" aria-hidden="true"><img src="assets/lumi-paper-dragon-cutout.png" alt=""></span> Phản biện của Lumi</div>
+                <div class="panel-title-group">
+                  <div class="panel-title"><span class="lumi-title-token" aria-hidden="true"><img src="assets/lumi-paper-dragon-cutout.png" alt=""></span> Phản biện của Lumi</div>
+                  <span class="stance-badge stance-badge--opposite" id="lumi-stance-badge">Lumi · Đối lập</span>
+                </div>
                 <span class="chip purple">Phản biện</span>
               </div>
               <div id="ai-output" class="empty-message">Chờ lập luận đầu tiên của bạn. Huấn luyện viên AI sẽ phản biện và giải thích điểm cần cải thiện.</div>
+              <div class="rebuttal-audio-box" id="rebuttal-audio-box" aria-live="polite">
+                <div class="rebuttal-audio-head">
+                  <span>Âm thanh phản biện</span>
+                  <span class="rebuttal-audio-status" id="rebuttal-audio-status">Đang tạo âm thanh...</span>
+                </div>
+                <audio id="rebuttal-audio-player" controls preload="metadata" aria-label="Âm thanh phản biện của Lumi"></audio>
+              </div>
             </div>
 
             <div class="panel arena-panel">
@@ -4095,6 +4258,7 @@
   const TYPEWRITER_CHAR_DELAY_MS = 18;
   const TYPEWRITER_SPACE_DELAY_MS = 12;
   const TYPEWRITER_PUNCTUATION_DELAY_MS = 95;
+  const TOPIC_PAGE_SIZE = 9;
   const THEME_OPTIONS = ["dark", "blue-pastel"];
   const THEME_ICONS = {
     dark: "🌙",
@@ -4140,6 +4304,19 @@
     level: "Intermediate",
     inputMode: "Text",
     topic: "",
+    customTopic: "",
+    selectedTopicId: "",
+    selectedTopicCategory: "",
+    selectedTopicTags: [],
+    topics: [],
+    topicCategories: [],
+    topicMode: "recommended",
+    topicCategoryFilter: "",
+    topicDifficultyFilter: "",
+    topicSearch: "",
+    topicVisibleCount: TOPIC_PAGE_SIZE,
+    topicBankLoading: true,
+    topicBankFallback: false,
     stance: "Ủng hộ",
     difficulty: "Intermediate",
     responseTime: "90 sec",
@@ -4148,6 +4325,11 @@
     roundCount: 0,
     isSubmitting: false,
     isListening: false,
+    voiceDraftState: "idle",
+    voiceDraftMessage: "",
+    voiceRecordingStartedAt: 0,
+    rebuttalAudioState: "idle",
+    rebuttalAudioMessage: "",
     lumiState: "idle",
     pendingVoiceTranscript: "",
     history: [],
@@ -4163,6 +4345,7 @@
   let speechAudioCache = { text: "", url: "" };
   let voiceSourceAudio = { url: "", type: "", size: 0 };
   let lumiAudioUrl = ""; // persisted URL for seekable Lumi player
+  let voiceDraftTimerId = null;
   let voiceAudioContext = null;
   let voiceSourceNode = null;
   let voiceProcessorNode = null;
@@ -4174,6 +4357,35 @@
     autoGainControl: true,
     channelCount: 1,
   };
+  const DEFAULT_TOPIC_CATEGORIES = [
+    { id: "education", name: "Giáo dục", description: "", count: 2 },
+    { id: "technology", name: "Công nghệ", description: "", count: 2 },
+    { id: "society", name: "Xã hội", description: "", count: 2 },
+    { id: "economy", name: "Kinh tế", description: "", count: 2 },
+    { id: "ethics", name: "Đạo đức", description: "", count: 2 },
+    { id: "policy", name: "Chính trị", description: "", count: 1 },
+    { id: "environment", name: "Môi trường", description: "", count: 1 },
+    { id: "health", name: "Sức khỏe", description: "", count: 1 },
+    { id: "culture", name: "Văn hóa", description: "", count: 1 },
+    { id: "media", name: "Truyền thông", description: "", count: 1 },
+  ];
+  const DEFAULT_TOPIC_BANK = [
+    { id: "fallback_edu_ai_homework", title: "Học sinh có nên được dùng AI để làm bài tập?", category: "Giáo dục", difficulty: "Trung cấp", tags: ["AI", "học tập"], description: "Ranh giới giữa hỗ trợ học tập và gian lận học thuật.", suggested_stance: ["Ủng hộ", "Phản đối"], is_active: true },
+    { id: "fallback_edu_phone_ban", title: "Trường học có nên cấm điện thoại trong giờ học?", category: "Giáo dục", difficulty: "Cơ bản", tags: ["điện thoại", "tập trung"], description: "Thiết bị số trong lớp học nên được quản lý ra sao?", suggested_stance: ["Ủng hộ", "Phản đối"], is_active: true },
+    { id: "fallback_tech_data_property", title: "Dữ liệu cá nhân có nên được xem là tài sản riêng?", category: "Công nghệ", difficulty: "Nâng cao", tags: ["dữ liệu", "quyền riêng tư"], description: "Quyền sở hữu dữ liệu và trách nhiệm của nền tảng.", suggested_stance: ["Ủng hộ", "Phản đối"], is_active: true },
+    { id: "fallback_tech_social_focus", title: "Mạng xã hội có làm giảm khả năng tập trung?", category: "Công nghệ", difficulty: "Cơ bản", tags: ["mạng xã hội", "tập trung"], description: "Tác động của mạng xã hội lên thói quen chú ý.", suggested_stance: ["Ủng hộ", "Phản đối"], is_active: true },
+    { id: "fallback_soc_remote_work", title: "Làm việc từ xa có tốt hơn làm việc tại văn phòng?", category: "Xã hội", difficulty: "Trung cấp", tags: ["làm việc", "năng suất"], description: "So sánh năng suất, giao tiếp và cân bằng đời sống.", suggested_stance: ["Ủng hộ", "Phản đối"], is_active: true },
+    { id: "fallback_soc_cyberbullying", title: "Có nên phạt nặng hành vi bắt nạt trên mạng?", category: "Xã hội", difficulty: "Trung cấp", tags: ["bắt nạt mạng", "an toàn"], description: "Mức độ can thiệp cần thiết để bảo vệ nạn nhân.", suggested_stance: ["Ủng hộ", "Phản đối"], is_active: true },
+    { id: "fallback_eco_finance_school", title: "Có nên dạy quản lý tài chính cá nhân từ cấp 3?", category: "Kinh tế", difficulty: "Cơ bản", tags: ["tài chính", "kỹ năng sống"], description: "Kỹ năng quản lý tiền có nên trở thành kiến thức phổ thông?", suggested_stance: ["Ủng hộ", "Phản đối"], is_active: true },
+    { id: "fallback_eco_green_tax", title: "Có nên đánh thuế cao hơn với sản phẩm gây hại môi trường?", category: "Kinh tế", difficulty: "Nâng cao", tags: ["thuế", "môi trường"], description: "Thay đổi hành vi tiêu dùng bằng chính sách giá.", suggested_stance: ["Ủng hộ", "Phản đối"], is_active: true },
+    { id: "fallback_eth_ai_hiring", title: "AI có nên được quyền đưa ra quyết định tuyển dụng?", category: "Đạo đức", difficulty: "Nâng cao", tags: ["AI", "tuyển dụng"], description: "Hiệu quả, thiên kiến thuật toán và trách nhiệm con người.", suggested_stance: ["Ủng hộ", "Phản đối"], is_active: true },
+    { id: "fallback_eth_public_grades", title: "Có nên công khai điểm số của học sinh trong lớp?", category: "Đạo đức", difficulty: "Cơ bản", tags: ["điểm số", "riêng tư"], description: "Động lực cạnh tranh và quyền riêng tư của học sinh.", suggested_stance: ["Ủng hộ", "Phản đối"], is_active: true },
+    { id: "fallback_policy_fake_news", title: "Có nên siết chặt quản lý tin giả trên mạng xã hội?", category: "Chính trị", difficulty: "Nâng cao", tags: ["tin giả", "chính sách"], description: "Cân bằng chống tin giả với tự do biểu đạt.", suggested_stance: ["Ủng hộ", "Phản đối"], is_active: true },
+    { id: "fallback_env_plastic_bag", title: "Có nên cấm túi nilon dùng một lần?", category: "Môi trường", difficulty: "Cơ bản", tags: ["rác thải", "tiêu dùng"], description: "Tác động môi trường và chi phí thay thế.", suggested_stance: ["Ủng hộ", "Phản đối"], is_active: true },
+    { id: "fallback_health_mental", title: "Học sinh có nên được học sức khỏe tinh thần như môn chính khóa?", category: "Sức khỏe", difficulty: "Trung cấp", tags: ["sức khỏe tinh thần", "học sinh"], description: "Nhận thức cảm xúc và áp lực học đường.", suggested_stance: ["Ủng hộ", "Phản đối"], is_active: true },
+    { id: "fallback_culture_fandom", title: "Văn hóa thần tượng có gây áp lực cho học sinh không?", category: "Văn hóa", difficulty: "Cơ bản", tags: ["thần tượng", "áp lực"], description: "Ảnh hưởng của thần tượng đến tâm lý và chi tiêu.", suggested_stance: ["Ủng hộ", "Phản đối"], is_active: true },
+    { id: "fallback_media_influencer_ads", title: "Influencer có trách nhiệm với nội dung họ quảng cáo không?", category: "Truyền thông", difficulty: "Trung cấp", tags: ["influencer", "quảng cáo"], description: "Niềm tin công chúng và trách nhiệm khi có ảnh hưởng.", suggested_stance: ["Ủng hộ", "Phản đối"], is_active: true },
+  ];
 
   const profiles = [
     ["Teen", "13-17 tuổi", "Giọng khích lệ, ví dụ gần gũi", "☃"],
@@ -4184,10 +4396,6 @@
     ["Basic", "Luyện nền tảng Luận điểm - Bằng chứng - Lập luận", "♧"],
     ["Intermediate", "Trao đổi phản biện có cấu trúc", "♨"],
     ["Advanced", "Lập luận sâu và phản biện khó hơn", "♕"],
-  ];
-  const modes = [
-    ["Text", "Gõ lập luận bằng văn bản", "T"],
-    ["Voice", "Nói tự nhiên, tự động chuyển thành chữ", "🎙"],
   ];
   const stances = [["Ủng hộ", "👍"], ["Phản đối", "👎"], ["Trung lập", "⚖"]];
   const difficulties = [["Basic", "●○○"], ["Intermediate", "●●○"], ["Advanced", "●●●"]];
@@ -4287,6 +4495,8 @@
     renderFlow();
     renderProfileOptions();
     renderSessionOptions();
+    renderTopicExplorer();
+    loadDebateTopics();
     updateProfileSummary();
     updateSessionSummary();
     updateUserTopbar();
@@ -4533,8 +4743,10 @@
 
   function selectAuthPreference(key, value) {
     state[key] = value;
+    if (key === "level") resetTopicVisibleCount();
     renderAuthOptions();
     renderProfileOptions();
+    if (key === "level") renderTopicExplorer();
     updateProfileSummary();
     updateUserTopbar();
   }
@@ -4581,7 +4793,6 @@
   function renderProfileOptions() {
     document.getElementById("age-options").innerHTML = profiles.map(([name, meta, desc, icon]) => choiceCard("age", name, meta, desc, icon, "large")).join("");
     document.getElementById("level-options").innerHTML = levels.map(([name, desc, icon]) => choiceCard("level", name, desc, "", icon)).join("");
-    document.getElementById("mode-options").innerHTML = modes.map(([name, desc, icon]) => choiceCard("inputMode", name, desc, "", icon, "", "purple")).join("");
   }
 
   function renderSessionOptions() {
@@ -4672,6 +4883,248 @@
     }
   }
 
+  async function loadDebateTopics() {
+    state.topicBankLoading = true;
+    state.topicBankFallback = false;
+    renderTopicExplorer();
+    try {
+      const [topicsData, categoriesData] = await Promise.all([
+        apiRequest("/api/v1/debate/topics?limit=100", { skipAuth: true }),
+        apiRequest("/api/v1/debate/topic-categories", { skipAuth: true }),
+      ]);
+      state.topics = Array.isArray(topicsData.topics) ? topicsData.topics : [];
+      state.topicCategories = Array.isArray(categoriesData.categories) ? categoriesData.categories : [];
+      if (!state.topics.length) throw new Error("empty topic bank");
+    } catch (error) {
+      console.warn("Không tải được ngân hàng chủ đề:", error);
+      state.topics = DEFAULT_TOPIC_BANK;
+      state.topicCategories = DEFAULT_TOPIC_CATEGORIES;
+      state.topicBankFallback = true;
+    } finally {
+      state.topicBankLoading = false;
+      renderTopicExplorer();
+    }
+  }
+
+  function normalizeSearchKey(value) {
+    return String(value || "")
+      .toLocaleLowerCase("vi")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function difficultyKey(value) {
+    const key = normalizeSearchKey(displayValue(value));
+    const aliases = {
+      "basic": "co ban",
+      "easy": "co ban",
+      "beginner": "co ban",
+      "co ban": "co ban",
+      "intermediate": "trung cap",
+      "medium": "trung cap",
+      "trung binh": "trung cap",
+      "trung cap": "trung cap",
+      "advanced": "nang cao",
+      "hard": "nang cao",
+      "expert": "nang cao",
+      "nang cao": "nang cao",
+    };
+    return aliases[key] || key;
+  }
+
+  function getPreferredTopicCategories() {
+    const key = difficultyKey(state.topicDifficultyFilter || state.difficulty || state.level);
+    if (key === "co ban") return ["Xã hội", "Sức khỏe", "Văn hóa", "Giáo dục"];
+    if (key === "nang cao") return ["Đạo đức", "Chính trị", "Kinh tế", "Công nghệ"];
+    return ["Giáo dục", "Công nghệ", "Xã hội", "Truyền thông"];
+  }
+
+  function resetTopicVisibleCount({ scroll = true } = {}) {
+    state.topicVisibleCount = TOPIC_PAGE_SIZE;
+    if (scroll) scrollTopicGridToTop();
+  }
+
+  function scrollTopicGridToTop() {
+    const shell = document.getElementById("topic-grid-shell");
+    if (!shell) return;
+    try {
+      shell.scrollIntoView({ block: "start", behavior: "smooth" });
+    } catch (error) {
+      shell.scrollIntoView();
+    }
+  }
+
+  function topicMatchesFilters(topic) {
+    if (state.topicCategoryFilter && topic.category !== state.topicCategoryFilter) return false;
+    if (state.topicDifficultyFilter && difficultyKey(topic.difficulty) !== difficultyKey(state.topicDifficultyFilter)) return false;
+    const query = normalizeSearchKey(state.topicSearch);
+    if (!query) return true;
+    const searchBlob = [
+      topic.title,
+      topic.category,
+      topic.difficulty,
+      topic.description,
+      ...(Array.isArray(topic.tags) ? topic.tags : []),
+    ].join(" ");
+    return normalizeSearchKey(searchBlob).includes(query);
+  }
+
+  function getFilteredTopics() {
+    const preferred = getPreferredTopicCategories();
+    const query = normalizeSearchKey(state.topicSearch);
+    const activeDifficulty = state.topicDifficultyFilter || state.difficulty || state.level;
+    let topics = (state.topics || []).filter(topicMatchesFilters);
+
+    if (state.topicMode === "recommended" && !query && !state.topicCategoryFilter) {
+      const matchingDifficulty = topics.filter(topic => difficultyKey(topic.difficulty) === difficultyKey(activeDifficulty));
+      if (matchingDifficulty.length >= TOPIC_PAGE_SIZE) topics = matchingDifficulty;
+    }
+
+    return topics
+      .sort((a, b) => {
+        const aRank = preferred.includes(a.category) ? preferred.indexOf(a.category) : preferred.length;
+        const bRank = preferred.includes(b.category) ? preferred.indexOf(b.category) : preferred.length;
+        if (aRank !== bRank) return aRank - bRank;
+        return String(a.title || "").localeCompare(String(b.title || ""), "vi");
+      });
+  }
+
+  function renderTopicExplorer() {
+    const categoryStrip = document.getElementById("topic-category-strip");
+    const grid = document.getElementById("topic-grid");
+    const loadMoreRow = document.getElementById("topic-load-more-row");
+    const status = document.getElementById("topic-bank-status");
+    const difficultyFilter = document.getElementById("topic-difficulty-filter");
+    const searchInput = document.getElementById("topic-search-input");
+    if (!categoryStrip || !grid || !loadMoreRow || !status) return;
+
+    const categories = state.topicCategories.length ? state.topicCategories : DEFAULT_TOPIC_CATEGORIES;
+    categoryStrip.innerHTML = [
+      { name: "__recommended", label: "Gợi ý cho bạn", count: "" },
+      { name: "", label: "Tất cả", count: state.topics.length || DEFAULT_TOPIC_BANK.length },
+      ...categories.map(category => ({
+        name: category.name,
+        label: category.name,
+        count: category.count,
+      })),
+    ].map(category => `
+      <button class="topic-chip ${isTopicChipActive(category.name) ? "active" : ""}" onclick="setTopicCategoryFilter('${escapeAttr(category.name)}')">
+        ${escapeHtml(category.label)}${Number.isFinite(Number(category.count)) ? ` · ${category.count}` : ""}
+      </button>
+    `).join("");
+
+    if (difficultyFilter && difficultyFilter.value !== state.topicDifficultyFilter) difficultyFilter.value = state.topicDifficultyFilter;
+    if (searchInput && searchInput.value !== state.topicSearch) searchInput.value = state.topicSearch;
+
+    const topics = getFilteredTopics();
+    const visibleCount = Math.min(state.topicVisibleCount, topics.length);
+    const visibleTopics = topics.slice(0, visibleCount);
+    status.classList.toggle("warning", state.topicBankFallback);
+    status.textContent = state.topicBankLoading
+      ? "Đang tải ngân hàng chủ đề..."
+      : state.topicBankFallback
+        ? "Không tải được ngân hàng chủ đề, đang dùng danh sách mặc định."
+        : `${topics.length} chủ đề phù hợp · ưu tiên theo trình độ ${displayValue(state.difficulty || state.level)}`;
+
+    grid.innerHTML = visibleTopics.length ? visibleTopics.map(topicCard).join("") : `
+      <div class="topic-empty-state">Không tìm thấy chủ đề phù hợp. Bạn có thể nhập chủ đề riêng bên dưới.</div>
+    `;
+    loadMoreRow.innerHTML = topics.length ? `
+      <span class="topic-count-note">Đang hiển thị ${visibleCount} / ${topics.length} chủ đề</span>
+      ${visibleCount < topics.length ? `<button class="topic-load-more" onclick="showMoreTopics()">Xem thêm chủ đề</button>` : ""}
+    ` : "";
+  }
+
+  function isTopicChipActive(categoryName) {
+    if (categoryName === "__recommended") return state.topicMode === "recommended";
+    if (categoryName === "") return state.topicMode === "all";
+    return state.topicMode === "category" && state.topicCategoryFilter === categoryName;
+  }
+
+  function topicCard(topic) {
+    const active = state.selectedTopicId === topic.id && !state.customTopic ? "active" : "";
+    const tags = (Array.isArray(topic.tags) ? topic.tags : []).slice(0, 3);
+    return `
+      <button class="topic-card ${active}" onclick="selectTopicCard('${escapeAttr(topic.id)}')">
+        <span class="topic-card-check">✓</span>
+        <span class="topic-card-title">${escapeHtml(topic.title)}</span>
+        <span class="topic-card-meta">
+          <span class="topic-badge topic-category-badge">${escapeHtml(topic.category)}</span>
+          <span class="topic-badge topic-difficulty-badge ${topicDifficultyClass(topic.difficulty)}">${escapeHtml(topic.difficulty)}</span>
+        </span>
+        <span class="topic-card-desc">${escapeHtml(topic.description || "")}</span>
+        <span class="topic-tag-list">${tags.map(tag => `<span class="topic-tag">${escapeHtml(tag)}</span>`).join("")}</span>
+      </button>
+    `;
+  }
+
+  function topicDifficultyClass(difficulty) {
+    const key = difficultyKey(difficulty);
+    if (key === "co ban") return "basic";
+    if (key === "nang cao") return "advanced";
+    return "intermediate";
+  }
+
+  function setTopicCategoryFilter(category) {
+    if (category === "__recommended") {
+      state.topicMode = "recommended";
+      state.topicCategoryFilter = "";
+    } else if (!category) {
+      state.topicMode = "all";
+      state.topicCategoryFilter = "";
+    } else {
+      state.topicMode = "category";
+      state.topicCategoryFilter = category;
+    }
+    resetTopicVisibleCount();
+    renderTopicExplorer();
+  }
+
+  function setTopicDifficultyFilter(difficulty) {
+    state.topicDifficultyFilter = difficulty || "";
+    resetTopicVisibleCount();
+    renderTopicExplorer();
+  }
+
+  function setTopicSearch(value) {
+    state.topicSearch = value || "";
+    resetTopicVisibleCount({ scroll: false });
+    renderTopicExplorer();
+  }
+
+  function showMoreTopics() {
+    state.topicVisibleCount += TOPIC_PAGE_SIZE;
+    renderTopicExplorer();
+  }
+
+  function findTopicById(topicId) {
+    return (state.topics || []).find(topic => topic.id === topicId) || null;
+  }
+
+  function applySelectedTopicIfNoCustom() {
+    if (state.customTopic) {
+      state.topic = state.customTopic;
+      return;
+    }
+    const selected = findTopicById(state.selectedTopicId);
+    state.topic = selected ? selected.title : "";
+  }
+
+  function selectTopicCard(topicId) {
+    const topic = findTopicById(topicId);
+    if (!topic) return;
+    state.selectedTopicId = topic.id;
+    state.selectedTopicCategory = topic.category || "";
+    state.selectedTopicTags = Array.isArray(topic.tags) ? topic.tags : [];
+    applySelectedTopicIfNoCustom();
+    hideError("start-error");
+    renderTopicExplorer();
+    updateSessionSummary();
+  }
+
   function choiceCard(key, name, meta, desc, icon, size = "", tone = "teal") {
     const selected = state[key] === name ? `selected ${tone}` : "";
     return `
@@ -4699,22 +5152,26 @@
 
   function selectValue(key, value) {
     state[key] = value;
+    if (key === "difficulty" || key === "level") resetTopicVisibleCount();
     renderProfileOptions();
     renderSessionOptions();
+    if (key === "difficulty" || key === "level") renderTopicExplorer();
+    if (key === "stance") renderArenaStanceBadges();
     updateProfileSummary();
     updateSessionSummary();
-    if (key === "inputMode") renderArgumentControls();
     syncInputModeDataset();
   }
 
   function setSessionTopic(value) {
-    state.topic = normalizeTopicText(value);
+    state.customTopic = normalizeTopicText(value);
+    applySelectedTopicIfNoCustom();
     hideError("start-error");
+    renderTopicExplorer();
     updateSessionSummary();
   }
 
   function updateProfileSummary() {
-    document.getElementById("profile-summary").textContent = `${displayValue(state.age)} · ${displayValue(state.level)} · ${displayValue(state.inputMode)}`;
+    document.getElementById("profile-summary").textContent = `${displayValue(state.age)} · ${displayValue(state.level)}`;
     renderHomeHub();
   }
 
@@ -4731,8 +5188,8 @@
   }
 
   function getProfileStatusLabel() {
-    const completed = [state.age, state.level, state.inputMode].filter(Boolean).length;
-    return completed >= 3 ? "Hồ sơ sẵn sàng" : `Hồ sơ ${Math.round((completed / 3) * 100)}%`;
+    const completed = [state.age, state.level].filter(Boolean).length;
+    return completed >= 2 ? "Hồ sơ sẵn sàng" : `Hồ sơ ${Math.round((completed / 2) * 100)}%`;
   }
 
   function getSessionStatusLabel() {
@@ -4909,19 +5366,26 @@
     setLoading(button, true, "Đang tạo phiên...");
 
     try {
+      const selectedBankTopic = !state.customTopic && state.selectedTopicId ? findTopicById(state.selectedTopicId) : null;
+      const sessionBody = {
+        topic: getTopic(),
+        stance: state.stance,
+        difficulty: state.difficulty,
+        input_mode: state.inputMode.toLowerCase(),
+        age_group: state.age,
+        debate_level: state.level,
+        language: "vi",
+        response_time: state.responseTime,
+        mode: state.mode,
+      };
+      if (selectedBankTopic) {
+        sessionBody.topic_id = selectedBankTopic.id;
+        sessionBody.topic_category = selectedBankTopic.category;
+        sessionBody.topic_tags = Array.isArray(selectedBankTopic.tags) ? selectedBankTopic.tags : [];
+      }
       const data = await apiRequest("/api/v1/debate/session", {
         method: "POST",
-        body: {
-          topic: getTopic(),
-          stance: state.stance,
-          difficulty: state.difficulty,
-          input_mode: state.inputMode.toLowerCase(),
-          age_group: state.age,
-          debate_level: state.level,
-          language: "vi",
-          response_time: state.responseTime,
-          mode: state.mode,
-        },
+        body: sessionBody,
       });
 
       state.sessionId = data.session_id;
@@ -4947,6 +5411,8 @@
   function renderArenaShell() {
     renderSessionChips();
     renderArenaStage();
+    renderDebateTopicBar();
+    renderArenaStanceBadges();
     renderArgumentControls();
     renderVoiceControls();
     renderVoiceTranscript();
@@ -4973,61 +5439,153 @@
 
   function renderArgumentControls() {
     syncInputModeDataset();
-    const voiceButton = document.getElementById("voice-input-btn");
-    if (!voiceButton) return;
-    voiceButton.classList.toggle("hidden", isTextInputMode());
-    voiceButton.setAttribute("aria-hidden", isTextInputMode() ? "true" : "false");
     renderVoiceControls();
+    if (isVoiceInputMode() && state.view === "arena") {
+      requestAnimationFrame(() => {
+        const button = document.getElementById("voice-draft-button");
+        button?.focus({ preventScroll: true });
+        document.getElementById("voice-draft-bar")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    }
   }
 
   function renderVoiceControls() {
-    const recordButton = document.getElementById("voice-record-btn");
-    const submitButton = document.getElementById("voice-submit-btn");
-    const inlineVoiceButton = document.getElementById("voice-input-btn");
-    const replayButton = document.getElementById("voice-replay-btn");
+    const bar = document.getElementById("voice-draft-bar");
+    const draftButton = document.getElementById("voice-draft-button");
+    const retryButton = document.getElementById("voice-retry-button");
+    const note = document.getElementById("voice-draft-note");
     const hasTranscript = Boolean(String(state.pendingVoiceTranscript || "").trim());
-    const hasRebuttal = Boolean(String(state.latest?.ai_rebuttal || "").trim());
-    setText("voice-user-title", state.currentUser?.display_name || state.userName || "Bạn");
-    if (recordButton) {
-      recordButton.disabled = state.isSubmitting || state.sessionStatus === "completed";
-      if (!recordButton.dataset.label) recordButton.dataset.label = recordButton.textContent;
-      recordButton.classList.toggle("is-listening", state.isListening);
-      if (state.isListening) {
-        recordButton.textContent = "Dừng ghi âm";
-      } else if (hasTranscript) {
-        recordButton.textContent = "Ghi lại";
-      } else if (!state.isSubmitting && state.sessionStatus !== "completed") {
-        recordButton.textContent = recordButton.dataset.label;
-      }
+    const isTranscribing = state.voiceDraftState === "transcribing";
+    const disabled = state.isSubmitting || state.sessionStatus === "completed" || isTranscribing;
+    const timerText = getVoiceRecordingTimerText();
+    let status = "Nhập bằng giọng nói";
+    let noteText = "";
+
+    if (state.isListening) {
+      status = `Đang ghi âm${timerText ? `... ${timerText}` : "..."}`;
+    } else if (isTranscribing) {
+      status = "Đang chuyển giọng nói thành văn bản...";
+    } else if (state.voiceDraftState === "ready" || hasTranscript) {
+      status = "Đã nhận diện giọng nói. Bạn có thể chỉnh sửa trước khi gửi.";
+    } else if (state.voiceDraftState === "error") {
+      status = state.voiceDraftMessage || "Không thể chuyển giọng nói thành văn bản.";
+      noteText = "Bạn vẫn có thể nhập lập luận thủ công hoặc thử ghi lại.";
+    } else if (isVoiceInputMode()) {
+      status = "Sẵn sàng nhập bằng giọng nói";
     }
-    if (submitButton) {
-      submitButton.classList.toggle("hidden", !hasTranscript);
-      submitButton.disabled = !hasTranscript || state.isListening || state.isSubmitting || state.sessionStatus === "completed";
+
+    setText("voice-draft-status", status);
+    if (bar) {
+      bar.classList.toggle("is-recording", state.isListening);
+      bar.classList.toggle("is-error", state.voiceDraftState === "error");
     }
-    if (inlineVoiceButton) {
-      inlineVoiceButton.disabled = state.isSubmitting || state.sessionStatus === "completed";
-      if (!inlineVoiceButton.dataset.label) inlineVoiceButton.dataset.label = inlineVoiceButton.textContent;
-      inlineVoiceButton.textContent = state.isListening ? "Dừng ghi âm" : inlineVoiceButton.dataset.label;
+    if (draftButton) {
+      draftButton.disabled = disabled;
+      draftButton.classList.toggle("is-recording", state.isListening);
+      draftButton.textContent = state.isListening ? "Dừng" : hasTranscript ? "Ghi lại" : "🎙 Nói";
+      draftButton.setAttribute("aria-label", state.isListening ? "Dừng ghi âm" : "Nhập lập luận bằng giọng nói");
     }
-    if (replayButton) {
-      replayButton.classList.toggle("hidden", !hasRebuttal || isTextInputMode());
-      replayButton.disabled = state.isSubmitting;
+    if (retryButton) {
+      retryButton.classList.toggle("hidden", !(state.voiceDraftState === "error" && !state.isListening));
+      retryButton.disabled = disabled;
     }
-    renderVoiceSourceAudio();
-    renderLumiAudioPlayer();
+    if (note) {
+      note.textContent = noteText;
+      note.classList.toggle("visible", Boolean(noteText));
+    }
+    renderRebuttalAudio();
   }
 
   function renderSessionChips() {
     const modeLabel = (trainingModes.find(([id]) => id === state.mode) || [])[1] || "Tranh biện tự do";
+    const topicMeta = state.selectedTopicCategory && !state.customTopic
+      ? `<span class="chip">${escapeHtml(state.selectedTopicCategory)}</span>`
+      : "";
     document.getElementById("session-chips").innerHTML = `
       <span class="chip cyan">${escapeHtml(modeLabel)}</span>
       <span class="chip teal">${escapeHtml(displayValue(getTopic()))}</span>
+      ${topicMeta}
       <span class="chip purple">Lập trường: ${escapeHtml(displayValue(state.stance))}</span>
       <span class="chip yellow">${escapeHtml(displayValue(state.difficulty))}</span>
-      <span class="chip">Lượt ${state.roundCount} / 3</span>
+      <span class="chip">Lượt ${state.roundCount}</span>
     `;
     renderHomeHub();
     renderArenaStage();
+    renderDebateTopicBar();
+    renderArenaStanceBadges();
+  }
+
+  function normalizeStance(value) {
+    const key = normalizeSearchKey(value);
+    if (["support", "agree", "pro", "for", "ung ho"].includes(key)) return "support";
+    if (["oppose", "disagree", "con", "against", "anti", "phan doi"].includes(key)) return "oppose";
+    if (["neutral", "balanced", "trung lap"].includes(key)) return "neutral";
+    return "unknown";
+  }
+
+  function getOppositeStance(stance) {
+    if (stance === "support") return "oppose";
+    if (stance === "oppose") return "support";
+    if (stance === "neutral") return "opposite";
+    return "opposite";
+  }
+
+  function getStanceLabel(stance) {
+    return {
+      support: "Ủng hộ",
+      oppose: "Phản đối",
+      neutral: "Trung lập",
+      opposite: "Đối lập",
+      unknown: "Chưa chọn lập trường",
+    }[stance] || "Chưa chọn lập trường";
+  }
+
+  function getStanceClass(stance) {
+    if (stance === "support") return "support";
+    if (stance === "oppose") return "oppose";
+    if (stance === "neutral") return "neutral";
+    if (stance === "opposite") return "opposite";
+    return "unknown";
+  }
+
+  function renderArenaStanceBadges() {
+    const userStance = normalizeStance(state.stance);
+    const lumiStance = getOppositeStance(userStance);
+    updateStanceBadge("user-stance-badge", "Bạn", userStance);
+    updateStanceBadge("lumi-stance-badge", "Lumi", lumiStance);
+    updateDebateCardStance("user-argument-panel", userStance);
+    updateDebateCardStance("lumi-rebuttal-panel", lumiStance);
+  }
+
+  function updateStanceBadge(id, owner, stance) {
+    const badge = document.getElementById(id);
+    if (!badge) return;
+    const className = getStanceClass(stance);
+    badge.className = `stance-badge stance-badge--${className}`;
+    badge.textContent = `${owner} · ${getStanceLabel(stance)}`;
+  }
+
+  function updateDebateCardStance(id, stance) {
+    const card = document.getElementById(id);
+    if (!card) return;
+    card.classList.remove("debate-card--support", "debate-card--oppose", "debate-card--neutral");
+    const className = getStanceClass(stance);
+    if (["support", "oppose", "neutral"].includes(className)) {
+      card.classList.add(`debate-card--${className}`);
+    }
+  }
+
+  function renderDebateTopicBar() {
+    const title = getTopic() || "Chưa có chủ đề tranh biện";
+    const category = state.selectedTopicCategory && !state.customTopic ? state.selectedTopicCategory : "";
+    const difficulty = state.difficulty ? displayValue(state.difficulty) : "";
+    setText("debate-topic-bar-title", title);
+    const meta = document.getElementById("debate-topic-bar-meta");
+    if (!meta) return;
+    meta.innerHTML = [
+      category ? `<span class="debate-topic-badge category">${escapeHtml(category)}</span>` : "",
+      difficulty ? `<span class="debate-topic-badge difficulty">${escapeHtml(difficulty)}</span>` : "",
+    ].filter(Boolean).join("");
   }
 
   function setArenaPulse(mode = "") {
@@ -5040,7 +5598,7 @@
   function renderArenaStage(cer = state.latest?.cer || null) {
     const stage = document.getElementById("arena-stage");
     if (!stage) return;
-    const round = Math.min(Number(state.roundCount) || 0, 3);
+    const round = Number(state.roundCount) || 0;
     const topic = getTopic() || "Chưa có topic";
     const displayName = state.currentUser?.display_name || state.userName || "Bạn";
     const statusLabel = state.isSubmitting
@@ -5081,43 +5639,44 @@
     if (el) el.textContent = value;
   }
 
-  function renderVoiceTranscript() {
-    const box = document.getElementById("voice-live-transcript");
-    const text = document.getElementById("voice-live-transcript-text");
-    if (!box || !text) return;
-    const transcript = String(state.pendingVoiceTranscript || state.latest?.user_argument || "").trim();
-    box.classList.toggle("hidden", !transcript && !voiceSourceAudio.url);
-    if (document.activeElement !== text) {
-      text.value = transcript;
-    }
-    renderVoiceSourceAudio();
+  function getVoiceRecordingTimerText() {
+    if (!state.voiceRecordingStartedAt) return "";
+    const seconds = Math.max(0, Math.floor((Date.now() - state.voiceRecordingStartedAt) / 1000));
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes}:${String(seconds % 60).padStart(2, "0")}`;
   }
 
-  function renderVoiceSourceAudio() {
-    const audioRow = document.getElementById("voice-source-audio");
-    const player = document.getElementById("voice-source-player");
-    if (!audioRow || !player) return;
-    const hasAudio = Boolean(voiceSourceAudio.url);
-    audioRow.classList.toggle("hidden", !hasAudio);
-    if (hasAudio && player.src !== voiceSourceAudio.url) {
-      player.src = voiceSourceAudio.url;
-      player.load();
-    } else if (!hasAudio) {
-      player.removeAttribute("src");
-      player.load();
+  function startVoiceDraftTimer() {
+    stopVoiceDraftTimer();
+    voiceDraftTimerId = window.setInterval(renderVoiceControls, 500);
+  }
+
+  function stopVoiceDraftTimer() {
+    if (!voiceDraftTimerId) return;
+    window.clearInterval(voiceDraftTimerId);
+    voiceDraftTimerId = null;
+  }
+
+  function setVoiceDraftState(nextState, message = "") {
+    state.voiceDraftState = nextState;
+    state.voiceDraftMessage = message;
+    renderVoiceControls();
+  }
+
+  function renderVoiceTranscript() {
+    const input = document.getElementById("user-input");
+    const current = String(input?.value || "").trim();
+    state.pendingVoiceTranscript = current;
+    if (!current && state.voiceDraftState === "ready") {
+      setVoiceDraftState("idle");
+      return;
     }
+    renderVoiceControls();
   }
 
   function clearVoiceSourceAudio() {
-    const player = document.getElementById("voice-source-player");
-    if (player) {
-      player.pause();
-      player.removeAttribute("src");
-      player.load();
-    }
     if (voiceSourceAudio.url) URL.revokeObjectURL(voiceSourceAudio.url);
     voiceSourceAudio = { url: "", type: "", size: 0 };
-    renderVoiceTranscript();
   }
 
   function saveVoiceSourceAudio(blob) {
@@ -5128,16 +5687,22 @@
       type: getUploadContentType(blob),
       size: blob.size,
     };
-    renderVoiceTranscript();
+  }
+
+  function applyVoiceTranscript(text) {
+    const input = document.getElementById("user-input");
+    const clean = String(text || "").trim();
+    if (!input || !clean) return;
+    const existing = input.value.trim();
+    input.value = existing ? `${existing} ${clean}` : clean;
+    state.pendingVoiceTranscript = input.value.trim();
+    updateCharCount();
+    setVoiceDraftState("ready");
+    input.focus();
   }
 
   function updatePendingVoiceTranscriptFromEditor() {
-    const text = document.getElementById("voice-live-transcript-text");
-    if (!text) return;
-    state.pendingVoiceTranscript = text.value.trim();
-    document.getElementById("user-input").value = state.pendingVoiceTranscript;
-    updateCharCount();
-    renderVoiceControls();
+    renderVoiceTranscript();
   }
 
   function getMediaRecorderMimeType() {
@@ -5180,14 +5745,16 @@
     voiceSampleRate = 0;
     voiceRecorderMode = "";
     state.isListening = false;
+    state.voiceRecordingStartedAt = 0;
+    stopVoiceDraftTimer();
     renderVoiceControls();
   }
 
-  async function stopVoiceRecording() {
+  async function stopVoiceDraft() {
     if (!state.isListening) return;
-    setText("voice-user-status", "Đang xử lý audio...");
+    setVoiceDraftState("transcribing");
     if (voiceRecorderMode === "wav") {
-      await stopWavRecorderTurn();
+      await stopWavRecorderDraft();
       return;
     }
     if (mediaRecorder) {
@@ -5195,29 +5762,31 @@
     }
   }
 
-  async function startVoiceTurn() {
-    hideOptionalError("voice-error");
+  async function startVoiceDraft() {
     hideError("form-error");
     if (state.isSubmitting) return;
-    if (state.isListening) return stopVoiceRecording();
-    if (!state.sessionId) return showError("voice-error", "Chưa có phiên tranh biện. Hãy tạo phiên trước.");
-    if (state.sessionStatus === "completed") return showError("voice-error", "Phiên này đã hoàn tất. Hãy xem tổng kết hoặc tạo chủ đề mới.");
-    if (!(navigator.mediaDevices?.getUserMedia && window.MediaRecorder)) {
-      showError("voice-error", "Trình duyệt không hỗ trợ ghi âm MediaRecorder. Hãy dùng Chrome hoặc Edge.");
+    if (state.isListening) return stopVoiceDraft();
+    if (!state.sessionId) return showError("form-error", "Chưa có phiên tranh biện. Hãy tạo phiên trước.");
+    if (state.sessionStatus === "completed") return showError("form-error", "Phiên này đã hoàn tất. Hãy xem tổng kết hoặc tạo chủ đề mới.");
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setVoiceDraftState("error", "Trình duyệt không hỗ trợ ghi âm bằng micro.");
       return;
     }
-    await startMediaRecorderTurn();
+    if (!window.MediaRecorder) {
+      setVoiceDraftState("error", "Trình duyệt không hỗ trợ MediaRecorder. Hãy dùng Chrome hoặc Edge.");
+      return;
+    }
+    await startMediaRecorderDraft();
   }
 
-  async function startMediaRecorderTurn() {
+  async function startVoiceTurn() {
+    return startVoiceDraft();
+  }
+
+  async function startMediaRecorderDraft() {
     resetVoiceRecorder();
     clearVoiceSourceAudio();
-    state.pendingVoiceTranscript = "";
-    document.getElementById("user-input").value = "";
-    updateCharCount();
-    renderTranscript();
-    setText("voice-user-status", "Đang nghe... nói trọn một lượt lập luận của bạn.");
-    setText("voice-ai-status", "Lumi đang chờ transcript từ giọng nói của bạn.");
+    renderVoiceTranscript();
     try {
       voiceStream = await navigator.mediaDevices.getUserMedia({ audio: VOICE_AUDIO_CONSTRAINTS });
       voiceMimeType = getMediaRecorderMimeType();
@@ -5229,8 +5798,7 @@
         if (event.data && event.data.size) voiceChunks.push(event.data);
       };
       mediaRecorder.onerror = event => {
-        showError("voice-error", `Không thể ghi âm: ${event.error?.message || "lỗi không xác định"}.`);
-        setText("voice-user-status", "Bấm mic để thử lại.");
+        setVoiceDraftState("error", `Không thể ghi âm: ${event.error?.message || "lỗi không xác định"}.`);
         resetVoiceRecorder();
       };
       mediaRecorder.onstop = async () => {
@@ -5239,65 +5807,67 @@
         const blob = new Blob(chunks, { type: voiceMimeType });
         saveVoiceSourceAudio(blob);
         if (!blob.size) {
-          setText("voice-user-status", "Chưa ghi được âm thanh rõ ràng. Bấm mic và nói lại lượt này.");
+          setVoiceDraftState("error", "Chưa ghi được âm thanh rõ ràng. Bấm micro và nói lại.");
           return;
         }
         try {
-          setText("voice-user-status", "Đang chuyển giọng nói thành transcript...");
+          setVoiceDraftState("transcribing");
           const data = await transcribeSpeechBlob(blob);
-          const clean = String(data.transcript || "").trim();
+          const clean = String(data.text || data.transcript || "").trim();
           if (!clean) throw new Error("Backend không trả về transcript.");
-          document.getElementById("user-input").value = clean;
-          state.pendingVoiceTranscript = clean;
-          updateCharCount();
-          renderVoiceTranscript();
-          renderVoiceControls();
-          renderTranscript();
-          setText("voice-user-status", "Hãy kiểm tra transcript rồi bấm Gửi transcript.");
+          applyVoiceTranscript(clean);
         } catch (error) {
-          showError("voice-error", `Không thể tạo transcript: ${error.message}`);
-          setText("voice-user-status", "Bấm mic để thử lại.");
+          setVoiceDraftState("error", `Không thể chuyển giọng nói thành văn bản: ${error.message}`);
         }
       };
 
       state.isListening = true;
+      state.voiceRecordingStartedAt = Date.now();
+      setVoiceDraftState("recording");
+      startVoiceDraftTimer();
       mediaRecorder.start();
       renderVoiceControls();
     } catch (error) {
       resetVoiceRecorder();
-      showError("voice-error", `Không thể mở micro: ${error.message}`);
-      setText("voice-user-status", "Bấm mic để thử lại.");
+      const denied = /denied|notallowed|permission/i.test(error.name || error.message || "");
+      setVoiceDraftState(
+        "error",
+        denied
+          ? "Không thể truy cập micro. Vui lòng kiểm tra quyền microphone."
+          : `Không thể truy cập micro. Vui lòng kiểm tra quyền microphone. (${error.message})`
+      );
     }
   }
 
-  async function stopWavRecorderTurn() {
+  async function stopWavRecorderDraft() {
     const blob = encodeWavFromSamples(voiceChunks, voiceSampleRate || 16000);
     resetVoiceRecorder();
     saveVoiceSourceAudio(blob);
-    const data = await transcribeSpeechBlob(blob);
-    const clean = String(data.transcript || "").trim();
-    document.getElementById("user-input").value = clean;
-    state.pendingVoiceTranscript = clean;
-    updateCharCount();
-    renderVoiceTranscript();
-    renderVoiceControls();
-    renderTranscript();
+    try {
+      setVoiceDraftState("transcribing");
+      const data = await transcribeSpeechBlob(blob);
+      const clean = String(data.text || data.transcript || "").trim();
+      if (!clean) throw new Error("Backend không trả về transcript.");
+      applyVoiceTranscript(clean);
+    } catch (error) {
+      setVoiceDraftState("error", `Không thể chuyển giọng nói thành văn bản: ${error.message}`);
+    }
   }
 
   async function submitPendingVoiceTranscript() {
     const clean = String(state.pendingVoiceTranscript || "").trim();
-    if (!clean) return showError("voice-error", "Chưa có transcript để gửi.");
+    if (!clean) return setVoiceDraftState("error", "Chưa có nội dung giọng nói để đưa vào ô lập luận.");
     document.getElementById("user-input").value = clean;
     updateCharCount();
-    await submitArgument({ fromVoice: true });
+    setVoiceDraftState("ready");
   }
 
   async function transcribeSpeechBlob(blob) {
     const language = getSpeechLanguage();
     const sessionQuery = state.sessionId ? `&session_id=${encodeURIComponent(state.sessionId)}` : "";
     const path = language === "vi"
-      ? `/api/v1/speech/transcribe?language=vi${sessionQuery}`
-      : `/api/v1/speech/transcribe?language=${language}${sessionQuery}`;
+      ? `/api/v1/speech/stt?language=vi${sessionQuery}`
+      : `/api/v1/speech/stt?language=${language}${sessionQuery}`;
     return apiRequest(path, {
       method: "POST",
       rawBody: blob,
@@ -5348,7 +5918,7 @@
   }
 
   function stopAiSpeech() {
-    const player = document.getElementById("voice-lumi-player");
+    const player = document.getElementById("rebuttal-audio-player");
     if (player && !player.paused) player.pause();
     if (activeSpeechAudio) {
       activeSpeechAudio.pause();
@@ -5363,15 +5933,28 @@
     speechAudioCache = { text: "", url: "" };
     if (lumiAudioUrl) URL.revokeObjectURL(lumiAudioUrl);
     lumiAudioUrl = "";
-    renderLumiAudioPlayer();
+    state.rebuttalAudioState = "idle";
+    state.rebuttalAudioMessage = "";
+    renderRebuttalAudio();
   }
 
-  function renderLumiAudioPlayer() {
-    const row = document.getElementById("voice-lumi-audio");
-    const player = document.getElementById("voice-lumi-player");
-    if (!row || !player) return;
+  function renderRebuttalAudio() {
+    const row = document.getElementById("rebuttal-audio-box");
+    const player = document.getElementById("rebuttal-audio-player");
+    const status = document.getElementById("rebuttal-audio-status");
+    if (!row || !player || !status) return;
     const hasAudio = Boolean(lumiAudioUrl);
-    row.classList.toggle("hidden", !hasAudio);
+    const visible = hasAudio || ["loading", "error"].includes(state.rebuttalAudioState);
+    row.classList.toggle("visible", visible);
+    player.hidden = !hasAudio;
+    status.classList.toggle("warning", state.rebuttalAudioState === "error");
+    status.textContent = state.rebuttalAudioState === "loading"
+      ? "Đang tạo âm thanh..."
+      : state.rebuttalAudioState === "error"
+        ? (state.rebuttalAudioMessage || "Không tạo được âm thanh phản biện")
+        : hasAudio
+          ? "Sẵn sàng nghe"
+          : "";
     if (hasAudio && player.src !== lumiAudioUrl) {
       player.src = lumiAudioUrl;
       player.load();
@@ -5381,8 +5964,12 @@
     }
   }
 
+  function renderLumiAudioPlayer() {
+    renderRebuttalAudio();
+  }
+
   async function synthesizeSpeech(text) {
-    return apiRequest("/api/v1/speech/synthesize", {
+    return apiRequest("/api/v1/speech/tts", {
       method: "POST",
       body: { text },
       responseType: "blob",
@@ -5398,44 +5985,40 @@
     if (lumiAudioUrl) URL.revokeObjectURL(lumiAudioUrl);
     lumiAudioUrl = URL.createObjectURL(blob);
     speechAudioCache = { text: clean, url: lumiAudioUrl };
-    renderLumiAudioPlayer();
+    renderRebuttalAudio();
     return lumiAudioUrl;
   }
 
-  async function playAiRebuttalSpeech(text) {
+  async function generateRebuttalAudio(text) {
     const clean = String(text || "").trim();
-    if (!clean || isTextInputMode()) return;
-    stopAiSpeech();
-    const replayBtn = document.getElementById("voice-replay-btn");
-    const ttsSkeleton = document.getElementById("voice-lumi-tts-skeleton");
+    if (!clean) return "";
+    state.rebuttalAudioState = "loading";
+    state.rebuttalAudioMessage = "";
+    renderRebuttalAudio();
     try {
-      setText("voice-ai-status", "Lumi đang tổng hợp giọng đọc...");
-      setText("voice-lumi-footer-status", "Đang tổng hợp âm thanh...");
-      if (ttsSkeleton) ttsSkeleton.classList.remove("hidden");
-      if (replayBtn) replayBtn.disabled = true;
       const audioUrl = await getRebuttalSpeechUrl(clean);
-      const player = document.getElementById("voice-lumi-player");
-      if (player) {
-        if (player.src !== audioUrl) player.src = audioUrl;
-        player.currentTime = 0;
-        await player.play().catch(() => {});
-      } else {
-        activeSpeechAudio = new Audio(audioUrl);
-        await activeSpeechAudio.play().catch(() => {});
-      }
-      setText("voice-ai-status", "Phản biện của Lumi đã được lưu. Bạn có thể tua và nghe lại bên dưới.");
-      setText("voice-lumi-footer-status", "Phản biện đã lưu — bấm ▶ để nghe lại");
+      state.rebuttalAudioState = "ready";
+      state.rebuttalAudioMessage = "";
+      renderRebuttalAudio();
+      return audioUrl;
     } catch (error) {
-      console.warn("Không thể phát TTS:", error);
+      console.warn("Không thể tạo TTS:", error);
       const isRateLimited = /429|rate|limit|quota/i.test(error.message || "");
-      setText("voice-ai-status", isRateLimited
-        ? "Zalo AI đang giới hạn lượt tạo giọng đọc. Bạn vẫn có thể đọc phản biện trên màn hình."
-        : "Không thể phát giọng đọc. Bạn vẫn có thể đọc trên màn hình.");
-      setText("voice-lumi-footer-status", "AI Debate Coach");
-    } finally {
-      if (ttsSkeleton) ttsSkeleton.classList.add("hidden");
-      if (replayBtn) replayBtn.disabled = false;
-      renderVoiceControls();
+      state.rebuttalAudioState = "error";
+      state.rebuttalAudioMessage = isRateLimited
+        ? "Dịch vụ tạo âm thanh đang giới hạn lượt."
+        : "Không tạo được âm thanh phản biện";
+      renderRebuttalAudio();
+      return "";
+    }
+  }
+
+  async function playAiRebuttalSpeech(text) {
+    const audioUrl = await generateRebuttalAudio(text);
+    const player = document.getElementById("rebuttal-audio-player");
+    if (audioUrl && player) {
+      player.currentTime = 0;
+      await player.play().catch(() => {});
     }
   }
 
@@ -5470,6 +6053,8 @@
       state.sessionStatus = turn.status;
       state.latest = turn;
       state.pendingVoiceTranscript = "";
+      state.voiceDraftState = "idle";
+      state.voiceDraftMessage = "";
       clearSpeechAudioCache();
       renderVoiceTranscript();
 
@@ -5480,12 +6065,9 @@
       renderFeedback(turn.feedback);
       setLoading(button, true, "AI đang trả lời...");
       await renderRebuttal(turn.ai_rebuttal, { animate: true });
-      if (isVoiceInputMode()) {
-        setText("voice-ai-status", "Phản biện đã sẵn sàng. Bấm ▶ Phát lại phản biện để nghe.");
-      }
+      await generateRebuttalAudio(turn.ai_rebuttal);
       state.history.push(turn);
       renderTranscript();
-      if (options.fromVoice) await playAiRebuttalSpeech(turn.ai_rebuttal);
 
       if (turn.status === "completed") {
         showError("form-error", "Phiên đã hoàn tất. Bạn có thể xem tổng kết hoặc tạo chủ đề mới.");
@@ -5493,11 +6075,12 @@
       await syncSessionStatus();
     } catch (error) {
       renderErrorState(error.message);
-      showError(options.fromVoice ? "voice-error" : "form-error", "Không thể gửi lập luận. Phiên hiện tại vẫn được giữ để bạn thử lại.");
+      showError("form-error", "Không thể gửi lập luận. Phiên hiện tại vẫn được giữ để bạn thử lại.");
     } finally {
       state.isSubmitting = false;
       input.disabled = state.sessionStatus === "completed";
       setLoading(button, false);
+      updateCharCount();
       renderVoiceControls();
       syncLumiState(getLumiStateForContext());
       renderArenaStage();
@@ -5508,7 +6091,6 @@
     syncLumiState("thinking");
     setArenaPulse("thinking");
     renderArenaStage();
-    setText("voice-ai-status", "Lumi đang phân tích và chuẩn bị phản biện...");
     document.getElementById("ai-output").className = "";
     document.getElementById("ai-output").innerHTML = `<div class="loading-dots">Huấn luyện viên AI đang phản biện <span></span><span></span><span></span></div>`;
     document.getElementById("cer-output").className = "empty-message";
@@ -5520,7 +6102,6 @@
   function renderErrorState(message) {
     syncLumiState("idle");
     setArenaPulse("error");
-    setText("voice-ai-status", "Lumi chưa thể trả lời lượt này. Hãy thử nói lại sau khi backend ổn định.");
     document.getElementById("ai-output").className = "empty-message";
     document.getElementById("ai-output").innerHTML = `<span style="color:#fca5a5">Lỗi kết nối: ${escapeHtml(message)}</span>`;
     renderCER(null);
@@ -5556,8 +6137,13 @@
 
   function newTopic() {
     state.topic = "";
+    state.customTopic = "";
+    state.selectedTopicId = "";
+    state.selectedTopicCategory = "";
+    state.selectedTopicTags = [];
     const input = document.getElementById("session-topic-input");
     if (input) input.value = "";
+    renderTopicExplorer();
     updateSessionSummary();
     practiceAgain();
   }
@@ -5661,33 +6247,19 @@
 
   async function renderRebuttal(text, options = {}) {
     const output = document.getElementById("ai-output");
-    const voiceRebuttalBox = document.getElementById("voice-ai-rebuttal");
-    const voiceRebuttalText = document.getElementById("voice-ai-rebuttal-text");
-    const loadingBox = document.getElementById("voice-lumi-loading");
     activeRebuttalAnimation += 1;
     const animationId = activeRebuttalAnimation;
     if (!text) {
       output.className = "empty-message";
       output.textContent = "Chờ lập luận đầu tiên của bạn. Huấn luyện viên AI sẽ phản biện và giải thích điểm cần cải thiện.";
-      setText("voice-ai-status", "Lumi sẽ phản biện sau khi nhận transcript của bạn.");
-      setText("voice-lumi-footer-status", "AI Debate Coach");
-      if (voiceRebuttalBox) voiceRebuttalBox.classList.add("hidden");
-      if (loadingBox) loadingBox.classList.remove("hidden"); // show spinner in idle
       return;
     }
-    // Transcript received: hide spinner, show transcript box
-    if (loadingBox) loadingBox.classList.add("hidden");
-    if (voiceRebuttalBox) voiceRebuttalBox.classList.remove("hidden");
-    if (voiceRebuttalText) voiceRebuttalText.textContent = "";
-    setText("voice-ai-status", "Phản biện đã sẵn sàng. Bấm ▶ Phát lại phản biện để nghe.");
-    setText("voice-lumi-footer-status", "Phản biện đã sẵn sàng");
     renderVoiceControls();
     output.className = options.animate ? "rebuttal-text is-typing" : "rebuttal-text";
     output.setAttribute("aria-live", "polite");
 
     if (!options.animate) {
       output.textContent = text;
-      if (voiceRebuttalText) voiceRebuttalText.textContent = text;
       setArenaPulse("rebuttal");
       syncLumiState(getLumiStateForContext());
       renderArenaStage();
@@ -5700,7 +6272,6 @@
     for (const char of Array.from(text)) {
       if (animationId !== activeRebuttalAnimation) return;
       output.textContent += char;
-      if (voiceRebuttalText) voiceRebuttalText.textContent += char;
       await wait(typewriterDelayFor(char));
     }
 
@@ -5812,7 +6383,7 @@
       </div>
       <div class="transcript-item">
         <div class="speaker ai">AI</div>
-        <div class="bubble">Chờ bạn kiểm tra và gửi transcript...</div>
+        <div class="bubble">Chờ bạn kiểm tra văn bản và bấm Gửi...</div>
       </div>
     ` : "";
     output.className = "";
@@ -5831,7 +6402,10 @@
   function renderSummary() {
     const average = getAverageCER();
     document.getElementById("summary-topic").textContent = displayValue(getTopic());
-    document.getElementById("summary-tags").textContent = `${displayValue(state.topic)} · ${displayValue(state.stance)}`;
+    const topicTags = !state.customTopic && state.selectedTopicTags.length
+      ? state.selectedTopicTags.slice(0, 3).join(", ")
+      : "Chủ đề tùy chỉnh";
+    document.getElementById("summary-tags").textContent = `${topicTags} · ${displayValue(state.stance)}`;
     document.getElementById("summary-turns").textContent = state.history.length;
     
     const labelEl = document.getElementById("summary-average-label");
@@ -5905,8 +6479,19 @@
   }
 
   function updateCharCount() {
-    const count = document.getElementById("user-input").value.length;
+    const input = document.getElementById("user-input");
+    const count = input.value.length;
     document.getElementById("char-count").textContent = `${count} / 1200`;
+    state.pendingVoiceTranscript = input.value.trim();
+    if (state.voiceDraftState === "ready" && !state.pendingVoiceTranscript) {
+      state.voiceDraftState = "idle";
+      state.voiceDraftMessage = "";
+    }
+    const button = document.getElementById("debate-btn");
+    if (button && !state.isSubmitting) {
+      button.disabled = !state.pendingVoiceTranscript || state.sessionStatus === "completed";
+    }
+    renderVoiceControls();
   }
 
   function setLoading(button, loading, text) {

@@ -1,9 +1,9 @@
+import asyncio
 import sys
 import unittest
 from pathlib import Path
 from unittest import mock
 
-import httpx
 from fastapi.testclient import TestClient
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -51,6 +51,26 @@ class SpeechBackendTests(unittest.TestCase):
             session_context=None,
         )
 
+    @mock.patch("app.api.speech.transcribe_audio")
+    def test_stt_alias_endpoint_uses_same_response_contract(self, mocked_transcribe):
+        mocked_transcribe.return_value = {
+            "ok": True,
+            "text": "Toi ung ho quan diem nay.",
+            "raw_text": "Toi ung ho quan diem nay.",
+            "provider": "groq",
+            "model": "whisper-large-v3",
+            "error": "",
+        }
+
+        response = self.client.post(
+            "/api/v1/speech/stt",
+            content=b"fake-webm-audio",
+            headers={"Content-Type": "audio/webm"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["transcript"], "Toi ung ho quan diem nay.")
+
     def test_transcribe_endpoint_rejects_unsupported_content_type(self):
         response = self.client.post(
             "/api/v1/speech/transcribe",
@@ -61,16 +81,16 @@ class SpeechBackendTests(unittest.TestCase):
         self.assertEqual(response.status_code, 415)
 
     def test_speech_service_rejects_empty_audio(self):
-        result = speech_service.transcribe_audio(b"", content_type="audio/webm", language="en")
+        with mock.patch.object(speech_service.settings, "VOICE_STT_PROVIDER", "elevenlabs"):
+            result = speech_service.transcribe_audio(b"", content_type="audio/webm", language="en")
 
         self.assertFalse(result["ok"])
-        self.assertEqual(result["provider"], "groq")
-        self.assertEqual(result["model"], "whisper-large-v3")
-        self.assertEqual(result["error"], "Audio rỗng. Hãy ghi âm lại.")
+        self.assertEqual(result["provider"], "elevenlabs")
+        self.assertEqual(result["error"], speech_service.EMPTY_AUDIO_ERROR)
 
     @mock.patch("app.services.speech_service.cleanup_voice_transcript")
     @mock.patch("app.services.speech_service.transcribe_groq_audio")
-    def test_speech_service_uses_groq_stt_with_session_prompt(self, mocked_transcribe, mocked_cleanup):
+    def test_stt_provider_groq_uses_groq_with_session_prompt(self, mocked_transcribe, mocked_cleanup):
         mocked_transcribe.return_value = {
             "ok": True,
             "text": "Toi ung ho sinh vien nam nhat di lam them.",
@@ -86,16 +106,17 @@ class SpeechBackendTests(unittest.TestCase):
             "error": "",
         }
 
-        result = speech_service.transcribe_audio(
-            b"fake-webm",
-            content_type="audio/webm",
-            language="vi",
-            session_context={
-                "topic": "Sinh vien nam nhat co nen di lam them?",
-                "stance": "Ung ho",
-                "difficulty": "Co ban",
-            },
-        )
+        with mock.patch.object(speech_service.settings, "VOICE_STT_PROVIDER", "groq"):
+            result = speech_service.transcribe_audio(
+                b"fake-webm",
+                content_type="audio/webm",
+                language="vi",
+                session_context={
+                    "topic": "Sinh vien nam nhat co nen di lam them?",
+                    "stance": "Ung ho",
+                    "difficulty": "Co ban",
+                },
+            )
 
         self.assertTrue(result["ok"])
         self.assertEqual(result["text"], "Toi ung ho sinh vien nam nhat di lam them.")
@@ -107,6 +128,73 @@ class SpeechBackendTests(unittest.TestCase):
         self.assertIn("Sinh vien nam nhat co nen di lam them?", kwargs["prompt"])
         self.assertIn("Ung ho", kwargs["prompt"])
         self.assertIn("không dịch sang tiếng Anh", kwargs["prompt"])
+
+    @mock.patch("app.services.speech_service.cleanup_voice_transcript")
+    @mock.patch("app.services.speech_service.transcribe_elevenlabs_audio", new_callable=mock.AsyncMock)
+    def test_default_stt_provider_is_elevenlabs(self, mocked_elevenlabs, mocked_cleanup):
+        mocked_elevenlabs.return_value = "Ban ghi am tu ElevenLabs."
+        mocked_cleanup.return_value = {
+            "text": "Ban ghi am tu ElevenLabs.",
+            "raw_text": "Ban ghi am tu ElevenLabs.",
+            "provider": "groq",
+            "model": "llama-test",
+            "error": "",
+        }
+
+        with (
+            mock.patch.object(speech_service.settings, "VOICE_STT_PROVIDER", "elevenlabs"),
+            mock.patch.object(speech_service.settings, "VOICE_STT_FALLBACK", ""),
+            mock.patch.object(speech_service.settings, "ELEVENLABS_STT_MODEL", "scribe_v2"),
+        ):
+            result = speech_service.transcribe_audio(b"fake-webm", content_type="audio/webm", language="vi")
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["provider"], "elevenlabs")
+        self.assertEqual(result["model"], "scribe_v2")
+        mocked_elevenlabs.assert_awaited_once_with(b"fake-webm", filename="speech.webm")
+
+    @mock.patch("app.services.speech_service.cleanup_voice_transcript")
+    @mock.patch("app.services.speech_service.transcribe_groq_audio")
+    @mock.patch("app.services.speech_service.transcribe_elevenlabs_audio", new_callable=mock.AsyncMock)
+    def test_stt_falls_back_to_groq_when_elevenlabs_fails(
+        self,
+        mocked_elevenlabs,
+        mocked_groq,
+        mocked_cleanup,
+    ):
+        mocked_elevenlabs.side_effect = RuntimeError("ElevenLabs STT loi")
+        mocked_groq.return_value = {
+            "ok": True,
+            "text": "Fallback Groq transcript.",
+            "provider": "groq",
+            "model": "whisper-large-v3",
+            "error": "",
+        }
+        mocked_cleanup.return_value = {
+            "text": "Fallback Groq transcript.",
+            "raw_text": "Fallback Groq transcript.",
+            "provider": "groq",
+            "model": "llama-test",
+            "error": "",
+        }
+
+        with (
+            mock.patch.object(speech_service.settings, "VOICE_STT_PROVIDER", "elevenlabs"),
+            mock.patch.object(speech_service.settings, "VOICE_STT_FALLBACK", "groq"),
+        ):
+            result = speech_service.transcribe_audio(b"fake-webm", content_type="audio/webm", language="vi")
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["provider"], "groq")
+        mocked_groq.assert_called_once()
+
+    def test_invalid_stt_provider_returns_clear_error(self):
+        with mock.patch.object(speech_service.settings, "VOICE_STT_PROVIDER", "bad-provider"):
+            result = speech_service.transcribe_audio(b"fake-webm", content_type="audio/webm", language="vi")
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error_code"], "INVALID_PROVIDER")
+        self.assertIn("VOICE_STT_PROVIDER không hợp lệ", result["error"])
 
     @mock.patch("app.services.groq_stt_client.httpx.post")
     def test_groq_stt_posts_audio_with_whisper_large_v3_and_prompt(self, mocked_post):
@@ -182,14 +270,14 @@ class SpeechBackendTests(unittest.TestCase):
         mocked_groq.assert_called_once()
         self.assertIn("không có chủ đề cụ thể", mocked_groq.call_args.args[0][1]["content"])
 
-    @mock.patch("app.api.speech.synthesize_text")
-    def test_synthesize_endpoint_returns_zalo_audio_blob(self, mocked_synthesize):
+    @mock.patch("app.api.speech.synthesize_text", new_callable=mock.AsyncMock)
+    def test_synthesize_endpoint_returns_audio_blob(self, mocked_synthesize):
         mocked_synthesize.return_value = {
             "ok": True,
-            "audio": b"fake-wav-audio",
-            "content_type": "audio/wav",
-            "provider": "zalo_ai",
-            "model": "zalo-ai-tts",
+            "audio": b"fake-mp3-audio",
+            "content_type": "audio/mpeg",
+            "provider": "edge",
+            "model": "vi-VN-NamMinhNeural",
             "error": "",
         }
 
@@ -199,59 +287,50 @@ class SpeechBackendTests(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.headers["content-type"], "audio/wav")
-        self.assertEqual(response.headers["x-speech-provider"], "zalo_ai")
-        self.assertEqual(response.content, b"fake-wav-audio")
-        mocked_synthesize.assert_called_once_with("Lumi phan bien luot nay.")
+        self.assertEqual(response.headers["content-type"], "audio/mpeg")
+        self.assertEqual(response.headers["x-speech-provider"], "edge")
+        self.assertEqual(response.content, b"fake-mp3-audio")
+        mocked_synthesize.assert_awaited_once_with("Lumi phan bien luot nay.")
+
+    @mock.patch("app.api.speech.synthesize_text", new_callable=mock.AsyncMock)
+    def test_tts_alias_endpoint_uses_same_audio_contract(self, mocked_synthesize):
+        mocked_synthesize.return_value = {
+            "ok": True,
+            "audio": b"fake-mp3-audio",
+            "content_type": "audio/mpeg",
+            "provider": "edge",
+            "model": "vi-VN-NamMinhNeural",
+            "error": "",
+        }
+
+        response = self.client.post("/api/v1/speech/tts", json={"text": "Noi thu."})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"fake-mp3-audio")
 
     def test_speech_service_rejects_empty_tts_text(self):
-        result = speech_service.synthesize_text("   ")
+        result = asyncio.run(speech_service.synthesize_text("   "))
 
         self.assertFalse(result["ok"])
-        self.assertEqual(result["error"], "Nội dung đọc không được để trống.")
+        self.assertEqual(result["error"], speech_service.EMPTY_TTS_TEXT_ERROR)
 
-    @mock.patch("app.services.zalo_ai_client.httpx.post")
-    def test_zalo_tts_rate_limit_is_reported_as_rate_limit(self, mocked_post):
-        response = mock.Mock()
-        response.status_code = 429
-        response.text = '{"error_code":429,"error_message":"API rate limit exceeded"}'
-        response.json.return_value = {
-            "error_code": 429,
-            "error_message": "API rate limit exceeded",
-        }
-        response.raise_for_status.side_effect = httpx.HTTPStatusError(
-            "Too Many Requests",
-            request=mock.Mock(),
-            response=response,
-        )
-        mocked_post.return_value = response
-
-        result = speech_service.synthesize_text("Lumi phan bien luot nay.")
-
-        self.assertFalse(result["ok"])
-        self.assertEqual(result["error_code"], "RATE_LIMIT")
-        self.assertIn("Zalo AI HTTP 429", result["error"])
-
-    @mock.patch("app.api.speech.synthesize_text")
-    def test_synthesize_endpoint_returns_429_for_tts_rate_limit(self, mocked_synthesize):
-        mocked_synthesize.return_value = {
-            "ok": False,
-            "audio": b"",
-            "content_type": "audio/wav",
-            "provider": "zalo_ai",
-            "model": "zalo-ai-tts",
-            "error": "Zalo AI HTTP 429: error_code=429: API rate limit exceeded",
-            "error_code": "RATE_LIMIT",
+    @mock.patch("app.services.speech_service._synthesize_with_edge", new_callable=mock.AsyncMock)
+    def test_tts_always_uses_edge(self, mocked_edge):
+        mocked_edge.return_value = {
+            "ok": True,
+            "audio": b"edge-audio",
+            "content_type": "audio/mpeg",
+            "provider": "edge",
+            "model": "vi-VN-NamMinhNeural",
+            "error": "",
+            "error_code": "",
         }
 
-        response = self.client.post(
-            "/api/v1/speech/synthesize",
-            json={"text": "Lumi phan bien luot nay."},
-        )
+        result = asyncio.run(speech_service.synthesize_text("Noi thu."))
 
-        self.assertEqual(response.status_code, 429)
-        self.assertIn("rate limit", response.json()["detail"])
-
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["provider"], "edge")
+        mocked_edge.assert_awaited_once_with("Noi thu.")
 
 if __name__ == "__main__":
     unittest.main()
