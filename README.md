@@ -254,6 +254,7 @@ AI_Debate_Trainer/
 │   │   │   ├── cer_scorer.py    # Chấm điểm CER lập luận
 │   │   │   ├── groq_client.py   # HTTP client gọi Groq LLM
 │   │   │   ├── groq_stt_client.py  # HTTP client gọi Groq Whisper
+│   │   │   ├── elevenlabs_stt_client.py # Experimental ElevenLabs STT
 │   │   │   ├── normalization.py # Chuẩn hoá input/output
 │   │   │   ├── output_parser.py # Parse JSON từ LLM
 │   │   │   ├── prompt_builder.py# Xây dựng system/user prompt
@@ -299,6 +300,40 @@ AI_Debate_Trainer/
 | `POST` | `/api/v1/speech/tts` | Text-to-speech (Edge TTS) |
 
 Xem chi tiết tại Swagger: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) (khi backend đang chạy).
+
+---
+
+## Cấu hình voice providers
+
+Mặc định app dùng ElevenLabs cho STT, Groq Whisper làm fallback, và Edge TTS cho phần đọc phản biện:
+
+```env
+VOICE_STT_PROVIDER=elevenlabs
+VOICE_STT_FALLBACK=groq
+```
+
+Cấu hình STT:
+
+```env
+ELEVENLABS_API_KEY=your_key_here
+ELEVENLABS_STT_BASE_URL=https://api.elevenlabs.io/v1/speech-to-text
+ELEVENLABS_STT_MODEL=scribe_v2
+GROQ_STT_BASE_URL=https://api.groq.com/openai/v1/audio/transcriptions
+GROQ_STT_MODEL=whisper-large-v3
+```
+
+TTS chỉ dùng Edge:
+
+```env
+EDGE_TTS_VOICE=vi-VN-NamMinhNeural
+EDGE_TTS_RATE=+10%
+```
+
+Rollback STT nhanh về Groq:
+
+```env
+VOICE_STT_PROVIDER=groq
+```
 
 ---
 

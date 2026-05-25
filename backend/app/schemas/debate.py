@@ -1,9 +1,41 @@
 from pydantic import BaseModel, Field
 
 
+class DebateTopicResponse(BaseModel):
+    id: str
+    title: str
+    category: str
+    difficulty: str
+    tags: list[str]
+    description: str
+    suggested_stance: list[str] = Field(default_factory=list)
+    is_active: bool = True
+    created_at: str | None = None
+
+
+class DebateTopicsResponse(BaseModel):
+    status: str
+    topics: list[DebateTopicResponse]
+    total: int
+
+
+class DebateTopicCategoryResponse(BaseModel):
+    id: str
+    name: str
+    description: str
+    count: int
+
+
+class DebateTopicCategoriesResponse(BaseModel):
+    status: str
+    categories: list[DebateTopicCategoryResponse]
+
+
 class StartSessionRequest(BaseModel):
     topic: str = Field(..., example="Should phones be allowed in class?")
+    topic_id: str | None = Field(default=None, example="edu_ai_homework")
     topic_category: str | None = Field(default=None, example="Education")
+    topic_tags: list[str] | None = Field(default=None, example=["AI", "learning"])
     custom_topic: str | None = Field(default=None, example="Should AI tutors replace homework?")
     stance: str = Field(..., example="support")
     difficulty: str | None = Field(default=None, example="intermediate")
@@ -20,7 +52,9 @@ class StartSessionRequest(BaseModel):
 class StartSessionResponse(BaseModel):
     session_id: str
     topic: str
+    topic_id: str | None = None
     topic_category: str | None = None
+    topic_tags: list[str] | None = None
     custom_topic: str | None = None
     stance: str
     difficulty: str
@@ -101,7 +135,9 @@ class DebateTurnResponseV2(DebateTurnResponse):
 class SessionInfoResponse(BaseModel):
     session_id: str
     topic: str
+    topic_id: str | None = None
     topic_category: str | None = None
+    topic_tags: list[str] | None = None
     custom_topic: str | None = None
     stance: str
     difficulty: str

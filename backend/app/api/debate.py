@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from app.schemas.debate import (
     DebateTurnRequest,
     DebateTurnResponseV2,
+    DebateTopicCategoriesResponse,
+    DebateTopicsResponse,
     ProgressOverviewResponse,
     SessionInfoResponse,
     SessionSummaryResponse,
@@ -15,6 +17,7 @@ from app.schemas.debate import (
 from app.services import ai_service
 from app.services.auth_service import get_debate_user
 from app.services.cer_scorer import normalize_cer_to_100
+from app.data.topics import list_categories, list_topics, recommended_topics
 from app.services.normalization import normalize_session_payload, normalize_status, validate_debate_topic
 from app.services.session_store import (
     create_session,
@@ -34,7 +37,9 @@ def _session_response(session: dict) -> dict:
     return {
         "session_id": session["session_id"],
         "topic": session["topic"],
+        "topic_id": session.get("topic_id"),
         "topic_category": session.get("topic_category"),
+        "topic_tags": session.get("topic_tags"),
         "custom_topic": session.get("custom_topic"),
         "stance": session["stance"],
         "difficulty": session["difficulty"],
@@ -47,6 +52,63 @@ def _session_response(session: dict) -> dict:
         "max_turns": int(session.get("max_turns") or 0),
         "turn_count": int(session.get("turn_count") or 0),
         "status": normalize_status(session.get("status")),
+    }
+
+
+@router.get("/topics", response_model=DebateTopicsResponse)
+def get_debate_topics(
+    category: str | None = None,
+    difficulty: str | None = None,
+    q: str | None = None,
+    limit: int | None = None,
+    tag: str | None = None,
+):
+    safe_limit = None
+    if limit is not None:
+        safe_limit = max(1, min(int(limit), 100))
+    topics = list_topics(
+        category=category,
+        difficulty=difficulty,
+        q=q,
+        tag=tag,
+        limit=safe_limit,
+    )
+    return {
+        "status": "success",
+        "topics": topics,
+        "total": len(topics),
+    }
+
+
+@router.get("/topics/recommended", response_model=DebateTopicsResponse)
+def get_recommended_debate_topics(
+    user_id: str | None = None,
+    difficulty: str | None = None,
+    category: str | None = None,
+    limit: int = 12,
+):
+    # The current implementation uses local seed data only. The user_id
+    # parameter is accepted now so Firestore history ranking can be added later
+    # without changing the public endpoint contract.
+    _ = user_id
+    safe_limit = max(1, min(int(limit), 50))
+    topics = recommended_topics(
+        difficulty=difficulty,
+        category=category,
+        limit=safe_limit,
+    )
+    return {
+        "status": "success",
+        "topics": topics,
+        "total": len(topics),
+    }
+
+
+@router.get("/topic-categories", response_model=DebateTopicCategoriesResponse)
+def get_debate_topic_categories():
+    return {
+        "status": "success",
+        "categories": list_categories(),
     }
 
 

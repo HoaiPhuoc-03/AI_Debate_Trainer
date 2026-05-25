@@ -18,6 +18,11 @@ class Settings:
     DEFAULT_MAX_TURNS = int(os.getenv("DEFAULT_MAX_TURNS", "5"))
     SPEECH_MAX_AUDIO_BYTES = int(os.getenv("SPEECH_MAX_AUDIO_BYTES", str(8 * 1024 * 1024)))
     SPEECH_TTS_MAX_CHARS = int(os.getenv("SPEECH_TTS_MAX_CHARS", "1200"))
+
+    # Speech-to-Text provider selection. ElevenLabs is primary, Groq is fallback.
+    VOICE_STT_PROVIDER = os.getenv("VOICE_STT_PROVIDER", "elevenlabs")
+    VOICE_STT_FALLBACK = os.getenv("VOICE_STT_FALLBACK", "groq")
+
     GROQ_STT_BASE_URL = os.getenv(
         "GROQ_STT_BASE_URL",
         "https://api.groq.com/openai/v1/audio/transcriptions",
@@ -28,6 +33,15 @@ class Settings:
     # Edge TTS (Microsoft Edge Text-to-Speech, no API key required)
     EDGE_TTS_VOICE = os.getenv("EDGE_TTS_VOICE", "vi-VN-NamMinhNeural")
     EDGE_TTS_RATE = os.getenv("EDGE_TTS_RATE", "+10%")
+
+    # ElevenLabs Speech-to-Text provider. Required only when ElevenLabs STT is used.
+    ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
+    ELEVENLABS_STT_BASE_URL = os.getenv(
+        "ELEVENLABS_STT_BASE_URL",
+        "https://api.elevenlabs.io/v1/speech-to-text",
+    )
+    ELEVENLABS_STT_MODEL = os.getenv("ELEVENLABS_STT_MODEL", "scribe_v2")
+    ELEVENLABS_STT_TIMEOUT_SECONDS = float(os.getenv("ELEVENLABS_STT_TIMEOUT_SECONDS", "60"))
 
     # Firebase
     FIREBASE_CREDENTIALS_JSON = os.getenv("FIREBASE_CREDENTIALS_JSON", "")
