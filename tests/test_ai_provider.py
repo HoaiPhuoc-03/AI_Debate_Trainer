@@ -116,6 +116,132 @@ class AIGroqOnlyTests(unittest.TestCase):
         self.assertEqual(result["status"], "error")
         self.assertEqual(result["rebuttal"], ai_service.GROQ_FORMAT_ERROR)
 
+    @mock.patch("app.services.ai_service.call_groq")
+    def test_practice_prompt_retries_duplicate_and_returns_new_prompt(self, mocked_groq):
+        mocked_groq.side_effect = [
+            {
+                "ok": True,
+                "text": '{"mode":"claim_writing","prompt_type":"scenario_prompt","topic":"Chủ đề cũ","scenario":"Chủ đề cũ","prompt":"Đề bài cũ","instruction":"Hãy viết claim."}',
+                "provider": "groq",
+                "model": "llama-3.3-70b-versatile",
+                "error": "",
+            },
+            {
+                "ok": True,
+                "text": '{"mode":"claim_writing","prompt_type":"scenario_prompt","topic":"Chủ đề mới","scenario":"Tình huống mới","prompt":"Tình huống mới: hãy viết claim.","instruction":"Hãy viết claim."}',
+                "provider": "groq",
+                "model": "llama-3.3-70b-versatile",
+                "error": "",
+            },
+        ]
+
+        result = ai_service.generate_practice_prompt(
+            mode="claim_writing",
+            topic="Chủ đề phiên",
+            difficulty="Trung cấp",
+            round=2,
+            previous_prompts=["Đề bài cũ"],
+            previous_topics=["Chủ đề cũ"],
+            avoid_repeating=True,
+        )
+
+        self.assertEqual(result["prompt"], "Tình huống mới: hãy viết claim.")
+        self.assertEqual(result["topic"], "Chủ đề mới")
+        self.assertEqual(mocked_groq.call_count, 2)
+
+    @mock.patch("app.services.ai_service.call_groq")
+    def test_evidence_practice_retries_duplicate_claim(self, mocked_groq):
+        mocked_groq.side_effect = [
+            {
+                "ok": True,
+                "text": '{"mode":"find_evidence","prompt_type":"claim_prompt","topic":"Chủ đề cũ","claim":"Claim cũ","prompt":"Claim cũ","instruction":"Hãy đưa bằng chứng."}',
+                "provider": "groq",
+                "model": "llama-3.3-70b-versatile",
+                "error": "",
+            },
+            {
+                "ok": True,
+                "text": '{"mode":"find_evidence","prompt_type":"claim_prompt","topic":"Chủ đề evidence mới","claim":"Claim evidence mới","prompt":"Claim evidence mới","instruction":"Hãy đưa bằng chứng."}',
+                "provider": "groq",
+                "model": "llama-3.3-70b-versatile",
+                "error": "",
+            },
+        ]
+
+        result = ai_service.generate_practice_prompt(
+            mode="evidence_practice",
+            topic="Chủ đề phiên",
+            difficulty="Trung cấp",
+            round=2,
+            previous_prompts=["Claim cũ"],
+            previous_topics=["Chủ đề cũ"],
+            avoid_repeating=True,
+        )
+
+        self.assertEqual(result["mode"], "find_evidence")
+        self.assertEqual(result["prompt_type"], "claim_prompt")
+        self.assertEqual(result["claim"], "Claim evidence mới")
+        self.assertEqual(result["topic"], "Chủ đề evidence mới")
+        self.assertEqual(mocked_groq.call_count, 2)
+
+    @mock.patch("app.services.ai_service.call_groq")
+    def test_quick_rebuttal_retries_duplicate_weak_argument(self, mocked_groq):
+        mocked_groq.side_effect = [
+            {
+                "ok": True,
+                "text": '{"mode":"quick_rebuttal","prompt_type":"weak_argument","topic":"Chủ đề cũ","weak_argument":"Học online luôn tốt hơn vì ai cũng có máy tính.","prompt":"Học online luôn tốt hơn vì ai cũng có máy tính.","instruction":"Hãy phản biện."}',
+                "provider": "groq",
+                "model": "llama-3.3-70b-versatile",
+                "error": "",
+            },
+            {
+                "ok": True,
+                "text": '{"mode":"quick_rebuttal","prompt_type":"weak_argument","topic":"Chủ đề phản biện mới","weak_argument":"Cấm điện thoại trong lớp chắc chắn làm học sinh tập trung hơn vì không còn thiết bị gây xao nhãng.","prompt":"Cấm điện thoại trong lớp chắc chắn làm học sinh tập trung hơn vì không còn thiết bị gây xao nhãng.","instruction":"Hãy phản biện."}',
+                "provider": "groq",
+                "model": "llama-3.3-70b-versatile",
+                "error": "",
+            },
+        ]
+
+        result = ai_service.generate_practice_prompt(
+            mode="quick_rebuttal",
+            topic="Chủ đề phiên",
+            difficulty="Trung cấp",
+            round=2,
+            previous_prompts=["Học online luôn tốt hơn vì ai cũng có máy tính."],
+            previous_topics=["Chủ đề cũ"],
+            avoid_repeating=True,
+        )
+
+        self.assertEqual(result["mode"], "quick_rebuttal")
+        self.assertEqual(result["prompt_type"], "weak_argument")
+        self.assertIn("Cấm điện thoại trong lớp", result["weak_argument"])
+        self.assertEqual(result["topic"], "Chủ đề phản biện mới")
+        self.assertEqual(mocked_groq.call_count, 2)
+
+    @mock.patch("app.services.ai_service.call_groq")
+    def test_practice_prompt_fallback_avoids_previous_topic(self, mocked_groq):
+        mocked_groq.return_value = {
+            "ok": False,
+            "text": "",
+            "provider": "groq",
+            "model": "llama-3.3-70b-versatile",
+            "error": "rate limit",
+        }
+
+        result = ai_service.generate_practice_prompt(
+            mode="quick_rebuttal",
+            topic="Học sinh có nên được dùng AI để làm bài tập?",
+            difficulty="Trung cấp",
+            round=2,
+            previous_topics=["Học sinh có nên được dùng AI để làm bài tập?"],
+            avoid_repeating=True,
+        )
+
+        self.assertEqual(result["mode"], "quick_rebuttal")
+        self.assertNotEqual(result["topic"], "Học sinh có nên được dùng AI để làm bài tập?")
+        self.assertIn("weak_argument", result)
+
 
 if __name__ == "__main__":
     unittest.main()

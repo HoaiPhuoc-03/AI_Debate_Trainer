@@ -8,6 +8,8 @@ from app.schemas.debate import (
     DebateTurnResponseV2,
     DebateTopicCategoriesResponse,
     DebateTopicsResponse,
+    PracticePromptRequest,
+    PracticePromptResponse,
     ProgressOverviewResponse,
     SessionInfoResponse,
     SessionSummaryResponse,
@@ -17,6 +19,7 @@ from app.schemas.debate import (
 from app.services import ai_service
 from app.services.auth_service import get_debate_user
 from app.services.cer_scorer import normalize_cer_to_100
+from app.services.prompt_builder import normalize_practice_mode
 from app.data.topics import list_categories, list_topics, recommended_topics
 from app.services.normalization import normalize_session_payload, normalize_status, validate_debate_topic
 from app.services.session_store import (
@@ -31,6 +34,7 @@ from app.services.session_store import (
 
 router = APIRouter()
 logger = logging.getLogger("uvicorn.error")
+SINGLE_SKILL_MODES = {"claim_writing", "find_evidence", "quick_rebuttal"}
 
 
 def _session_response(session: dict) -> dict:
@@ -126,6 +130,27 @@ def start_session(
     return _session_response(session)
 
 
+@router.post("/practice-prompt", response_model=PracticePromptResponse)
+def create_practice_prompt(
+    payload: PracticePromptRequest,
+    current_user: dict = Depends(get_debate_user),
+):
+    _ = current_user
+    topic_validation = validate_debate_topic(payload.topic)
+    if not topic_validation["is_valid"]:
+        raise HTTPException(status_code=400, detail=topic_validation["message"])
+    return ai_service.generate_practice_prompt(
+        mode=payload.mode,
+        topic=payload.topic,
+        difficulty=payload.difficulty,
+        round=payload.round,
+        language="vi",
+        previous_prompts=payload.previous_prompts,
+        previous_topics=payload.previous_topics,
+        avoid_repeating=payload.avoid_repeating,
+    )
+
+
 @router.post("/turn", response_model=DebateTurnResponseV2)
 def debate_turn(
     payload: DebateTurnRequest,
@@ -161,11 +186,15 @@ def debate_turn(
         input_mode=session.get("input_mode"),
         turn_history=turn_history,
         mode=session.get("mode", "free_debate"),
+        practice_mode=payload.practice_mode,
+        practice_prompt=payload.practice_prompt,
+        practice_round=payload.practice_round,
     )
     result["cer"] = normalize_cer_to_100(result.get("cer"))
     ai_done_ms = int((time.perf_counter() - turn_start) * 1000)
     turn_status = "active" if result["ok"] else result.get("status", "error")
 
+    active_mode = normalize_practice_mode(payload.practice_mode or session.get("mode", "free_debate"))
     saved = save_debate_turn(
         session=session,
         user_argument=payload.user_argument,
@@ -173,8 +202,12 @@ def debate_turn(
         cer=result["cer"],
         feedback=result["feedback"],
         content_flags=result.get("content_flags", []),
+        practice_mode=payload.practice_mode,
+        practice_prompt=payload.practice_prompt,
+        practice_round=payload.practice_round,
         status=turn_status,
         count_for_completion=result["ok"],
+        complete_session=active_mode not in SINGLE_SKILL_MODES,
     )
     response_status = saved["session"]["status"] if result["ok"] else turn_status
     total_turn_ms = int((time.perf_counter() - turn_start) * 1000)

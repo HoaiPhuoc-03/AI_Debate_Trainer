@@ -1,6 +1,11 @@
+import json
+import re
 import time
+import unicodedata
+from difflib import SequenceMatcher
 
 from app.core.config import settings
+from app.data.topics import list_topics
 from app.services.cer_scorer import (
     DEFAULT_BREAKDOWN,
     INVALID_REBUTTAL,
@@ -14,7 +19,13 @@ from app.services.groq_client import (
     sanitize_error,
 )
 from app.services.output_parser import DEFAULT_CER
-from app.services.prompt_builder import build_cer_messages
+from app.services.prompt_builder import (
+    build_cer_messages,
+    build_practice_prompt_messages,
+    normalize_practice_mode,
+    practice_instruction_for_mode,
+    practice_prompt_type_for_mode,
+)
 
 
 DEFAULT_FEEDBACK = {
@@ -64,6 +75,9 @@ def build_messages(
     language: str = "vi",
     turn_history: list[dict] | None = None,
     mode: str = "free_debate",
+    practice_mode: str | None = None,
+    practice_prompt: str | None = None,
+    practice_round: int | None = None,
 ) -> list[dict[str, str]]:
     # Use build_cer_messages() which returns a proper [system, user] pair.
     # GEPA design: the system prompt is written IN Vietnamese so the model's
@@ -80,6 +94,9 @@ def build_messages(
         language=language,
         turn_history=turn_history,
         mode=mode,
+        practice_mode=practice_mode,
+        practice_prompt=practice_prompt,
+        practice_round=practice_round,
     )
 
 
@@ -148,6 +165,181 @@ def _rubric_to_analysis(rubric: dict, *, provider: str = "groq", model: str = ""
     }
 
 
+def _text_key(value: str | None) -> str:
+    text = unicodedata.normalize("NFD", str(value or "").strip().casefold())
+    text = "".join(char for char in text if unicodedata.category(char) != "Mn")
+    text = re.sub(r"[^\w]+", " ", text)
+    return " ".join(text.split())
+
+
+def _history_items(items: list[str] | None) -> list[str]:
+    return [str(item).strip() for item in (items or []) if str(item or "").strip()]
+
+
+def _too_similar(value: str, previous_values: list[str] | None) -> bool:
+    key = _text_key(value)
+    if not key:
+        return False
+    for previous in _history_items(previous_values):
+        previous_key = _text_key(previous)
+        if not previous_key:
+            continue
+        if key == previous_key or key in previous_key or previous_key in key:
+            return True
+        if SequenceMatcher(None, key, previous_key).ratio() >= 0.82:
+            return True
+    return False
+
+
+def _choose_fallback_topic(topic: str, difficulty: str | None, round: int, previous_topics: list[str] | None) -> dict:
+    avoided = {_text_key(item) for item in _history_items(previous_topics)}
+    if topic:
+        avoided.add(_text_key(topic))
+
+    preferred = list_topics(difficulty=difficulty) if difficulty else []
+    candidates = preferred or list_topics()
+    filtered = [
+        item for item in candidates
+        if _text_key(item.get("title")) not in avoided and _text_key(item.get("id")) not in avoided
+    ]
+    if not filtered and preferred:
+        filtered = [
+            item for item in list_topics()
+            if _text_key(item.get("title")) not in avoided and _text_key(item.get("id")) not in avoided
+        ]
+    if not filtered:
+        filtered = candidates or list_topics()
+    if not filtered:
+        return {"title": topic or "Một chủ đề xã hội mới", "description": ""}
+    index = max(int(round or 1), 1) - 1
+    return filtered[index % len(filtered)]
+
+
+def _prompt_conflicts_with_history(prompt: str, prompt_topic: str, previous_prompts: list[str] | None, previous_topics: list[str] | None) -> bool:
+    if _too_similar(prompt, previous_prompts):
+        return True
+    if _too_similar(prompt_topic, previous_topics):
+        return True
+    if prompt_topic and _too_similar(prompt, previous_topics):
+        return True
+    return False
+
+
+def _fallback_practice_prompt(
+    mode: str,
+    topic: str,
+    difficulty: str | None = None,
+    round: int = 1,
+    previous_topics: list[str] | None = None,
+    warning: str = "Không tạo được đề bài mới từ AI, đang dùng đề bài mẫu.",
+) -> dict:
+    normalized = normalize_practice_mode(mode)
+    prompt_type = practice_prompt_type_for_mode(normalized)
+    fallback_topic = _choose_fallback_topic(topic, difficulty, round, previous_topics)
+    title = str(fallback_topic.get("title") or topic or "Một chủ đề xã hội mới").strip()
+    description = str(fallback_topic.get("description") or "").strip()
+    scenario = description or f"Hãy xem xét một tình huống cụ thể liên quan đến: {title}."
+    claim = ""
+    weak_argument = ""
+    if normalized == "find_evidence":
+        claim = f"{title} sẽ mang lại lợi ích rõ rệt nếu được triển khai minh bạch và có hướng dẫn phù hợp."
+        prompt = claim
+    elif normalized == "quick_rebuttal":
+        weak_argument = f"{title} chắc chắn đúng vì nhiều người hiện nay đều đồng ý và làm theo."
+        prompt = weak_argument
+    else:
+        prompt = f"Tình huống: {title}. {scenario}"
+    return {
+        "status": "success",
+        "mode": normalized,
+        "prompt_type": prompt_type,
+        "topic": title,
+        "scenario": scenario if normalized == "claim_writing" else None,
+        "claim": claim if normalized == "find_evidence" else None,
+        "weak_argument": weak_argument if normalized == "quick_rebuttal" else None,
+        "prompt": prompt,
+        "instruction": practice_instruction_for_mode(normalized),
+        "warning": warning,
+    }
+
+
+def _extract_json_object(text: str) -> dict:
+    clean = (text or "").strip()
+    if not clean:
+        raise ValueError("empty practice prompt response")
+    try:
+        return json.loads(clean)
+    except json.JSONDecodeError:
+        match = re.search(r"\{.*\}", clean, flags=re.DOTALL)
+        if not match:
+            raise
+        return json.loads(match.group(0))
+
+
+def generate_practice_prompt(
+    mode: str,
+    topic: str,
+    difficulty: str | None = None,
+    round: int = 1,
+    language: str = "vi",
+    previous_prompts: list[str] | None = None,
+    previous_topics: list[str] | None = None,
+    avoid_repeating: bool = True,
+) -> dict:
+    normalized = normalize_practice_mode(mode)
+    if normalized not in {"claim_writing", "find_evidence", "quick_rebuttal"}:
+        return _fallback_practice_prompt(normalized, topic, difficulty, round, previous_topics)
+
+    try:
+        attempts = 3 if avoid_repeating else 1
+        rejected_prompts: list[str] = []
+        for _ in range(attempts):
+            messages = build_practice_prompt_messages(
+                mode=normalized,
+                topic=topic,
+                difficulty=difficulty or "Trung bình",
+                round=round,
+                language=language,
+                previous_prompts=[*_history_items(previous_prompts), *rejected_prompts],
+                previous_topics=previous_topics,
+                avoid_repeating=avoid_repeating,
+            )
+            llm_result = call_groq(messages, max_tokens=520, temperature=0.85)
+            if not llm_result["ok"]:
+                continue
+            parsed = _extract_json_object(llm_result["text"])
+            prompt = str(parsed.get("prompt") or parsed.get("scenario") or parsed.get("claim") or parsed.get("weak_argument") or "").strip()
+            prompt_topic = str(parsed.get("topic") or parsed.get("scenario") or parsed.get("claim") or parsed.get("weak_argument") or "").strip()
+            if not prompt:
+                continue
+            if avoid_repeating and _prompt_conflicts_with_history(prompt, prompt_topic, previous_prompts, previous_topics):
+                rejected_prompts.append(prompt)
+                continue
+            parsed_mode = normalize_practice_mode(parsed.get("mode") or normalized)
+            return {
+                "status": "success",
+                "mode": parsed_mode,
+                "prompt_type": parsed.get("prompt_type") or practice_prompt_type_for_mode(normalized),
+                "topic": prompt_topic or None,
+                "scenario": str(parsed.get("scenario") or "").strip() or None,
+                "claim": str(parsed.get("claim") or "").strip() or None,
+                "weak_argument": str(parsed.get("weak_argument") or "").strip() or None,
+                "prompt": prompt,
+                "instruction": str(parsed.get("instruction") or practice_instruction_for_mode(normalized)).strip(),
+                "warning": None,
+            }
+        return _fallback_practice_prompt(
+            normalized,
+            topic,
+            difficulty,
+            round,
+            previous_topics,
+            warning="AI tạo đề bị trùng hoặc chưa hợp lệ, Lumi đã đổi sang đề mẫu khác.",
+        )
+    except Exception:
+        return _fallback_practice_prompt(normalized, topic, difficulty, round, previous_topics)
+
+
 def generate_debate_analysis(
     topic: str,
     stance: str,
@@ -160,6 +352,9 @@ def generate_debate_analysis(
     input_mode: str | None = None,
     turn_history: list[dict] | None = None,
     mode: str = "free_debate",
+    practice_mode: str | None = None,
+    practice_prompt: str | None = None,
+    practice_round: int | None = None,
 ) -> dict:
     validation = validate_user_argument(topic, user_argument)
     if not validation["is_valid"]:
@@ -199,6 +394,9 @@ def generate_debate_analysis(
             language=language or "vi",
             turn_history=turn_history,
             mode=mode,
+            practice_mode=practice_mode,
+            practice_prompt=practice_prompt,
+            practice_round=practice_round,
         )
         build_prompt_ms = int((time.perf_counter() - build_start) * 1000)
 
@@ -258,6 +456,9 @@ def generate_debate_turn_analysis(
     input_mode: str | None = None,
     turn_history: list[dict] | None = None,
     mode: str = "free_debate",
+    practice_mode: str | None = None,
+    practice_prompt: str | None = None,
+    practice_round: int | None = None,
 ) -> dict:
     return generate_debate_analysis(
         topic=topic,
@@ -271,6 +472,9 @@ def generate_debate_turn_analysis(
         input_mode=input_mode,
         turn_history=turn_history,
         mode=mode,
+        practice_mode=practice_mode,
+        practice_prompt=practice_prompt,
+        practice_round=practice_round,
     )
 
 
@@ -286,6 +490,9 @@ def generate_rebuttal(
     input_mode: str | None = None,
     turn_history: list[dict] | None = None,
     mode: str = "free_debate",
+    practice_mode: str | None = None,
+    practice_prompt: str | None = None,
+    practice_round: int | None = None,
 ) -> dict:
     analysis = generate_debate_analysis(
         topic=topic,
@@ -299,6 +506,9 @@ def generate_rebuttal(
         input_mode=input_mode,
         turn_history=turn_history,
         mode=mode,
+        practice_mode=practice_mode,
+        practice_prompt=practice_prompt,
+        practice_round=practice_round,
     )
     return {
         "ok": analysis["ok"],

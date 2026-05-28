@@ -301,10 +301,79 @@ CHỐNG DỒN ĐIỂM:
   - Lập luận khác nhau PHẢI có điểm khác nhau"""
 
 
+import re
+import unicodedata
+
 # ---------------------------------------------------------------------------
 # Mode dispatch helper
 # ---------------------------------------------------------------------------
+PRACTICE_MODE_ALIASES = {
+    "free": "free_debate",
+    "free_debate": "free_debate",
+    "claim": "claim_writing",
+    "luyen_viet_claim": "claim_writing",
+    "claim_practice": "claim_writing",
+    "claim_writing": "claim_writing",
+    "evidence": "find_evidence",
+    "luyen_tim_evidence": "find_evidence",
+    "evidence_practice": "find_evidence",
+    "find_evidence": "find_evidence",
+    "rebuttal": "quick_rebuttal",
+    "phan_bien_nhanh": "quick_rebuttal",
+    "quick_rebuttal": "quick_rebuttal",
+    "argument_builder": "full_argument",
+    "full_argument": "full_argument",
+}
+
+PRACTICE_PROMPT_TYPES = {
+    "claim_writing": "scenario_prompt",
+    "find_evidence": "claim_prompt",
+    "quick_rebuttal": "weak_argument",
+}
+
+
+def normalize_practice_mode(mode: str | None) -> str:
+    ascii_key = unicodedata.normalize("NFD", str(mode or "free_debate").strip().lower())
+    ascii_key = "".join(char for char in ascii_key if unicodedata.category(char) != "Mn")
+    key = re.sub(r"\W+", "_", ascii_key).strip("_")
+    return PRACTICE_MODE_ALIASES.get(key, "free_debate")
+
+
+def practice_prompt_type_for_mode(mode: str | None) -> str:
+    return PRACTICE_PROMPT_TYPES.get(normalize_practice_mode(mode), "topic_prompt")
+
+
+def practice_instruction_for_mode(mode: str | None) -> str:
+    normalized = normalize_practice_mode(mode)
+    if normalized == "claim_writing":
+        return "Hãy viết một claim rõ ràng, có thể tranh luận được."
+    if normalized == "find_evidence":
+        return "Hãy đưa ra bằng chứng cụ thể để hỗ trợ hoặc phản bác claim này."
+    if normalized == "quick_rebuttal":
+        return "Hãy chỉ ra lỗ hổng, giả định sai hoặc phản ví dụ."
+    return "Hãy xây dựng câu trả lời tranh biện phù hợp."
+
+
+def _practice_context(mode: str, practice_prompt: str | None, practice_round: int | None) -> str:
+    if mode not in PRACTICE_PROMPT_TYPES or not practice_prompt:
+        return ""
+    labels = {
+        "claim_writing": "Chủ đề/tình huống do Lumi đưa ra",
+        "find_evidence": "Claim mẫu do Lumi đưa ra",
+        "quick_rebuttal": "Luận điểm yếu do Lumi đưa ra",
+    }
+    return (
+        f"=== ĐỀ BÀI LUYỆN TẬP ===\n"
+        f"Mode: {mode}\n"
+        f"Lượt: {practice_round or 1}\n"
+        f"{labels[mode]}: {practice_prompt}\n"
+        f"Nhiệm vụ của người dùng: {practice_instruction_for_mode(mode)}\n"
+        f"Chấm câu trả lời của người dùng theo đúng đề bài này. Không tự coi đề bài là câu trả lời của người dùng.\n\n"
+    )
+
+
 def _system_prompt_for_mode(mode: str, output_language: str, age_group: str, debate_level: str) -> str:
+    mode = normalize_practice_mode(mode)
     if mode == "claim_writing":
         return _build_claim_writing_system_prompt(output_language, age_group, debate_level)
     elif mode == "find_evidence":
@@ -333,6 +402,9 @@ def build_cer_messages(
     language: str = "vi",
     turn_history: list[dict] | None = None,
     mode: str = "free_debate",
+    practice_mode: str | None = None,
+    practice_prompt: str | None = None,
+    practice_round: int | None = None,
 ) -> list[dict[str, str]]:
     """
     Returns a [system, user] message pair for the Groq API.
@@ -346,10 +418,12 @@ def build_cer_messages(
     - Mode dispatches to mode-specific system prompts
     """
     output_language = _language_name(language)
+    mode = normalize_practice_mode(practice_mode or mode)
     system_prompt = _system_prompt_for_mode(mode, output_language, age_group, debate_level)
 
     history_block = _format_turn_history(turn_history)
     history_section = f"\n{history_block}\n" if history_block else ""
+    practice_section = _practice_context(mode, practice_prompt, practice_round)
 
     user_prompt = (
         f"=== NGỮ CẢNH ===\n"
@@ -358,6 +432,7 @@ def build_cer_messages(
         f"Độ khó   : {difficulty}\n"
         f"Nhập liệu: {_input_mode_rule(input_mode)}\n"
         f"{history_section}"
+        f"{practice_section}"
         f"\n=== LẬP LUẬN HIỆN TẠI CỦA NGƯỜI DÙNG ===\n"
         f"{user_argument}\n"
         f"\n=== YÊU CẦU ===\n"
@@ -391,6 +466,82 @@ def build_cer_rubric_prompt(
         language=language,
     )
     return msgs[0]["content"] + "\n\n" + msgs[1]["content"]
+
+
+def build_practice_prompt_messages(
+    mode: str,
+    topic: str,
+    difficulty: str | None = None,
+    round: int = 1,
+    language: str = "vi",
+    previous_prompts: list[str] | None = None,
+    previous_topics: list[str] | None = None,
+    avoid_repeating: bool = True,
+) -> list[dict[str, str]]:
+    """Builds a small prompt-generation request for single-skill practice rounds."""
+    normalized = normalize_practice_mode(mode)
+    prompt_type = practice_prompt_type_for_mode(normalized)
+    output_language = _language_name(language)
+    if normalized == "find_evidence":
+        task = (
+            "Tạo đúng 1 claim mẫu ngắn, rõ lập trường, có thể được hỗ trợ hoặc phản bác bằng bằng chứng. "
+            "Không tự đưa bằng chứng."
+        )
+    elif normalized == "quick_rebuttal":
+        task = (
+            "Tạo đúng 1 luận điểm yếu hoặc lập luận có lỗ hổng logic rõ, ngắn gọn, liên quan chủ đề. "
+            "Lập luận yếu phải đủ cụ thể để người học phản biện."
+        )
+    else:
+        task = (
+            "Tạo đúng 1 chủ đề phụ hoặc tình huống ngắn để người học viết claim. "
+            "Không viết claim thay người học."
+        )
+
+    previous_prompt_block = "\n".join(
+        f"- {item}" for item in (previous_prompts or [])[-8:] if str(item).strip()
+    ) or "- Chưa có"
+    previous_topic_block = "\n".join(
+        f"- {item}" for item in (previous_topics or [])[-8:] if str(item).strip()
+    ) or "- Chưa có"
+    anti_repeat_rule = (
+        "Generate a new prompt that is different from previous prompts. "
+        "Avoid reusing the same topic, same scenario, same claim, or same weak argument. "
+        "Return only valid JSON. The prompt must be in Vietnamese."
+        if avoid_repeating
+        else "Return only valid JSON. The prompt must be in Vietnamese."
+    )
+
+    system_prompt = (
+        f"Bạn là Lumi, huấn luyện viên tạo đề bài luyện tranh biện bằng {output_language}. "
+        "Chỉ trả về DUY NHẤT JSON hợp lệ, không markdown, không giải thích ngoài JSON."
+    )
+    user_prompt = (
+        f"Mode: {normalized}\n"
+        f"Prompt type: {prompt_type}\n"
+        f"Chủ đề phiên: {topic}\n"
+        f"Độ khó: {difficulty or 'Trung bình'}\n"
+        f"Lượt: {round}\n"
+        f"Yêu cầu chống lặp: {anti_repeat_rule}\n"
+        f"Previous prompts:\n{previous_prompt_block}\n"
+        f"Previous topics:\n{previous_topic_block}\n"
+        f"Nhiệm vụ: {task}\n\n"
+        "JSON bắt buộc:\n"
+        "{\n"
+        f'  "mode": "{normalized}",\n'
+        f'  "prompt_type": "{prompt_type}",\n'
+        '  "topic": "<topic/tình huống chính mới, khác các topic trước>",\n'
+        '  "scenario": "<chỉ dùng cho claim_writing, tình huống mới>",\n'
+        '  "claim": "<chỉ dùng cho evidence_practice, claim mới>",\n'
+        '  "weak_argument": "<chỉ dùng cho quick_rebuttal, luận điểm yếu mới>",\n'
+        '  "prompt": "<đề bài 1-2 câu, cụ thể, không trùng nguyên văn chủ đề nếu có thể>",\n'
+        f'  "instruction": "{practice_instruction_for_mode(normalized)}"\n'
+        "}"
+    )
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
 
 
 def build_debate_prompt(
@@ -443,6 +594,9 @@ def build_groq_messages(
     language: str = "vi",
     turn_history: list[dict] | None = None,
     mode: str = "free_debate",
+    practice_mode: str | None = None,
+    practice_prompt: str | None = None,
+    practice_round: int | None = None,
 ) -> list[dict[str, str]]:
     """Legacy entry point — routes to build_cer_messages."""
     return build_cer_messages(
@@ -451,4 +605,7 @@ def build_groq_messages(
         debate_level=debate_level, input_mode=input_mode or "text",
         language=language, turn_history=turn_history,
         mode=mode,
-    )
+        practice_mode=practice_mode,
+        practice_prompt=practice_prompt,
+        practice_round=practice_round,
+    )

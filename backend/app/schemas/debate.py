@@ -74,6 +74,33 @@ class StartSessionResponse(BaseModel):
 class DebateTurnRequest(BaseModel):
     session_id: str
     user_argument: str = Field(..., example="Phones can support quick research.")
+    practice_mode: str | None = Field(default=None, example="evidence_practice")
+    practice_prompt: str | None = Field(default=None, example="Online learning helps students manage their own time.")
+    practice_round: int | None = Field(default=None, ge=1, example=1)
+
+
+class PracticePromptRequest(BaseModel):
+    session_id: str | None = Field(default=None, example="abc123")
+    mode: str = Field(..., example="evidence_practice")
+    topic: str = Field(..., example="Should online learning replace homework?")
+    difficulty: str | None = Field(default=None, example="intermediate")
+    round: int = Field(default=1, ge=1, example=1)
+    previous_prompts: list[str] = Field(default_factory=list)
+    previous_topics: list[str] = Field(default_factory=list)
+    avoid_repeating: bool = True
+
+
+class PracticePromptResponse(BaseModel):
+    status: str
+    mode: str
+    prompt_type: str
+    prompt: str
+    instruction: str
+    warning: str | None = None
+    topic: str | None = None
+    scenario: str | None = None
+    claim: str | None = None
+    weak_argument: str | None = None
 
 
 class CERScoreResponse(BaseModel):

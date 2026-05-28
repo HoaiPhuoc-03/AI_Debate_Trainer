@@ -1112,6 +1112,118 @@
     background: #f1ebff;
     border-color: #ddd0ff;
   }
+  .practice-mode-bar {
+    width: min(100%, 920px);
+    margin: -8px auto 24px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #f8fbff 0%, #eef7ff 50%, #f6f1ff 100%);
+    border: 1px solid rgba(120, 170, 255, 0.22);
+    box-shadow: 0 10px 24px rgba(120, 150, 220, 0.10);
+  }
+  .practice-mode-icon {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    color: #ffffff;
+    background: linear-gradient(135deg, #5ED6D6, #9B8CFF);
+    box-shadow: 0 8px 18px rgba(94, 214, 214, 0.22);
+    font-size: 19px;
+  }
+  .practice-mode-content {
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+  .practice-mode-label {
+    color: #6f87a6;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .practice-mode-title {
+    color: #1f2a44;
+    font-size: 16px;
+    font-weight: 850;
+  }
+  .practice-mode-description {
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 650;
+  }
+  .practice-prompt-card {
+    border: 1px solid rgba(94, 214, 214, 0.34);
+    background: linear-gradient(135deg, #f0fbff 0%, #f6f8ff 56%, #fff7ed 100%);
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 14px 30px rgba(74, 111, 232, 0.10);
+  }
+  .practice-prompt-kicker {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #315a99;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .practice-prompt-body {
+    margin-top: 12px;
+    color: #1f2a44;
+    font-size: 16px;
+    line-height: 1.62;
+    font-weight: 700;
+  }
+  .practice-prompt-task {
+    margin-top: 12px;
+    color: #4f637f;
+    font-size: 14px;
+    line-height: 1.55;
+    font-weight: 650;
+  }
+  .practice-prompt-warning {
+    margin-top: 12px;
+    color: #9a5b00;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .practice-next-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+    position: relative;
+    z-index: 2;
+    pointer-events: auto;
+  }
+  .practice-next-row.hidden { display: none; }
+  .practice-next-button {
+    min-height: 42px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    color: #ffffff;
+    background: linear-gradient(135deg, #4d6fe8, #20b8c7);
+    font-weight: 850;
+    cursor: pointer;
+    box-shadow: 0 12px 24px rgba(77, 111, 232, 0.22);
+    pointer-events: auto;
+  }
+  .practice-next-button:disabled {
+    cursor: wait;
+    opacity: 0.7;
+  }
   .arena-stack { display: grid; gap: 30px; }
   .arena-panel { padding: 30px; }
   .debate-card--support {
@@ -2268,6 +2380,17 @@
     .debate-topic-bar__title {
       max-width: 100%;
       font-size: 17px;
+    }
+    .practice-mode-bar {
+      width: 100%;
+      border-radius: 22px;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+    .practice-mode-content {
+      display: grid;
+      justify-items: start;
+      gap: 3px;
     }
     .theme-toggle { padding: 6px 8px; }
     .top-actions { gap: 12px; }
@@ -4096,6 +4219,15 @@
           <div class="debate-topic-bar__meta" id="debate-topic-bar-meta"></div>
         </div>
 
+        <div class="practice-mode-bar" id="practice-mode-bar" aria-live="polite">
+          <div class="practice-mode-icon" id="practice-mode-icon" aria-hidden="true">⚔️</div>
+          <div class="practice-mode-content">
+            <span class="practice-mode-label">Chế độ luyện tập</span>
+            <span class="practice-mode-title" id="practice-mode-title">Tranh biện tự do</span>
+            <span class="practice-mode-description" id="practice-mode-description">User vs AI, luân phiên phản biện</span>
+          </div>
+        </div>
+
         <div class="arena-layout">
           <div class="arena-stack">
             <div class="panel arena-panel" id="user-argument-panel">
@@ -4146,6 +4278,9 @@
                 <span class="chip purple">Phản biện</span>
               </div>
               <div id="ai-output" class="empty-message">Chờ lập luận đầu tiên của bạn. Huấn luyện viên AI sẽ phản biện và giải thích điểm cần cải thiện.</div>
+              <div class="practice-next-row hidden" id="practice-next-row">
+                <button class="practice-next-button" id="practice-next-button" type="button" data-practice-next>Tiếp theo →</button>
+              </div>
               <div class="rebuttal-audio-box" id="rebuttal-audio-box" aria-live="polite">
                 <div class="rebuttal-audio-head">
                   <span>Âm thanh phản biện</span>
@@ -4335,6 +4470,21 @@
     history: [],
     latest: null,
     mode: "free_debate",
+    practice: {
+      mode: null,
+      round: 1,
+      currentPrompt: null,
+      currentTopic: "",
+      currentPromptType: null,
+      instruction: "",
+      isAwaitingUserAnswer: true,
+      hasEvaluation: false,
+      warning: "",
+      isGeneratingPrompt: false,
+      usedPracticePrompts: [],
+      usedPracticeTopics: [],
+      lastPracticePrompt: "",
+    },
   };
   let activeRebuttalAnimation = 0;
   let mediaRecorder = null;
@@ -4408,12 +4558,80 @@
     ["quick_rebuttal", "Phản biện nhanh", "AI đưa lập luận yếu → tìm lỗ hổng", "⚡"],
     ["full_argument", "Xây dựng lập luận", "Xây 1 lập luận C+E+R đầy đủ → AI chấm", "🏗"],
   ];
+  const PRACTICE_MODE_DETAILS = {
+    free_debate: {
+      icon: "⚔️",
+      title: "Tranh biện tự do",
+      description: "User vs AI, luân phiên phản biện",
+    },
+    claim_writing: {
+      icon: "✍️",
+      title: "Luyện viết Claim",
+      description: "AI cho chủ đề → bạn viết claim → AI chấm",
+    },
+    find_evidence: {
+      icon: "🔎",
+      title: "Luyện tìm Evidence",
+      description: "AI cho claim → bạn tìm bằng chứng → AI đánh giá",
+    },
+    quick_rebuttal: {
+      icon: "⚡",
+      title: "Phản biện nhanh",
+      description: "AI đưa lập luận yếu → bạn tìm lỗ hổng",
+    },
+    full_argument: {
+      icon: "🧱",
+      title: "Xây dựng lập luận",
+      description: "Xây 1 lập luận C-E-R đầy đủ → AI chấm",
+    },
+  };
+  const PRACTICE_MODE_ALIASES = {
+    free: "free_debate",
+    free_debate: "free_debate",
+    claim: "claim_writing",
+    luyen_viet_claim: "claim_writing",
+    claim_practice: "claim_writing",
+    claim_writing: "claim_writing",
+    evidence: "find_evidence",
+    luyen_tim_evidence: "find_evidence",
+    evidence_practice: "find_evidence",
+    find_evidence: "find_evidence",
+    rebuttal: "quick_rebuttal",
+    phan_bien_nhanh: "quick_rebuttal",
+    quick_rebuttal: "quick_rebuttal",
+    argument_builder: "full_argument",
+    full_argument: "full_argument",
+  };
   const MODE_METRICS = {
     free_debate: ["claim", "evidence", "reasoning"],
     claim_writing: ["claim"],
     find_evidence: ["evidence"],
     quick_rebuttal: ["reasoning"],
     full_argument: ["claim", "evidence", "reasoning"],
+  };
+  const SINGLE_SKILL_PRACTICE_MODES = ["claim_writing", "find_evidence", "quick_rebuttal"];
+  const PRACTICE_PROMPT_UI = {
+    claim_writing: {
+      icon: "✍️",
+      heading: "ĐỀ BÀI CỦA LUMI",
+      label: "Chủ đề/tình huống",
+      task: "Hãy viết một claim rõ ràng, có thể tranh luận được.",
+      placeholder: "Hãy viết một claim rõ ràng, có thể tranh luận được...",
+    },
+    find_evidence: {
+      icon: "🔎",
+      heading: "CLAIM CẦN TÌM BẰNG CHỨNG",
+      label: "Claim",
+      task: "Hãy đưa ra bằng chứng cụ thể để hỗ trợ hoặc phản bác claim này.",
+      placeholder: "Hãy đưa bằng chứng cụ thể cho claim Lumi đã đưa...",
+    },
+    quick_rebuttal: {
+      icon: "⚡",
+      heading: "LUẬN ĐIỂM YẾU CẦN PHẢN BIỆN",
+      label: "Luận điểm yếu",
+      task: "Hãy chỉ ra lỗ hổng, giả định sai hoặc phản ví dụ.",
+      placeholder: "Hãy chỉ ra lỗ hổng hoặc phản biện lại luận điểm yếu của Lumi...",
+    },
   };
   const AUTO_TOPIC_MODES = ["claim_writing", "find_evidence", "quick_rebuttal"];
   const displayLabels = {
@@ -4446,6 +4664,7 @@
   document.addEventListener("DOMContentLoaded", initTheme);
   document.addEventListener("DOMContentLoaded", init);
   document.addEventListener("click", closeUserMenu);
+  document.addEventListener("click", handlePracticePromptActions);
 
   function getInitialTheme() {
     const saved = localStorage.getItem(THEME_KEY);
@@ -4496,6 +4715,7 @@
     renderProfileOptions();
     renderSessionOptions();
     renderTopicExplorer();
+    bindPracticeRoundControls();
     loadDebateTopics();
     updateProfileSummary();
     updateSessionSummary();
@@ -4853,7 +5073,9 @@
 
   function selectMode(modeId) {
     state.mode = modeId;
+    resetPracticeState(modeId);
     renderModeOptions();
+    renderPracticeModeBar();
     if (AUTO_TOPIC_MODES.includes(modeId)) {
       const list = AUTO_TOPICS[modeId];
       if (list && list.length > 0) {
@@ -5394,10 +5616,14 @@
       state.roundCount = 0;
       state.history = [];
       state.latest = null;
+      resetPracticeState(state.mode);
       clearSpeechAudioCache();
       clearVoiceSourceAudio();
       renderArenaShell();
       goToView("arena");
+      if (isSingleSkillPracticeMode()) {
+        await initializePracticeRound();
+      }
       await syncSessionStatus();
     } catch (error) {
       const message = error.message || "";
@@ -5412,6 +5638,7 @@
     renderSessionChips();
     renderArenaStage();
     renderDebateTopicBar();
+    renderPracticeModeBar();
     renderArenaStanceBadges();
     renderArgumentControls();
     renderVoiceControls();
@@ -5421,6 +5648,7 @@
     updateCharCount();
     renderTranscript();
     renderRebuttal(null);
+    renderPracticeNextButton();
     renderCER(null);
     renderFeedback(null);
   }
@@ -5439,6 +5667,7 @@
 
   function renderArgumentControls() {
     syncInputModeDataset();
+    updateArgumentPlaceholder();
     renderVoiceControls();
     if (isVoiceInputMode() && state.view === "arena") {
       requestAnimationFrame(() => {
@@ -5501,18 +5730,29 @@
     const topicMeta = state.selectedTopicCategory && !state.customTopic
       ? `<span class="chip">${escapeHtml(state.selectedTopicCategory)}</span>`
       : "";
+    const roundLabel = isSingleSkillPracticeMode()
+      ? state.practice.round
+      : state.roundCount;
+    const topicLabel = getPracticeDisplayTopic();
     document.getElementById("session-chips").innerHTML = `
       <span class="chip cyan">${escapeHtml(modeLabel)}</span>
-      <span class="chip teal">${escapeHtml(displayValue(getTopic()))}</span>
+      <span class="chip teal">${escapeHtml(displayValue(topicLabel))}</span>
       ${topicMeta}
       <span class="chip purple">Lập trường: ${escapeHtml(displayValue(state.stance))}</span>
       <span class="chip yellow">${escapeHtml(displayValue(state.difficulty))}</span>
-      <span class="chip">Lượt ${state.roundCount}</span>
+      <span class="chip">Lượt ${roundLabel}</span>
     `;
     renderHomeHub();
     renderArenaStage();
     renderDebateTopicBar();
+    renderPracticeModeBar();
     renderArenaStanceBadges();
+  }
+
+  function getPracticeDisplayTopic() {
+    return isSingleSkillPracticeMode() && state.practice.currentTopic
+      ? state.practice.currentTopic
+      : getTopic();
   }
 
   function normalizeStance(value) {
@@ -5576,7 +5816,7 @@
   }
 
   function renderDebateTopicBar() {
-    const title = getTopic() || "Chưa có chủ đề tranh biện";
+    const title = getPracticeDisplayTopic() || "Chưa có chủ đề tranh biện";
     const category = state.selectedTopicCategory && !state.customTopic ? state.selectedTopicCategory : "";
     const difficulty = state.difficulty ? displayValue(state.difficulty) : "";
     setText("debate-topic-bar-title", title);
@@ -5586,6 +5826,278 @@
       category ? `<span class="debate-topic-badge category">${escapeHtml(category)}</span>` : "",
       difficulty ? `<span class="debate-topic-badge difficulty">${escapeHtml(difficulty)}</span>` : "",
     ].filter(Boolean).join("");
+  }
+
+  function getActivePracticeMode() {
+    const session = state.currentSession || {};
+    return state.practiceMode
+      || state.trainingMode
+      || session.practice_mode
+      || session.practiceMode
+      || state.mode
+      || "free_debate";
+  }
+
+  function normalizePracticeMode(value) {
+    const key = String(value || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^\w]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+    return PRACTICE_MODE_ALIASES[key] || "free_debate";
+  }
+
+  function getPracticeModeConfig(value = getActivePracticeMode()) {
+    const mode = normalizePracticeMode(value);
+    return PRACTICE_MODE_DETAILS[mode] || PRACTICE_MODE_DETAILS.free_debate;
+  }
+
+  function renderPracticeModeBar() {
+    const bar = document.getElementById("practice-mode-bar");
+    if (!bar) return;
+    const mode = getPracticeModeConfig();
+    setText("practice-mode-icon", mode.icon);
+    setText("practice-mode-title", mode.title);
+    setText("practice-mode-description", mode.description);
+  }
+
+  function isSingleSkillPracticeMode(mode = state.mode) {
+    return SINGLE_SKILL_PRACTICE_MODES.includes(normalizePracticeMode(mode));
+  }
+
+  function resetPracticeState(mode = state.mode) {
+    state.practice = {
+      mode: normalizePracticeMode(mode),
+      round: 1,
+      currentPrompt: null,
+      currentTopic: "",
+      currentPromptType: null,
+      instruction: "",
+      isAwaitingUserAnswer: true,
+      hasEvaluation: false,
+      warning: "",
+      isGeneratingPrompt: false,
+      usedPracticePrompts: [],
+      usedPracticeTopics: [],
+      lastPracticePrompt: "",
+    };
+  }
+
+  function getPracticePromptUi(mode = state.practice.mode || state.mode) {
+    return PRACTICE_PROMPT_UI[normalizePracticeMode(mode)] || PRACTICE_PROMPT_UI.claim_writing;
+  }
+
+  function getArgumentPlaceholder() {
+    const mode = normalizePracticeMode(state.mode);
+    if (PRACTICE_PROMPT_UI[mode]) return PRACTICE_PROMPT_UI[mode].placeholder;
+    if (mode === "full_argument") return "Hãy xây dựng lập luận đầy đủ Claim - Evidence - Reasoning...";
+    return "Nhập lập luận của bạn tại đây...";
+  }
+
+  function updateArgumentPlaceholder() {
+    const input = document.getElementById("user-input");
+    if (input) input.placeholder = getArgumentPlaceholder();
+  }
+
+  function localPracticePromptFallback(mode = state.mode, topic = getTopic()) {
+    const normalized = normalizePracticeMode(mode);
+    const ui = getPracticePromptUi(normalized);
+    const round = Number(state.practice.round || 1);
+    const variants = [
+      "vai trò của nhà trường trong việc hướng dẫn học sinh dùng công nghệ có trách nhiệm",
+      "trách nhiệm của nền tảng số khi nội dung gây hại lan truyền nhanh",
+      "cách cân bằng giữa quyền riêng tư và lợi ích cộng đồng trong đời sống số",
+      "việc giúp người trẻ ra quyết định tốt hơn trước áp lực thông tin",
+    ];
+    const fallbackTopic = variants[(round - 1) % variants.length];
+    let prompt = `Tình huống: ${fallbackTopic}. Hãy viết một claim rõ ràng thể hiện lập trường của bạn.`;
+    let promptType = "scenario_prompt";
+    if (normalized === "find_evidence") {
+      prompt = `Claim: ${fallbackTopic} sẽ mang lại lợi ích thực tế nếu được thiết kế và giải thích minh bạch.`;
+      promptType = "claim_prompt";
+    } else if (normalized === "quick_rebuttal") {
+      prompt = `Luận điểm yếu: ${fallbackTopic} chắc chắn đúng vì nhiều người đều đang ủng hộ.`;
+      promptType = "weak_argument";
+    } else if (topic) {
+      prompt = `Tình huống mới: ${fallbackTopic}. Liên hệ với chủ đề phiên "${topic}" nhưng không lặp lại nguyên đề cũ.`;
+    }
+    return {
+      status: "success",
+      mode: normalized,
+      prompt_type: promptType,
+      topic: fallbackTopic,
+      prompt,
+      instruction: ui.task,
+      warning: "Không tạo được đề bài mới từ AI, đang dùng đề bài mẫu.",
+    };
+  }
+
+  function rememberPracticePrompt(promptData = {}) {
+    const prompt = String(promptData.prompt || "").trim();
+    const topic = String(promptData.topic || promptData.scenario || promptData.claim || promptData.weak_argument || "").trim();
+    if (prompt && !state.practice.usedPracticePrompts.includes(prompt)) {
+      state.practice.usedPracticePrompts.push(prompt);
+    }
+    if (topic && !state.practice.usedPracticeTopics.includes(topic)) {
+      state.practice.usedPracticeTopics.push(topic);
+    }
+    state.practice.lastPracticePrompt = prompt;
+    state.practice.currentTopic = topic;
+    state.practice.usedPracticePrompts = state.practice.usedPracticePrompts.slice(-12);
+    state.practice.usedPracticeTopics = state.practice.usedPracticeTopics.slice(-12);
+  }
+
+  async function generatePracticePrompt(mode, topic, difficulty, round = state.practice.round) {
+    try {
+      const data = await apiRequest("/api/v1/debate/practice-prompt", {
+        method: "POST",
+        body: {
+          session_id: state.sessionId,
+          mode,
+          topic,
+          difficulty,
+          round,
+          previous_prompts: state.practice.usedPracticePrompts || [],
+          previous_topics: state.practice.usedPracticeTopics || [],
+          avoid_repeating: true,
+        },
+      });
+      return data?.prompt ? data : localPracticePromptFallback(mode, topic);
+    } catch (error) {
+      console.warn("Không tạo được đề bài luyện tập từ backend:", error);
+      return localPracticePromptFallback(mode, topic);
+    }
+  }
+
+  function renderPracticeNextButton() {
+    const row = document.getElementById("practice-next-row");
+    const button = document.getElementById("practice-next-button");
+    if (!row || !button) return;
+    bindPracticeRoundControls();
+    const visible = isSingleSkillPracticeMode() && state.practice.hasEvaluation && state.sessionStatus !== "completed";
+    row.classList.toggle("hidden", !visible);
+    button.disabled = state.practice.isGeneratingPrompt || state.isSubmitting;
+    button.textContent = state.practice.isGeneratingPrompt ? "Đang tạo lượt mới..." : "Tiếp theo →";
+  }
+
+  function bindPracticeRoundControls() {
+    const nextButton = document.getElementById("practice-next-button");
+    if (nextButton && nextButton.dataset.boundPracticeNext !== "true") {
+      nextButton.dataset.boundPracticeNext = "true";
+      nextButton.addEventListener("click", handleNextPracticeRound);
+    }
+  }
+
+  function handlePracticePromptActions(event) {
+    const retryButton = event.target.closest?.("[data-practice-retry]");
+    if (!retryButton) return;
+    event.preventDefault();
+    if (state.practice.isGeneratingPrompt || state.isSubmitting) return;
+    initializePracticeRound({ message: "Lumi đang thử tạo lại đề bài..." });
+  }
+
+  function renderPracticePrompt(promptData = null) {
+    const output = document.getElementById("ai-output");
+    if (!output) return;
+    const mode = normalizePracticeMode(promptData?.mode || state.practice.mode || state.mode);
+    const ui = getPracticePromptUi(mode);
+    const prompt = String(promptData?.prompt || state.practice.currentPrompt || "").trim();
+    const instruction = String(promptData?.instruction || state.practice.instruction || ui.task).trim();
+    const warning = String(promptData?.warning || state.practice.warning || "").trim();
+    if (!prompt) {
+      output.className = "empty-message";
+      output.textContent = "Lumi đang chuẩn bị đề bài...";
+      renderPracticeNextButton();
+      return;
+    }
+    output.className = "";
+    output.innerHTML = `
+      <div class="practice-prompt-card">
+        <div class="practice-prompt-kicker"><span>${ui.icon}</span><span>${ui.heading}</span></div>
+        <div class="practice-prompt-body"><strong>${escapeHtml(ui.label)}:</strong> ${escapeHtml(prompt)}</div>
+        <div class="practice-prompt-task"><strong>Nhiệm vụ:</strong> ${escapeHtml(instruction)}</div>
+        ${warning ? `<div class="practice-prompt-warning">${escapeHtml(warning)} <button class="secondary-btn" type="button" data-practice-retry>Thử lại</button></div>` : ""}
+      </div>
+    `;
+    renderPracticeNextButton();
+  }
+
+  function renderPracticePromptLoading(message = "Lumi đang chuẩn bị đề bài...") {
+    const output = document.getElementById("ai-output");
+    if (!output) return;
+    output.className = "";
+    output.innerHTML = `<div class="loading-dots">${escapeHtml(message)} <span></span><span></span><span></span></div>`;
+    renderPracticeNextButton();
+  }
+
+  async function initializePracticeRound(options = {}) {
+    if (!isSingleSkillPracticeMode()) return;
+    const mode = normalizePracticeMode(state.mode);
+    state.practice.mode = mode;
+    state.practice.hasEvaluation = false;
+    state.practice.isAwaitingUserAnswer = true;
+    state.practice.isGeneratingPrompt = true;
+    renderPracticePromptLoading(options.message || "Lumi đang chuẩn bị đề bài...");
+    renderPracticeNextButton();
+    try {
+      const promptData = await generatePracticePrompt(mode, getTopic(), state.difficulty, state.practice.round);
+      state.practice.currentPrompt = promptData.prompt;
+      rememberPracticePrompt(promptData);
+      state.practice.currentPromptType = promptData.prompt_type || localPracticePromptFallback(mode).prompt_type;
+      state.practice.instruction = promptData.instruction || getPracticePromptUi(mode).task;
+      state.practice.warning = promptData.warning || "";
+      renderPracticePrompt(promptData);
+      renderTranscript();
+      renderSessionChips();
+    } finally {
+      state.practice.isGeneratingPrompt = false;
+      renderPracticeNextButton();
+      updateArgumentPlaceholder();
+    }
+  }
+
+  function clearArgumentInput() {
+    const input = document.getElementById("user-input");
+    if (input) input.value = "";
+    state.pendingVoiceTranscript = "";
+    state.voiceDraftState = "idle";
+    state.voiceDraftMessage = "";
+    updateCharCount();
+    renderVoiceTranscript();
+  }
+
+  async function handleNextPracticeRound(event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (
+      !isSingleSkillPracticeMode()
+      || state.practice.isGeneratingPrompt
+      || state.isSubmitting
+      || !state.practice.hasEvaluation
+    ) {
+      return;
+    }
+    state.practice.isGeneratingPrompt = true;
+    state.practice.round += 1;
+    state.practice.hasEvaluation = false;
+    state.practice.isAwaitingUserAnswer = true;
+    state.practice.currentPrompt = null;
+    state.practice.currentTopic = "";
+    state.practice.currentPromptType = null;
+    state.practice.instruction = "";
+    state.practice.warning = "";
+    state.latest = null;
+    clearArgumentInput();
+    resetVoiceRecorder();
+    clearVoiceSourceAudio();
+    renderVoiceControls();
+    renderCER(null);
+    renderFeedback(null);
+    renderSessionChips();
+    renderPracticeNextButton();
+    await initializePracticeRound({ message: "Đang tạo lượt luyện tập mới..." });
   }
 
   function setArenaPulse(mode = "") {
@@ -5599,7 +6111,7 @@
     const stage = document.getElementById("arena-stage");
     if (!stage) return;
     const round = Number(state.roundCount) || 0;
-    const topic = getTopic() || "Chưa có topic";
+    const topic = getPracticeDisplayTopic() || "Chưa có topic";
     const displayName = state.currentUser?.display_name || state.userName || "Bạn";
     const statusLabel = state.isSubmitting
       ? "AI đang phản biện"
@@ -6036,19 +6548,40 @@
     if (!state.sessionId) return showError("form-error", "Chưa có phiên tranh biện. Hãy tạo phiên trước.");
     if (!argument) return showError("form-error", "Hãy nhập lập luận trước khi gửi.");
     if (state.sessionStatus === "completed") return showError("form-error", "Phiên này đã hoàn tất. Hãy xem tổng kết hoặc tạo chủ đề mới.");
+    if (isSingleSkillPracticeMode() && !state.practice.currentPrompt) {
+      return showError("form-error", "Lumi chưa tạo đề bài cho lượt này. Hãy bấm Thử lại hoặc tạo lượt mới.");
+    }
 
     state.isSubmitting = true;
     input.disabled = true;
     const button = document.getElementById("debate-btn");
-    setLoading(button, true, "Đang suy nghĩ...");
+    setLoading(button, true, isSingleSkillPracticeMode() ? "Đang chấm..." : "Đang suy nghĩ...");
     renderLoadingState();
 
     try {
+      const body = {
+        session_id: state.sessionId,
+        user_argument: argument,
+      };
+      if (isSingleSkillPracticeMode()) {
+        body.practice_mode = state.practice.mode || state.mode;
+        body.practice_prompt = state.practice.currentPrompt;
+        body.practice_round = state.practice.round;
+      }
       const data = await apiRequest("/api/v1/debate/turn", {
         method: "POST",
-        body: { session_id: state.sessionId, user_argument: argument },
+        body,
       });
       const turn = normalizeTurnResponse(data, argument);
+      if (isSingleSkillPracticeMode()) {
+        turn.practice_mode = state.practice.mode || state.mode;
+        turn.practice_prompt = state.practice.currentPrompt;
+        turn.practice_prompt_type = state.practice.currentPromptType;
+        turn.practice_instruction = state.practice.instruction;
+        turn.practice_round = state.practice.round;
+        state.practice.hasEvaluation = true;
+        state.practice.isAwaitingUserAnswer = false;
+      }
       state.roundCount += 1;
       state.sessionStatus = turn.status;
       state.latest = turn;
@@ -6063,11 +6596,12 @@
       renderArenaShell();
       renderCER(turn.cer);
       renderFeedback(turn.feedback);
-      setLoading(button, true, "AI đang trả lời...");
+      setLoading(button, true, isSingleSkillPracticeMode() ? "Lumi đang phản hồi..." : "AI đang trả lời...");
       await renderRebuttal(turn.ai_rebuttal, { animate: true });
       await generateRebuttalAudio(turn.ai_rebuttal);
       state.history.push(turn);
       renderTranscript();
+      renderPracticeNextButton();
 
       if (turn.status === "completed") {
         showError("form-error", "Phiên đã hoàn tất. Bạn có thể xem tổng kết hoặc tạo chủ đề mới.");
@@ -6082,6 +6616,7 @@
       setLoading(button, false);
       updateCharCount();
       renderVoiceControls();
+      renderPracticeNextButton();
       syncLumiState(getLumiStateForContext());
       renderArenaStage();
     }
@@ -6092,11 +6627,17 @@
     setArenaPulse("thinking");
     renderArenaStage();
     document.getElementById("ai-output").className = "";
-    document.getElementById("ai-output").innerHTML = `<div class="loading-dots">Huấn luyện viên AI đang phản biện <span></span><span></span><span></span></div>`;
+    const loadingText = isSingleSkillPracticeMode()
+      ? "Lumi đang đánh giá câu trả lời của bạn"
+      : "Huấn luyện viên AI đang phản biện";
+    document.getElementById("ai-output").innerHTML = `<div class="loading-dots">${loadingText} <span></span><span></span><span></span></div>`;
     document.getElementById("cer-output").className = "empty-message";
-    document.getElementById("cer-output").textContent = "Đang chấm Luận điểm, Bằng chứng, Lập luận...";
+    document.getElementById("cer-output").textContent = isSingleSkillPracticeMode()
+      ? "Đang chấm kỹ năng của lượt luyện tập này..."
+      : "Đang chấm Luận điểm, Bằng chứng, Lập luận...";
     document.getElementById("feedback-output").className = "empty-message";
     document.getElementById("feedback-output").textContent = "Đang tạo nhận xét huấn luyện...";
+    renderPracticeNextButton();
   }
 
   function renderErrorState(message) {
@@ -6106,6 +6647,7 @@
     document.getElementById("ai-output").innerHTML = `<span style="color:#fca5a5">Lỗi kết nối: ${escapeHtml(message)}</span>`;
     renderCER(null);
     renderFeedback(null);
+    renderPracticeNextButton();
   }
 
   async function finishSession() {
@@ -6131,6 +6673,7 @@
     state.history = [];
     state.latest = null;
     state.pendingVoiceTranscript = "";
+    resetPracticeState(state.mode);
     renderVoiceTranscript();
     goToView("session");
   }
@@ -6250,10 +6793,16 @@
     activeRebuttalAnimation += 1;
     const animationId = activeRebuttalAnimation;
     if (!text) {
+      if (isSingleSkillPracticeMode() && state.practice.currentPrompt && !state.practice.hasEvaluation) {
+        renderPracticePrompt();
+        return;
+      }
       output.className = "empty-message";
       output.textContent = "Chờ lập luận đầu tiên của bạn. Huấn luyện viên AI sẽ phản biện và giải thích điểm cần cải thiện.";
+      renderPracticeNextButton();
       return;
     }
+    renderPracticeNextButton();
     renderVoiceControls();
     output.className = options.animate ? "rebuttal-text is-typing" : "rebuttal-text";
     output.setAttribute("aria-live", "polite");
@@ -6294,7 +6843,7 @@
       } else if (state.mode === "find_evidence") {
         titleEl.innerHTML = `<span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> Điểm Bằng chứng`;
       } else if (state.mode === "quick_rebuttal") {
-        titleEl.innerHTML = `<span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> Điểm Lập luận`;
+        titleEl.innerHTML = `<span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> Điểm Phản biện`;
       } else {
         titleEl.innerHTML = `<span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> Điểm CER`;
       }
@@ -6318,7 +6867,7 @@
     const allRows = [
       ["claim", "Luận điểm", cer.claim, ""],
       ["evidence", "Bằng chứng", cer.evidence, "evidence"],
-      ["reasoning", "Lập luận", cer.reasoning, "reasoning"],
+      ["reasoning", state.mode === "quick_rebuttal" ? "Phản biện" : "Lập luận", cer.reasoning, "reasoning"],
     ];
     const rows = allRows.filter(([key]) => activeMetrics.includes(key));
     output.className = "";
@@ -6371,11 +6920,30 @@
   function renderTranscript() {
     const output = document.getElementById("transcript-output");
     const pending = String(state.pendingVoiceTranscript || "").trim();
-    if (!state.history.length && !pending) {
+    const activePracticePrompt = isSingleSkillPracticeMode() && state.practice.currentPrompt && !state.practice.hasEvaluation
+      ? {
+          practice_mode: state.practice.mode,
+          practice_prompt: state.practice.currentPrompt,
+          practice_instruction: state.practice.instruction,
+          practice_round: state.practice.round,
+        }
+      : null;
+    if (!state.history.length && !pending && !activePracticePrompt) {
       output.className = "empty-message";
       output.textContent = "Hội thoại tranh biện sẽ xuất hiện ở đây sau mỗi lượt.";
       return;
     }
+    const renderPracticePromptBubble = (turn) => {
+      if (!turn?.practice_prompt) return "";
+      const mode = normalizePracticeMode(turn.practice_mode || state.mode);
+      const ui = getPracticePromptUi(mode);
+      return `
+        <div class="transcript-item">
+          <div class="speaker ai">Lumi</div>
+          <div class="bubble">${escapeHtml(ui.heading)}: ${escapeHtml(turn.practice_prompt)}</div>
+        </div>
+      `;
+    };
     const pendingHtml = pending ? `
       <div class="transcript-item">
         <div class="speaker">Bạn</div>
@@ -6388,6 +6956,7 @@
     ` : "";
     output.className = "";
     output.innerHTML = state.history.slice(-3).map(turn => `
+      ${renderPracticePromptBubble(turn)}
       <div class="transcript-item">
         <div class="speaker">Bạn</div>
         <div class="bubble">${escapeHtml(turn.user_argument)}</div>
@@ -6396,7 +6965,7 @@
         <div class="speaker ai">AI</div>
         <div class="bubble">${escapeHtml(turn.ai_rebuttal)}</div>
       </div>
-    `).join("") + pendingHtml;
+    `).join("") + (activePracticePrompt ? renderPracticePromptBubble(activePracticePrompt) : "") + pendingHtml;
   }
 
   function renderSummary() {
@@ -6415,7 +6984,7 @@
       } else if (state.mode === "find_evidence") {
         labelEl.textContent = "Bằng chứng trung bình";
       } else if (state.mode === "quick_rebuttal") {
-        labelEl.textContent = "Lập luận trung bình";
+        labelEl.textContent = "Phản biện trung bình";
       } else {
         labelEl.textContent = "CER trung bình";
       }
@@ -6536,6 +7105,7 @@
 
   function labelFor(key) {
     const normalized = String(key || "").toLowerCase();
+    if (state.mode === "quick_rebuttal" && normalized === "reasoning") return "Phản biện";
     return displayLabels[normalized] || displayValue(key);
   }
 

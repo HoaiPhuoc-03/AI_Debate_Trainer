@@ -12,6 +12,7 @@ BACKEND_DIR = ROOT_DIR / "backend"
 sys.path.insert(0, str(BACKEND_DIR))
 
 from app.core.config import settings  # noqa: E402
+from app.api import debate as debate_api  # noqa: E402
 from app.main import app  # noqa: E402
 from app.services.session_store import init_db  # noqa: E402
 
@@ -126,6 +127,48 @@ class Week6BackendTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok"})
+
+    @mock.patch("app.api.debate.ai_service.generate_practice_prompt")
+    def test_practice_prompt_endpoint_returns_generated_round_prompt(self, mocked_prompt):
+        app.dependency_overrides[debate_api.get_debate_user] = lambda: {"id": "demo-user"}
+        mocked_prompt.return_value = {
+            "status": "success",
+            "mode": "find_evidence",
+            "prompt_type": "claim_prompt",
+            "prompt": "Học trực tuyến giúp học sinh tự chủ hơn trong việc quản lý thời gian.",
+            "instruction": "Hãy đưa ra bằng chứng cụ thể để hỗ trợ hoặc phản bác claim này.",
+            "warning": None,
+        }
+        try:
+            response = self.client.post(
+                "/api/v1/debate/practice-prompt",
+                json={
+                    "mode": "evidence_practice",
+                    "topic": "Có nên cho học sinh dùng AI trong học tập?",
+                    "difficulty": "Trung cấp",
+                    "round": 2,
+                    "previous_prompts": ["Claim cũ"],
+                    "previous_topics": ["Chủ đề cũ"],
+                    "avoid_repeating": True,
+                },
+            )
+        finally:
+            app.dependency_overrides.pop(debate_api.get_debate_user, None)
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["prompt_type"], "claim_prompt")
+        self.assertIn("Học trực tuyến", data["prompt"])
+        mocked_prompt.assert_called_once_with(
+            mode="evidence_practice",
+            topic="Có nên cho học sinh dùng AI trong học tập?",
+            difficulty="Trung cấp",
+            round=2,
+            language="vi",
+            previous_prompts=["Claim cũ"],
+            previous_topics=["Chủ đề cũ"],
+            avoid_repeating=True,
+        )
 
     def test_register_success(self):
         data = self.register_user()

@@ -465,8 +465,12 @@ def save_debate_turn(
     cer: dict,
     feedback: dict,
     content_flags: list | None = None,
+    practice_mode: str | None = None,
+    practice_prompt: str | None = None,
+    practice_round: int | None = None,
     status: str = "active",
     count_for_completion: bool = True,
+    complete_session: bool = True,
 ) -> dict:
     init_db()
     db = _db()
@@ -488,6 +492,9 @@ def save_debate_turn(
         "turn_number": turn_number,
         "user_argument": user_argument,
         "ai_rebuttal": ai_rebuttal,
+        "practice_mode": practice_mode,
+        "practice_prompt": practice_prompt,
+        "practice_round": practice_round,
         "status": status,
         "created_at": now,
     })
@@ -539,7 +546,7 @@ def save_debate_turn(
     )
     next_status = (
         "completed"
-        if count_for_completion and next_turn_count >= int(session["max_turns"])
+        if complete_session and count_for_completion and next_turn_count >= int(session["max_turns"])
         else "active"
     )
     avg_score = _compute_session_avg_score(db, session_id)
