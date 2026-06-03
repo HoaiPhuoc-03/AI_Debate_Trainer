@@ -971,7 +971,7 @@
 
   .config-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 30px;
     margin-top: 30px;
   }
@@ -4210,10 +4210,6 @@
             <h2 class="section-title" style="margin-top:0">Độ khó</h2>
             <div class="stack" id="difficulty-options"></div>
           </div>
-          <div class="panel config-panel">
-            <h2 class="section-title" style="margin-top:0">⏱ Thời gian phản hồi</h2>
-            <div class="stack" id="time-options"></div>
-          </div>
         </div>
 
         <div id="start-error" class="screen-error"></div>
@@ -5083,7 +5079,6 @@
   function renderSessionOptions() {
     document.getElementById("stance-options").innerHTML = stances.map(([name, icon]) => lineChoice("stance", name, icon)).join("");
     document.getElementById("difficulty-options").innerHTML = difficulties.map(([name, dots]) => lineChoice("difficulty", name, dots)).join("");
-    document.getElementById("time-options").innerHTML = times.map(([name, desc]) => lineChoice("responseTime", name, desc)).join("");
     renderModeOptions();
   }
 
@@ -5507,6 +5502,7 @@
   function goToView(view) {
     stopTurnTimer();
     closeUserMenu();
+    hideError("form-error");
     state.view = view;
     document.body.dataset.view = view;
     syncInputModeDataset();
@@ -6247,6 +6243,7 @@
 
   function initTurnTimer() {
     stopTurnTimer();
+    hideError("form-error");
     if (state.mode !== "free_debate" || state.sessionStatus === "completed" || state.isSubmitting) {
       const badge = document.getElementById("turn-timer");
       if (badge) badge.classList.add("hidden");
@@ -6328,11 +6325,7 @@
     const input = document.getElementById("user-input");
     let text = input ? input.value.trim() : "";
     
-    const errorDiv = document.getElementById("form-error");
-    if (errorDiv) {
-      errorDiv.textContent = "Hết thời gian chuẩn bị!";
-      errorDiv.style.display = "block";
-    }
+    showError("form-error", "Hết thời gian chuẩn bị!");
 
     if (!text) {
       text = "(Hết thời gian chuẩn bị - Không đưa ra lập luận)";
