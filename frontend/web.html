@@ -4560,6 +4560,7 @@
   let voiceDraftTimerId = null;
   let turnTimerId = null;
   let turnTimeRemaining = 0;
+  let isTurnTimerRunning = false;
   let voiceAudioContext = null;
   let voiceSourceNode = null;
   let voiceProcessorNode = null;
@@ -5535,7 +5536,7 @@
     if (view === "summary") renderSummary();
     if (view === "progress") renderProgressTopics();
     if (view === "arena") {
-      startTurnTimer();
+      initTurnTimer();
     }
   }
 
@@ -6244,7 +6245,7 @@
     return 90;
   }
 
-  function startTurnTimer() {
+  function initTurnTimer() {
     stopTurnTimer();
     if (state.mode !== "free_debate" || state.sessionStatus === "completed" || state.isSubmitting) {
       const badge = document.getElementById("turn-timer");
@@ -6260,6 +6261,28 @@
 
     turnTimeRemaining = parseResponseTime(state.responseTime);
     updateTurnTimerDisplay();
+    isTurnTimerRunning = false;
+  }
+
+  function startTurnTimer() {
+    if (isTurnTimerRunning) return;
+    if (state.mode !== "free_debate" || state.sessionStatus === "completed" || state.isSubmitting) {
+      const badge = document.getElementById("turn-timer");
+      if (badge) badge.classList.add("hidden");
+      return;
+    }
+
+    const badge = document.getElementById("turn-timer");
+    if (badge) {
+      badge.classList.remove("hidden");
+      badge.classList.remove("warning");
+    }
+
+    isTurnTimerRunning = true;
+
+    if (turnTimerId) {
+      window.clearInterval(turnTimerId);
+    }
 
     turnTimerId = window.setInterval(() => {
       if (state.isSubmitting || state.sessionStatus === "completed" || state.view !== "arena") {
@@ -6281,6 +6304,7 @@
       window.clearInterval(turnTimerId);
       turnTimerId = null;
     }
+    isTurnTimerRunning = false;
   }
 
   function updateTurnTimerDisplay() {
@@ -6776,7 +6800,7 @@
       if (state.sessionStatus === "completed") {
         stopTurnTimer();
       } else {
-        startTurnTimer();
+        initTurnTimer();
       }
     }
   }
@@ -7247,6 +7271,9 @@
       button.disabled = !state.pendingVoiceTranscript || state.sessionStatus === "completed";
     }
     renderVoiceControls();
+    if (count > 0) {
+      startTurnTimer();
+    }
   }
 
   function setLoading(button, loading, text) {
