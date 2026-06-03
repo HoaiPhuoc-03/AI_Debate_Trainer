@@ -5534,6 +5534,9 @@
     }
     if (view === "summary") renderSummary();
     if (view === "progress") renderProgressTopics();
+    if (view === "arena") {
+      startTurnTimer();
+    }
   }
 
   function renderLumiCompanion() {
@@ -5711,7 +5714,6 @@
     renderPracticeNextButton();
     renderCER(null);
     renderFeedback(null);
-    startTurnTimer();
   }
 
   function isTextInputMode() {
@@ -6300,7 +6302,7 @@
 
   function handleTurnTimerTimeout() {
     const input = document.getElementById("user-input");
-    const text = input ? input.value.trim() : "";
+    let text = input ? input.value.trim() : "";
     
     const errorDiv = document.getElementById("form-error");
     if (errorDiv) {
@@ -6308,17 +6310,15 @@
       errorDiv.style.display = "block";
     }
 
-    if (text.length >= 12) {
-      submitArgument();
-    } else {
+    if (!text) {
+      text = "(Hết thời gian chuẩn bị - Không đưa ra lập luận)";
       if (input) {
-        input.focus();
-        input.style.borderColor = "var(--red, #ef4444)";
-        setTimeout(() => {
-          input.style.borderColor = "";
-        }, 3000);
+        input.value = text;
+        updateCharCount();
       }
     }
+
+    submitArgument();
   }
 
   function setVoiceDraftState(nextState, message = "") {
