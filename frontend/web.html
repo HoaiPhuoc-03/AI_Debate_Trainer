@@ -971,7 +971,7 @@
 
   .config-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 30px;
     margin-top: 30px;
   }
@@ -4210,6 +4210,10 @@
             <h2 class="section-title" style="margin-top:0">Độ khó</h2>
             <div class="stack" id="difficulty-options"></div>
           </div>
+          <div class="panel config-panel">
+            <h2 class="section-title" style="margin-top:0">⏱ Thời gian phản hồi</h2>
+            <div class="stack" id="time-options"></div>
+          </div>
         </div>
 
         <div id="start-error" class="screen-error"></div>
@@ -5079,6 +5083,7 @@
   function renderSessionOptions() {
     document.getElementById("stance-options").innerHTML = stances.map(([name, icon]) => lineChoice("stance", name, icon)).join("");
     document.getElementById("difficulty-options").innerHTML = difficulties.map(([name, dots]) => lineChoice("difficulty", name, dots)).join("");
+    document.getElementById("time-options").innerHTML = times.map(([name, desc]) => lineChoice("responseTime", name, desc)).join("");
     renderModeOptions();
   }
 
