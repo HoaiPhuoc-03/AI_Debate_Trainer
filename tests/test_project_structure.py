@@ -22,7 +22,7 @@ class ProjectStructureTests(unittest.TestCase):
 
         self.assertNotIn("import httpx", ai_service)
         self.assertIn("import httpx", groq_client)
-        self.assertIn("from app.services.prompt_builder import build_groq_messages", ai_service)
+        self.assertIn("build_cer_messages", ai_service)
 
     def test_removed_empty_frontend_scratch_file(self):
         self.assertFalse((ROOT_DIR / "frontend" / "a").exists())

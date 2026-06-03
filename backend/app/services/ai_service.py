@@ -294,9 +294,14 @@ def generate_practice_prompt(
         attempts = 3 if avoid_repeating else 1
         rejected_prompts: list[str] = []
         for _ in range(attempts):
+            selected_topic = topic
+            if round > 1:
+                fallback_topic = _choose_fallback_topic(topic, difficulty, round, previous_topics)
+                selected_topic = fallback_topic.get("title") or topic
+
             messages = build_practice_prompt_messages(
                 mode=normalized,
-                topic=topic,
+                topic=selected_topic,
                 difficulty=difficulty or "Trung bình",
                 round=round,
                 language=language,

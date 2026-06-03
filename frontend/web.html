@@ -1289,6 +1289,32 @@
     color: #7a5bd3;
     border: 1px solid #ddd0ff;
   }
+  .timer-badge {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    background: rgba(96, 165, 250, 0.12);
+    border: 1px solid rgba(96, 165, 250, 0.25);
+    color: #93c5fd;
+    transition: all 0.3s ease;
+  }
+  .timer-badge.warning {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+    animation: timerPulse 1s infinite alternate;
+  }
+  @keyframes timerPulse {
+    from { opacity: 0.85; transform: scale(1); }
+    to { opacity: 1; transform: scale(1.03); }
+  }
+
   .arena-textarea {
     width: 100%;
     min-height: 350px;
@@ -1523,6 +1549,41 @@
     padding-left: 26px;
     font-size: 19px;
     line-height: 1.7;
+  }
+
+  .transcript-round-group {
+    background: rgba(148, 163, 184, 0.04);
+    border: 1px solid rgba(148, 163, 184, 0.08);
+    border-radius: 16px;
+    padding: 16px 20px 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2);
+  }
+  .transcript-round-group.current-round {
+    background: rgba(32, 231, 209, 0.02);
+    border-color: rgba(32, 231, 209, 0.12);
+  }
+  .transcript-round-header {
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--cyan);
+    letter-spacing: 0.05em;
+    margin-bottom: 14px;
+    border-bottom: 1px solid rgba(32, 231, 209, 0.15);
+    padding-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+  @media (max-width: 768px) {
+    .transcript-round-group {
+      padding: 12px 14px 14px;
+      margin-bottom: 18px;
+    }
+    .transcript-round-header {
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
   }
 
   .transcript-item {
@@ -4235,6 +4296,7 @@
                 <div class="panel-title-group">
                   <div class="panel-title">▣ Lập luận của bạn</div>
                   <span class="stance-badge stance-badge--unknown" id="user-stance-badge">Bạn · Chưa chọn lập trường</span>
+                  <span class="timer-badge hidden" id="turn-timer">⏱ 00:00</span>
                 </div>
                 <span class="soft-pill" id="char-count">0 / 1200</span>
               </div>
@@ -4496,6 +4558,8 @@
   let voiceSourceAudio = { url: "", type: "", size: 0 };
   let lumiAudioUrl = ""; // persisted URL for seekable Lumi player
   let voiceDraftTimerId = null;
+  let turnTimerId = null;
+  let turnTimeRemaining = 0;
   let voiceAudioContext = null;
   let voiceSourceNode = null;
   let voiceProcessorNode = null;
@@ -5170,13 +5234,8 @@
   }
 
   function scrollTopicGridToTop() {
-    const shell = document.getElementById("topic-grid-shell");
-    if (!shell) return;
-    try {
-      shell.scrollIntoView({ block: "start", behavior: "smooth" });
-    } catch (error) {
-      shell.scrollIntoView();
-    }
+    // Disabled to prevent viewport jumping and hiding filters/selection UI
+    return;
   }
 
   function topicMatchesFilters(topic) {
@@ -5374,7 +5433,7 @@
 
   function selectValue(key, value) {
     state[key] = value;
-    if (key === "difficulty" || key === "level") resetTopicVisibleCount();
+    if (key === "difficulty" || key === "level") resetTopicVisibleCount({ scroll: false });
     renderProfileOptions();
     renderSessionOptions();
     if (key === "difficulty" || key === "level") renderTopicExplorer();
@@ -5445,6 +5504,7 @@
   }
 
   function goToView(view) {
+    stopTurnTimer();
     closeUserMenu();
     state.view = view;
     document.body.dataset.view = view;
@@ -5651,6 +5711,7 @@
     renderPracticeNextButton();
     renderCER(null);
     renderFeedback(null);
+    startTurnTimer();
   }
 
   function isTextInputMode() {
@@ -6169,6 +6230,97 @@
     voiceDraftTimerId = null;
   }
 
+  function parseResponseTime(timeStr) {
+    const clean = String(timeStr || "").toLowerCase().trim();
+    if (clean.includes("min")) {
+      const mins = parseInt(clean) || 3;
+      return mins * 60;
+    }
+    if (clean.includes("sec")) {
+      return parseInt(clean) || 90;
+    }
+    return 90;
+  }
+
+  function startTurnTimer() {
+    stopTurnTimer();
+    if (state.mode !== "free_debate" || state.sessionStatus === "completed" || state.isSubmitting) {
+      const badge = document.getElementById("turn-timer");
+      if (badge) badge.classList.add("hidden");
+      return;
+    }
+
+    const badge = document.getElementById("turn-timer");
+    if (badge) {
+      badge.classList.remove("hidden");
+      badge.classList.remove("warning");
+    }
+
+    turnTimeRemaining = parseResponseTime(state.responseTime);
+    updateTurnTimerDisplay();
+
+    turnTimerId = window.setInterval(() => {
+      if (state.isSubmitting || state.sessionStatus === "completed" || state.view !== "arena") {
+        return;
+      }
+      
+      turnTimeRemaining--;
+      updateTurnTimerDisplay();
+
+      if (turnTimeRemaining <= 0) {
+        stopTurnTimer();
+        handleTurnTimerTimeout();
+      }
+    }, 1000);
+  }
+
+  function stopTurnTimer() {
+    if (turnTimerId) {
+      window.clearInterval(turnTimerId);
+      turnTimerId = null;
+    }
+  }
+
+  function updateTurnTimerDisplay() {
+    const badge = document.getElementById("turn-timer");
+    if (!badge) return;
+
+    const minutes = Math.floor(Math.max(0, turnTimeRemaining) / 60);
+    const seconds = Math.max(0, turnTimeRemaining) % 60;
+    const formatted = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    
+    badge.innerHTML = `⏱ ${formatted}`;
+    
+    if (turnTimeRemaining <= 15) {
+      badge.classList.add("warning");
+    } else {
+      badge.classList.remove("warning");
+    }
+  }
+
+  function handleTurnTimerTimeout() {
+    const input = document.getElementById("user-input");
+    const text = input ? input.value.trim() : "";
+    
+    const errorDiv = document.getElementById("form-error");
+    if (errorDiv) {
+      errorDiv.textContent = "Hết thời gian chuẩn bị!";
+      errorDiv.style.display = "block";
+    }
+
+    if (text.length >= 12) {
+      submitArgument();
+    } else {
+      if (input) {
+        input.focus();
+        input.style.borderColor = "var(--red, #ef4444)";
+        setTimeout(() => {
+          input.style.borderColor = "";
+        }, 3000);
+      }
+    }
+  }
+
   function setVoiceDraftState(nextState, message = "") {
     state.voiceDraftState = nextState;
     state.voiceDraftMessage = message;
@@ -6539,6 +6691,7 @@
   }
 
   async function submitArgument(options = {}) {
+    stopTurnTimer();
     const input = document.getElementById("user-input");
     const argument = input.value.trim();
     hideError("form-error");
@@ -6605,11 +6758,15 @@
 
       if (turn.status === "completed") {
         showError("form-error", "Phiên đã hoàn tất. Bạn có thể xem tổng kết hoặc tạo chủ đề mới.");
+        stopTurnTimer();
+      } else {
+        startTurnTimer();
       }
       await syncSessionStatus();
     } catch (error) {
       renderErrorState(error.message);
       showError("form-error", "Không thể gửi lập luận. Phiên hiện tại vẫn được giữ để bạn thử lại.");
+      startTurnTimer();
     } finally {
       state.isSubmitting = false;
       input.disabled = state.sessionStatus === "completed";
@@ -6920,52 +7077,79 @@
   function renderTranscript() {
     const output = document.getElementById("transcript-output");
     const pending = String(state.pendingVoiceTranscript || "").trim();
-    const activePracticePrompt = isSingleSkillPracticeMode() && state.practice.currentPrompt && !state.practice.hasEvaluation
-      ? {
-          practice_mode: state.practice.mode,
-          practice_prompt: state.practice.currentPrompt,
-          practice_instruction: state.practice.instruction,
-          practice_round: state.practice.round,
-        }
-      : null;
-    if (!state.history.length && !pending && !activePracticePrompt) {
+    const hasActivePractice = isSingleSkillPracticeMode() && state.practice.currentPrompt && !state.practice.hasEvaluation;
+    
+    if (!state.history.length && !pending && !hasActivePractice) {
       output.className = "empty-message";
       output.textContent = "Hội thoại tranh biện sẽ xuất hiện ở đây sau mỗi lượt.";
       return;
     }
-    const renderPracticePromptBubble = (turn) => {
-      if (!turn?.practice_prompt) return "";
-      const mode = normalizePracticeMode(turn.practice_mode || state.mode);
-      const ui = getPracticePromptUi(mode);
-      return `
-        <div class="transcript-item">
-          <div class="speaker ai">Lumi</div>
-          <div class="bubble">${escapeHtml(ui.heading)}: ${escapeHtml(turn.practice_prompt)}</div>
+
+    output.className = "";
+    let html = "";
+
+    // 1. Render completed history turns (last 3)
+    state.history.slice(-3).forEach((turn, idx) => {
+      const displayTopic = turn.practice_prompt || getTopic();
+      const roundLabel = isSingleSkillPracticeMode()
+        ? (turn.practice_round || turn.turn_number || (idx + 1))
+        : (turn.turn_number || (idx + 1));
+      
+      html += `
+        <div class="transcript-round-group">
+          <div class="transcript-round-header">
+            <span>Lượt ${roundLabel} · ${escapeHtml(displayTopic)}</span>
+          </div>
+          <div class="transcript-item">
+            <div class="speaker">Bạn</div>
+            <div class="bubble">${escapeHtml(turn.user_argument)}</div>
+          </div>
+          <div class="transcript-item">
+            <div class="speaker ai">AI</div>
+            <div class="bubble">${escapeHtml(turn.ai_rebuttal)}</div>
+          </div>
         </div>
       `;
-    };
-    const pendingHtml = pending ? `
-      <div class="transcript-item">
-        <div class="speaker">Bạn</div>
-        <div class="bubble">${escapeHtml(pending)}</div>
-      </div>
-      <div class="transcript-item">
-        <div class="speaker ai">AI</div>
-        <div class="bubble">Chờ bạn kiểm tra văn bản và bấm Gửi...</div>
-      </div>
-    ` : "";
-    output.className = "";
-    output.innerHTML = state.history.slice(-3).map(turn => `
-      ${renderPracticePromptBubble(turn)}
-      <div class="transcript-item">
-        <div class="speaker">Bạn</div>
-        <div class="bubble">${escapeHtml(turn.user_argument)}</div>
-      </div>
-      <div class="transcript-item">
-        <div class="speaker ai">AI</div>
-        <div class="bubble">${escapeHtml(turn.ai_rebuttal)}</div>
-      </div>
-    `).join("") + (activePracticePrompt ? renderPracticePromptBubble(activePracticePrompt) : "") + pendingHtml;
+    });
+
+    // 2. Render active/pending current turn
+    if (hasActivePractice || pending) {
+      const displayTopic = hasActivePractice ? state.practice.currentPrompt : getTopic();
+      const roundLabel = isSingleSkillPracticeMode() ? state.practice.round : (state.roundCount + 1);
+      
+      html += `
+        <div class="transcript-round-group current-round">
+          <div class="transcript-round-header">
+            <span>Lượt ${roundLabel} · ${escapeHtml(displayTopic)}</span>
+          </div>
+      `;
+
+      if (hasActivePractice) {
+        html += `
+          <div class="transcript-item">
+            <div class="speaker ai">Lumi</div>
+            <div class="bubble">Nhiệm vụ: ${escapeHtml(state.practice.instruction)}</div>
+          </div>
+        `;
+      }
+      
+      if (pending) {
+        html += `
+          <div class="transcript-item">
+            <div class="speaker">Bạn</div>
+            <div class="bubble">${escapeHtml(pending)}</div>
+          </div>
+          <div class="transcript-item">
+            <div class="speaker ai">AI</div>
+            <div class="bubble">Chờ bạn kiểm tra văn bản và bấm Gửi...</div>
+          </div>
+        `;
+      }
+
+      html += `</div>`; // Close transcript-round-group
+    }
+
+    output.innerHTML = html;
   }
 
   function renderSummary() {

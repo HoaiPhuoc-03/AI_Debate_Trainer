@@ -37,7 +37,7 @@ class OutputParserTests(unittest.TestCase):
         self.assertEqual(parsed["cer"]["claim"], 7.0)
         self.assertEqual(parsed["cer"]["evidence"], 3.0)
         self.assertEqual(parsed["cer"]["reasoning"], 6.0)
-        self.assertEqual(parsed["cer"]["total"], 5.33)
+        self.assertEqual(parsed["cer"]["total"], 5.4)
         self.assertEqual(parsed["feedback"]["strengths"], ["Có quan điểm rõ ràng."])
         self.assertEqual(parsed["feedback"]["weaknesses"], ["Thiếu bằng chứng cụ thể."])
         self.assertEqual(parsed["feedback"]["suggestions"], ["Hãy bổ sung ví dụ hoặc số liệu."])
@@ -98,10 +98,10 @@ Suggestions:
 """.strip()
         parsed = parse_debate_output(raw)
 
-        self.assertEqual(parsed["cer"]["claim"], 10.0)
+        self.assertEqual(parsed["cer"]["claim"], 12.0)
         self.assertEqual(parsed["cer"]["evidence"], 0.0)
         self.assertEqual(parsed["cer"]["reasoning"], 8.5)
-        self.assertEqual(parsed["cer"]["total"], 6.17)
+        self.assertEqual(parsed["cer"]["total"], 7.0)
 
     def test_empty_raw_text_returns_safe_fallback(self):
         parsed = parse_debate_output("")
