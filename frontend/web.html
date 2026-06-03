@@ -6758,15 +6758,11 @@
 
       if (turn.status === "completed") {
         showError("form-error", "Phiên đã hoàn tất. Bạn có thể xem tổng kết hoặc tạo chủ đề mới.");
-        stopTurnTimer();
-      } else {
-        startTurnTimer();
       }
       await syncSessionStatus();
     } catch (error) {
       renderErrorState(error.message);
       showError("form-error", "Không thể gửi lập luận. Phiên hiện tại vẫn được giữ để bạn thử lại.");
-      startTurnTimer();
     } finally {
       state.isSubmitting = false;
       input.disabled = state.sessionStatus === "completed";
@@ -6776,6 +6772,12 @@
       renderPracticeNextButton();
       syncLumiState(getLumiStateForContext());
       renderArenaStage();
+
+      if (state.sessionStatus === "completed") {
+        stopTurnTimer();
+      } else {
+        startTurnTimer();
+      }
     }
   }
 
