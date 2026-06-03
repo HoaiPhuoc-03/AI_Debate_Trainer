@@ -181,5 +181,11 @@ class ProgressOverviewResponse(BaseModel):
     overall_score: float
     streak_days: int
     recent_topics: list[dict]
+    topic_category_breakdown: list[dict] = Field(default_factory=list)
+    weekly_avg_score: float = 0.0
+    monthly_avg_score: float = 0.0
+    recent_trend_delta: float = 0.0
+    best_topic: dict | None = None
+    worst_topic: dict | None = None
     skill_strength: str
     skill_weakness: str
