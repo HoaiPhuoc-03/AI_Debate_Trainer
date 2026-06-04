@@ -212,8 +212,12 @@ def init_db() -> None:
     Firestore is schemaless, so there is no DDL or migration to run.
     This function is intentionally cheap to call multiple times.
     """
-    _db()
-    _ensure_demo_user()
+    try:
+        _db()
+        _ensure_demo_user()
+    except Exception as e:
+        import sys
+        print(f"ERROR during init_db (e.g. Firestore Quota Exceeded): {e}", file=sys.stderr)
 
 
 # ---------------------------------------------------------------------------
@@ -697,6 +701,10 @@ def get_progress_overview(user_id: str | None = None) -> dict:
         reverse=True,
     )
 
+    now = _now()
+    week_cutoff = now - timedelta(days=7)
+    month_cutoff = now - timedelta(days=30)
+
     # Unique completed calendar days for streak calculation
     completed_days = list({
         s["completed_at"]
@@ -707,6 +715,7 @@ def get_progress_overview(user_id: str | None = None) -> dict:
     # ── aggregate CER scores across all valid turns ────────────────────────
     session_ids = {s["session_id"] for s in sessions}
     session_modes = {s["session_id"]: s.get("mode", "free_debate") for s in sessions}
+    session_meta = {s["session_id"]: s for s in sessions}
     session_scores = {}
     claim_vals:     list[float] = []
     evidence_vals:  list[float] = []
@@ -757,10 +766,50 @@ def get_progress_overview(user_id: str | None = None) -> dict:
     recent_topics = [
         {
             "topic": s["topic"],
-            "score": session_scores.get(s["session_id"], 0.0)
+            "score": session_scores.get(s["session_id"], 0.0),
+            "category": s.get("topic_category") or "Chưa phân loại",
+            "difficulty": s.get("difficulty") or "Trung bình",
+            "mode": s.get("mode") or "free_debate",
+            "completed_at": s.get("completed_at") or s.get("created_at"),
         }
         for s in recent_sessions[:5]
     ]
+
+    category_totals: dict[str, dict[str, float]] = {}
+    weekly_scores: list[float] = []
+    monthly_scores: list[float] = []
+    for sid, score in session_scores.items():
+        meta = session_meta.get(sid, {})
+        category = meta.get("topic_category") or "Chưa phân loại"
+        entry = category_totals.setdefault(category, {"count": 0, "sum": 0.0})
+        entry["count"] += 1
+        entry["sum"] += float(score)
+
+        stamp = _parse_datetime(meta.get("completed_at") or meta.get("updated_at") or meta.get("created_at"))
+        if stamp and stamp >= week_cutoff:
+            weekly_scores.append(float(score))
+        if stamp and stamp >= month_cutoff:
+            monthly_scores.append(float(score))
+
+    topic_category_breakdown = [
+        {
+            "category": category,
+            "count": int(values["count"]),
+            "average_score": round(values["sum"] / values["count"], 2) if values["count"] else 0.0,
+        }
+        for category, values in sorted(category_totals.items(), key=lambda item: (-int(item[1]["count"]), item[0]))
+    ]
+
+    best_topic = None
+    worst_topic = None
+    if recent_topics:
+        sorted_recent = sorted(recent_topics, key=lambda item: float(item.get("score", 0.0)), reverse=True)
+        best_topic = sorted_recent[0]
+        worst_topic = sorted(recent_topics, key=lambda item: float(item.get("score", 0.0)))[0]
+
+    recent_trend_delta = 0.0
+    if len(recent_topics) >= 2:
+        recent_trend_delta = round(float(recent_topics[0].get("score", 0.0)) - float(recent_topics[1].get("score", 0.0)), 2)
 
     scores = {
         "claim_score":     _average(claim_vals),
@@ -777,6 +826,12 @@ def get_progress_overview(user_id: str | None = None) -> dict:
         "overall_score":       _average(total_vals),
         "streak_days":         _streak_days(completed_days),
         "recent_topics":       recent_topics,
+        "topic_category_breakdown": topic_category_breakdown,
+        "weekly_avg_score":     _average(weekly_scores),
+        "monthly_avg_score":    _average(monthly_scores),
+        "recent_trend_delta":   recent_trend_delta,
+        "best_topic":           best_topic,
+        "worst_topic":          worst_topic,
         "skill_strength":      _skill_label(scores, pick_highest=True),
         "skill_weakness":      _skill_label(scores, pick_highest=False),
     }
