@@ -1407,6 +1407,34 @@
       border-color: #ddd0ff;
     }
 
+    .timer-badge {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 14px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: #2f6ba8;
+      background: rgba(96, 165, 250, 0.12);
+      border: 1px solid rgba(96, 165, 250, 0.25);
+      transition: all 0.3s ease;
+    }
+
+    .timer-badge.warning {
+      color: #c2410c;
+      background: rgba(251, 146, 60, 0.15);
+      border-color: rgba(251, 146, 60, 0.35);
+      animation: timerPulse 1s infinite alternate;
+    }
+
+    @keyframes timerPulse {
+      from { opacity: 0.85; transform: scale(1); }
+      to { opacity: 1; transform: scale(1.03); }
+    }
+
     .practice-mode-bar {
       width: min(100%, 920px);
       margin: -8px auto 24px;
@@ -6771,11 +6799,11 @@
           </div>
 
           <div class="practice-mode-bar" id="practice-mode-bar" aria-live="polite">
-            <div class="practice-mode-icon" id="practice-mode-icon" aria-hidden="true">âš”ï¸</div>
+            <div class="practice-mode-icon" id="practice-mode-icon" aria-hidden="true">⚔️</div>
             <div class="practice-mode-content">
-              <span class="practice-mode-label">Cháº¿ Ä‘á»™ luyá»‡n táº­p</span>
-              <span class="practice-mode-title" id="practice-mode-title">Tranh biá»‡n tá»± do</span>
-              <span class="practice-mode-description" id="practice-mode-description">User vs AI, luÃ¢n phiÃªn pháº£n biá»‡n</span>
+              <span class="practice-mode-label">Chế độ luyện tập</span>
+              <span class="practice-mode-title" id="practice-mode-title">Tranh biện tự do</span>
+              <span class="practice-mode-description" id="practice-mode-description">User vs AI, luân phiên phản biện</span>
             </div>
           </div>
 
@@ -6788,6 +6816,7 @@
                     <span class="stance-badge stance-badge--unknown" id="user-stance-badge">Bạn · Chưa chọn lập
                       trường</span>
                   </div>
+                  <span class="timer-badge hidden" id="turn-timer">⏱ 00:00</span>
                   <span class="soft-pill" id="char-count">0 / 1200</span>
                 </div>
                 <div id="form-error" class="screen-error"></div>
@@ -7191,6 +7220,9 @@
     let voiceSourceAudio = { url: "", type: "", size: 0 };
     let lumiAudioUrl = ""; // persisted URL for seekable Lumi player
     let voiceDraftTimerId = null;
+    let turnTimerId = null;
+    let turnTimeRemaining = 0;
+    let isTurnTimerRunning = false;
     let voiceAudioContext = null;
     let voiceSourceNode = null;
     let voiceProcessorNode = null;
@@ -7254,11 +7286,11 @@
       ["full_argument", "Xây dựng lập luận", "Xây 1 lập luận C+E+R đầy đủ → AI chấm", "🏗"],
     ];
     const PRACTICE_MODE_DETAILS = {
-      free_debate: { icon: "âš”ï¸", title: "Tranh biá»‡n tá»± do", description: "User vs AI, luÃ¢n phiÃªn pháº£n biá»‡n" },
-      claim_writing: { icon: "âœï¸", title: "Luyá»‡n viáº¿t Claim", description: "AI cho chá»§ Ä‘á» â†’ báº¡n viáº¿t claim â†’ AI cháº¥m" },
-      find_evidence: { icon: "ðŸ”Ž", title: "Luyá»‡n tÃ¬m Evidence", description: "AI cho claim â†’ báº¡n tÃ¬m báº±ng chá»©ng â†’ AI Ä‘Ã¡nh giÃ¡" },
-      quick_rebuttal: { icon: "âš¡", title: "Pháº£n biá»‡n nhanh", description: "AI Ä‘Æ°a láº­p luáº­n yáº¿u â†’ báº¡n tÃ¬m lá»— há»•ng" },
-      full_argument: { icon: "ðŸ§±", title: "XÃ¢y dá»±ng láº­p luáº­n", description: "XÃ¢y 1 láº­p luáº­n C-E-R Ä‘áº§y Ä‘á»§ â†’ AI cháº¥m" },
+      free_debate: { icon: "⚔️", title: "Tranh biện tự do", description: "User vs AI, luân phiên phản biện" },
+      claim_writing: { icon: "✍️", title: "Luyện viết Claim", description: "AI cho chủ đề → bạn viết claim → AI chấm" },
+      find_evidence: { icon: "🔎", title: "Luyện tìm Evidence", description: "AI cho claim → bạn tìm bằng chứng → AI đánh giá" },
+      quick_rebuttal: { icon: "⚡", title: "Phản biện nhanh", description: "AI đưa lập luận yếu → bạn tìm lỗ hổng" },
+      full_argument: { icon: "🧱", title: "Xây dựng lập luận", description: "Xây 1 lập luận C-E-R đầy đủ → AI chấm" },
     };
     const PRACTICE_MODE_ALIASES = {
       free: "free_debate",
@@ -7288,25 +7320,25 @@
     const SINGLE_SKILL_PRACTICE_MODES = ["claim_writing", "find_evidence", "quick_rebuttal"];
     const PRACTICE_PROMPT_UI = {
       claim_writing: {
-        icon: "âœï¸",
+        icon: "✍️",
         heading: "ĐỀ BÀI CỦA LUMI",
         label: "Tình huống",
         task: "Viết một claim rõ, có thể tranh biện và đúng trọng tâm.",
         placeholder: "Hãy viết claim ngắn gọn, thể hiện rõ lập trường...",
       },
       find_evidence: {
-        icon: "ðŸ”Ž",
+        icon: "🔎",
         heading: "CLAIM CẦN TÌM BẰNG CHỨNG",
         label: "Claim",
-        task: "TÃ¬m báº±ng chá»©ng cá»¥ thá»ƒ, Ä‘Ã¡ng tin cáº­y Ä‘á»ƒ há»— trá»£ claim nÃ y.",
-        placeholder: "HÃ£y Ä‘Æ°a ra báº±ng chá»©ng cá»¥ thá»ƒ cho claim trÃªn...",
+        task: "Tìm bằng chứng cụ thể, đáng tin cậy để hỗ trợ claim này.",
+        placeholder: "Hãy đưa ra bằng chứng cụ thể cho claim trên...",
       },
       quick_rebuttal: {
-        icon: "âš¡",
+        icon: "⚡",
         heading: "LUẬN ĐIỂM YẾU CẦN PHẢN BIỆN",
-        label: "Láº­p luáº­n yáº¿u",
-        task: "Chá»‰ ra lá»— há»•ng vÃ  pháº£n biá»‡n nhanh, trá»±c diá»‡n.",
-        placeholder: "HÃ£y pháº£n biá»‡n láº­p luáº­n yáº¿u trÃªn...",
+        label: "Lập luận yếu",
+        task: "Chỉ ra lỗ hổng và phản biện nhanh, trực diện.",
+        placeholder: "Hãy phản biện lập luận yếu trên...",
       },
     };
     const displayLabels = {
@@ -7844,13 +7876,7 @@
     }
 
     function scrollTopicGridToTop() {
-      const shell = document.getElementById("topic-grid-shell");
-      if (!shell) return;
-      try {
-        shell.scrollIntoView({ block: "start", behavior: "smooth" });
-      } catch (error) {
-        shell.scrollIntoView();
-      }
+      return;
     }
 
     function topicMatchesFilters(topic) {
@@ -8048,7 +8074,7 @@
 
     function selectValue(key, value) {
       state[key] = value;
-      if (key === "difficulty" || key === "level") resetTopicVisibleCount();
+      if (key === "difficulty" || key === "level") resetTopicVisibleCount({ scroll: false });
       renderProfileOptions();
       renderSessionOptions();
       if (key === "difficulty" || key === "level") renderTopicExplorer();
@@ -8141,7 +8167,9 @@
     }
 
     function goToView(view) {
+      stopTurnTimer();
       closeUserMenu();
+      hideError("form-error");
       state.view = view;
       document.body.dataset.view = view;
       syncInputModeDataset();
@@ -8170,6 +8198,7 @@
       }
       if (view === "summary") renderSummary();
       if (view === "progress") renderProgressTopics();
+      if (view === "arena") initTurnTimer();
     }
 
     function renderLumiCompanion() {
@@ -8782,6 +8811,90 @@
       voiceDraftTimerId = null;
     }
 
+    function parseResponseTime(timeStr) {
+      const clean = String(timeStr || "").toLowerCase().trim();
+      if (clean.includes("min")) {
+        const mins = parseInt(clean, 10) || 3;
+        return mins * 60;
+      }
+      if (clean.includes("sec")) {
+        return parseInt(clean, 10) || 90;
+      }
+      return 90;
+    }
+
+    function initTurnTimer() {
+      stopTurnTimer();
+      const badge = document.getElementById("turn-timer");
+      if (state.mode !== "free_debate" || state.sessionStatus === "completed" || state.isSubmitting) {
+        if (badge) badge.classList.add("hidden");
+        return;
+      }
+      if (badge) {
+        badge.classList.remove("hidden", "warning");
+      }
+      turnTimeRemaining = parseResponseTime(state.responseTime);
+      updateTurnTimerDisplay();
+      isTurnTimerRunning = false;
+    }
+
+    function startTurnTimer() {
+      if (isTurnTimerRunning) return;
+      const badge = document.getElementById("turn-timer");
+      if (state.mode !== "free_debate" || state.sessionStatus === "completed" || state.isSubmitting || state.view !== "arena") {
+        if (badge) badge.classList.add("hidden");
+        return;
+      }
+      if (turnTimeRemaining <= 0) {
+        turnTimeRemaining = parseResponseTime(state.responseTime);
+        updateTurnTimerDisplay();
+      }
+      if (badge) badge.classList.remove("hidden", "warning");
+      isTurnTimerRunning = true;
+      if (turnTimerId) window.clearInterval(turnTimerId);
+      turnTimerId = window.setInterval(() => {
+        if (state.isSubmitting || state.sessionStatus === "completed" || state.view !== "arena") return;
+        turnTimeRemaining -= 1;
+        updateTurnTimerDisplay();
+        if (turnTimeRemaining <= 0) {
+          stopTurnTimer();
+          handleTurnTimerTimeout();
+        }
+      }, 1000);
+    }
+
+    function stopTurnTimer() {
+      if (turnTimerId) {
+        window.clearInterval(turnTimerId);
+        turnTimerId = null;
+      }
+      isTurnTimerRunning = false;
+    }
+
+    function updateTurnTimerDisplay() {
+      const badge = document.getElementById("turn-timer");
+      if (!badge) return;
+      const total = Math.max(0, turnTimeRemaining);
+      const minutes = Math.floor(total / 60);
+      const seconds = total % 60;
+      badge.textContent = `⏱ ${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+      badge.classList.toggle("warning", total <= 15);
+    }
+
+    function handleTurnTimerTimeout() {
+      const input = document.getElementById("user-input");
+      let text = input ? input.value.trim() : "";
+      showError("form-error", "Hết thời gian chuẩn bị!");
+      if (!text) {
+        text = "(Hết thời gian chuẩn bị - Không đưa ra lập luận)";
+        if (input) {
+          input.value = text;
+          updateCharCount();
+        }
+      }
+      submitArgument();
+    }
+
     function setVoiceDraftState(nextState, message = "") {
       state.voiceDraftState = nextState;
       state.voiceDraftMessage = message;
@@ -8797,6 +8910,7 @@
         return;
       }
       renderVoiceControls();
+      if (current) startTurnTimer();
     }
 
     function clearVoiceSourceAudio() {
@@ -9152,6 +9266,7 @@
     }
 
     async function submitArgument(options = {}) {
+      stopTurnTimer();
       const input = document.getElementById("user-input");
       const argument = input.value.trim();
       hideError("form-error");
@@ -9228,6 +9343,11 @@
         syncLumiState(getLumiStateForContext());
         renderArenaStage();
         renderPracticeNextButton();
+        if (state.sessionStatus === "completed") {
+          stopTurnTimer();
+        } else {
+          initTurnTimer();
+        }
       }
     }
 
@@ -9515,11 +9635,30 @@
     function renderTranscript() {
       const output = document.getElementById("transcript-output");
       const pending = String(state.pendingVoiceTranscript || "").trim();
-      if (!state.history.length && !pending) {
+      const activePracticePrompt = isSingleSkillPracticeMode() && state.practice.currentPrompt && !state.practice.hasEvaluation
+        ? {
+          practice_mode: state.practice.mode,
+          practice_prompt: state.practice.currentPrompt,
+          practice_instruction: state.practice.instruction,
+          practice_round: state.practice.round,
+        }
+        : null;
+      if (!state.history.length && !pending && !activePracticePrompt) {
         output.className = "empty-message";
         output.textContent = "Hội thoại tranh biện sẽ xuất hiện ở đây sau mỗi lượt.";
         return;
       }
+      const renderPracticePromptBubble = (turn) => {
+        if (!turn?.practice_prompt) return "";
+        const mode = normalizePracticeMode(turn.practice_mode || state.mode);
+        const ui = getPracticePromptUi(mode);
+        return `
+      <div class="transcript-item">
+        <div class="speaker ai">Lumi</div>
+        <div class="bubble">${escapeHtml(ui.heading)}: ${escapeHtml(turn.practice_prompt)}</div>
+      </div>
+    `;
+      };
       const pendingHtml = pending ? `
       <div class="transcript-item">
         <div class="speaker">Bạn</div>
@@ -9532,6 +9671,7 @@
     ` : "";
       output.className = "";
       output.innerHTML = state.history.slice(-3).map(turn => `
+      ${renderPracticePromptBubble(turn)}
       <div class="transcript-item">
         <div class="speaker">Bạn</div>
         <div class="bubble">${escapeHtml(turn.user_argument)}</div>
@@ -9540,7 +9680,7 @@
         <div class="speaker ai">AI</div>
         <div class="bubble">${escapeHtml(turn.ai_rebuttal)}</div>
       </div>
-    `).join("") + pendingHtml;
+    `).join("") + (activePracticePrompt ? renderPracticePromptBubble(activePracticePrompt) : "") + pendingHtml;
     }
 
     function renderSummary() {
@@ -10099,8 +10239,12 @@
       }
       renderVoiceControls();
       if (count > 0 && state.view === "arena" && !state.isSubmitting) {
+        startTurnTimer();
         syncLumiState("typing");
       } else if (!state.isSubmitting) {
+        if (state.view === "arena" && state.mode === "free_debate") {
+          initTurnTimer();
+        }
         syncLumiState(getLumiStateForContext());
       }
     }
