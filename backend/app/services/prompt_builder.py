@@ -322,6 +322,7 @@ PRACTICE_MODE_ALIASES = {
     "phan_bien_nhanh": "quick_rebuttal",
     "quick_rebuttal": "quick_rebuttal",
     "argument_builder": "full_argument",
+    "cer": "full_argument",
     "full_argument": "full_argument",
 }
 
@@ -329,6 +330,7 @@ PRACTICE_PROMPT_TYPES = {
     "claim_writing": "scenario_prompt",
     "find_evidence": "claim_prompt",
     "quick_rebuttal": "weak_argument",
+    "full_argument": "argument_builder",
 }
 
 
@@ -351,6 +353,8 @@ def practice_instruction_for_mode(mode: str | None) -> str:
         return "Hãy đưa ra bằng chứng cụ thể để hỗ trợ hoặc phản bác claim này."
     if normalized == "quick_rebuttal":
         return "Hãy chỉ ra lỗ hổng, giả định sai hoặc phản ví dụ."
+    if normalized == "full_argument":
+        return "Hãy xây dựng một lập luận đầy đủ gồm Claim, Evidence và Reasoning cho chủ đề này."
     return "Hãy xây dựng câu trả lời tranh biện phù hợp."
 
 
@@ -361,6 +365,7 @@ def _practice_context(mode: str, practice_prompt: str | None, practice_round: in
         "claim_writing": "Chủ đề/tình huống do Lumi đưa ra",
         "find_evidence": "Claim mẫu do Lumi đưa ra",
         "quick_rebuttal": "Luận điểm yếu do Lumi đưa ra",
+        "full_argument": "Chủ đề xây dựng lập luận do Lumi đưa ra",
     }
     return (
         f"=== ĐỀ BÀI LUYỆN TẬP ===\n"

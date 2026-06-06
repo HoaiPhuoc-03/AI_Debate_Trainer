@@ -93,6 +93,9 @@
       input.value = keepSampleInput ? SAMPLE_ARGUMENT : "";
     }
     if (typeof updateCharCount === "function") updateCharCount();
+    if (typeof startUserTurnTimer === "function" && state?.view === "arena") {
+      startUserTurnTimer({ reset: true });
+    }
     if (typeof renderRebuttal === "function") renderRebuttal(null);
     if (typeof renderCER === "function") renderCER(null);
     if (typeof renderFeedback === "function") renderFeedback(null);

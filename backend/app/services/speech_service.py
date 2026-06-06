@@ -2,6 +2,7 @@ import json
 import re
 import asyncio
 import logging
+import socket
 from concurrent.futures import ThreadPoolExecutor
 
 from app.core.config import settings
@@ -36,6 +37,12 @@ EDGE_TTS_FRIENDLY_ERROR = (
     "Edge TTS hiện không phản hồi. "
     "Vui lòng kiểm tra kết nối internet hoặc thử lại sau."
 )
+EDGE_TTS_DEPENDENCY_ERROR = (
+    "Backend thiếu thư viện edge-tts. "
+    "Hãy khởi động ứng dụng bằng scripts\\run_windows_app.ps1."
+)
+EDGE_TTS_MAX_ATTEMPTS = 5
+EDGE_TTS_RETRY_BASE_SECONDS = 1.5
 INVALID_STT_PROVIDER_ERROR = (
     "VOICE_STT_PROVIDER không hợp lệ. Chỉ hỗ trợ 'groq' hoặc 'elevenlabs'."
 )
@@ -337,40 +344,62 @@ async def _synthesize_with_edge(clean: str) -> dict:
     Tổng hợp giọng nói bằng edge-tts (Microsoft Edge TTS).
     Trả về bytes audio MP3 trực tiếp trong memory - không ghi file.
     """
-    import edge_tts
-
     logger.info("[TTS] Using provider: edge")
+    connector = None
     try:
-        communicate = edge_tts.Communicate(
-            text=clean,
-            voice=settings.EDGE_TTS_VOICE,
-            rate=settings.EDGE_TTS_RATE,
-        )
-        audio_chunks: list[bytes] = []
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                audio_chunks.append(chunk["data"])
+        import aiohttp
+        import edge_tts
 
-        audio_bytes = b"".join(audio_chunks)
-        if not audio_bytes:
-            return {
-                "ok": False,
-                "audio": b"",
-                "content_type": "audio/mpeg",
-                "provider": "edge",
-                "model": settings.EDGE_TTS_VOICE,
-                "error": EDGE_TTS_FRIENDLY_ERROR,
-                "error_code": "EMPTY_AUDIO_RESPONSE",
-            }
+        for attempt in range(1, EDGE_TTS_MAX_ATTEMPTS + 1):
+            # The Edge websocket can connect over IPv6 but return an empty
+            # stream on some Windows networks. Use a fresh IPv4 connection.
+            connector = aiohttp.TCPConnector(family=socket.AF_INET)
+            try:
+                communicate = edge_tts.Communicate(
+                    text=clean,
+                    voice=settings.EDGE_TTS_VOICE,
+                    rate=settings.EDGE_TTS_RATE,
+                    connector=connector,
+                )
+                audio_chunks: list[bytes] = []
+                async for chunk in communicate.stream():
+                    if chunk["type"] == "audio":
+                        audio_chunks.append(chunk["data"])
+
+                audio_bytes = b"".join(audio_chunks)
+                if audio_bytes:
+                    return {
+                        "ok": True,
+                        "audio": audio_bytes,
+                        "content_type": "audio/mpeg",
+                        "provider": "edge",
+                        "model": settings.EDGE_TTS_VOICE,
+                        "error": "",
+                        "error_code": "",
+                    }
+            except edge_tts.exceptions.NoAudioReceived:
+                logger.warning(
+                    "[TTS] Edge returned no audio on attempt %s/%s",
+                    attempt,
+                    EDGE_TTS_MAX_ATTEMPTS,
+                )
+            finally:
+                if not connector.closed:
+                    await connector.close()
+                connector = None
+
+            if attempt < EDGE_TTS_MAX_ATTEMPTS:
+                retry_delay = EDGE_TTS_RETRY_BASE_SECONDS * (2 ** (attempt - 1))
+                await asyncio.sleep(retry_delay)
 
         return {
-            "ok": True,
-            "audio": audio_bytes,
+            "ok": False,
+            "audio": b"",
             "content_type": "audio/mpeg",
             "provider": "edge",
             "model": settings.EDGE_TTS_VOICE,
-            "error": "",
-            "error_code": "",
+            "error": EDGE_TTS_FRIENDLY_ERROR,
+            "error_code": "EMPTY_AUDIO_RESPONSE",
         }
     except asyncio.TimeoutError:
         return {
@@ -382,6 +411,19 @@ async def _synthesize_with_edge(clean: str) -> dict:
             "error": EDGE_TTS_FRIENDLY_ERROR,
             "error_code": "TIMEOUT",
         }
+    except ModuleNotFoundError as exc:
+        if exc.name not in {"aiohttp", "edge_tts"}:
+            raise
+        logger.exception("[TTS] edge-tts dependency is missing")
+        return {
+            "ok": False,
+            "audio": b"",
+            "content_type": "audio/mpeg",
+            "provider": "edge",
+            "model": settings.EDGE_TTS_VOICE,
+            "error": EDGE_TTS_DEPENDENCY_ERROR,
+            "error_code": "MISSING_DEPENDENCY",
+        }
     except Exception as exc:
         return {
             "ok": False,
@@ -392,3 +434,6 @@ async def _synthesize_with_edge(clean: str) -> dict:
             "error": str(exc) or EDGE_TTS_FRIENDLY_ERROR,
             "error_code": "UNKNOWN_ERROR",
         }
+    finally:
+        if connector is not None and not connector.closed:
+            await connector.close()

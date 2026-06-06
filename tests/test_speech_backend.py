@@ -1,5 +1,7 @@
 import asyncio
+import socket
 import sys
+import types
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -313,6 +315,102 @@ class SpeechBackendTests(unittest.TestCase):
 
         self.assertFalse(result["ok"])
         self.assertEqual(result["error"], speech_service.EMPTY_TTS_TEXT_ERROR)
+
+    @mock.patch.dict("sys.modules", {"edge_tts": None})
+    def test_tts_reports_missing_edge_dependency(self):
+        result = asyncio.run(speech_service._synthesize_with_edge("Noi thu."))
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error_code"], "MISSING_DEPENDENCY")
+        self.assertEqual(result["error"], speech_service.EDGE_TTS_DEPENDENCY_ERROR)
+
+    def test_tts_forces_ipv4_for_edge_websocket(self):
+        connector = mock.Mock(closed=False)
+        connector.close = mock.AsyncMock()
+
+        async def stream():
+            yield {"type": "audio", "data": b"fake-mp3"}
+
+        communicate = mock.Mock()
+        communicate.stream = stream
+        fake_aiohttp = types.SimpleNamespace(
+            TCPConnector=mock.Mock(return_value=connector),
+        )
+        fake_edge_tts = types.SimpleNamespace(
+            Communicate=mock.Mock(return_value=communicate),
+        )
+
+        with mock.patch.dict(
+            "sys.modules",
+            {"aiohttp": fake_aiohttp, "edge_tts": fake_edge_tts},
+        ):
+            result = asyncio.run(speech_service._synthesize_with_edge("Noi thu."))
+
+        self.assertTrue(result["ok"])
+        fake_aiohttp.TCPConnector.assert_called_once_with(family=socket.AF_INET)
+        self.assertIs(fake_edge_tts.Communicate.call_args.kwargs["connector"], connector)
+        connector.close.assert_awaited_once()
+
+    def test_tts_retries_empty_edge_audio_with_new_ipv4_connections(self):
+        class NoAudioReceived(Exception):
+            pass
+
+        connectors = []
+
+        def create_connector(**kwargs):
+            connector = mock.Mock(closed=False)
+            connector.close = mock.AsyncMock()
+            connectors.append(connector)
+            return connector
+
+        calls = 0
+
+        def create_communicate(**kwargs):
+            nonlocal calls
+            calls += 1
+            communicate = mock.Mock()
+
+            async def stream():
+                if calls < speech_service.EDGE_TTS_MAX_ATTEMPTS:
+                    raise NoAudioReceived()
+                yield {"type": "audio", "data": b"recovered-mp3"}
+
+            communicate.stream = stream
+            return communicate
+
+        fake_aiohttp = types.SimpleNamespace(
+            TCPConnector=mock.Mock(side_effect=create_connector),
+        )
+        fake_edge_tts = types.SimpleNamespace(
+            Communicate=mock.Mock(side_effect=create_communicate),
+            exceptions=types.SimpleNamespace(NoAudioReceived=NoAudioReceived),
+        )
+
+        with (
+            mock.patch.dict(
+                "sys.modules",
+                {"aiohttp": fake_aiohttp, "edge_tts": fake_edge_tts},
+            ),
+            mock.patch(
+                "app.services.speech_service.asyncio.sleep",
+                new_callable=mock.AsyncMock,
+            ) as mocked_sleep,
+        ):
+            result = asyncio.run(speech_service._synthesize_with_edge("Noi thu."))
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["audio"], b"recovered-mp3")
+        self.assertEqual(len(connectors), speech_service.EDGE_TTS_MAX_ATTEMPTS)
+        for connector in connectors:
+            connector.close.assert_awaited_once()
+        self.assertEqual(mocked_sleep.await_count, speech_service.EDGE_TTS_MAX_ATTEMPTS - 1)
+        self.assertEqual(
+            [call.args[0] for call in mocked_sleep.await_args_list],
+            [
+                speech_service.EDGE_TTS_RETRY_BASE_SECONDS * (2 ** attempt)
+                for attempt in range(speech_service.EDGE_TTS_MAX_ATTEMPTS - 1)
+            ],
+        )
 
     @mock.patch("app.services.speech_service._synthesize_with_edge", new_callable=mock.AsyncMock)
     def test_tts_always_uses_edge(self, mocked_edge):

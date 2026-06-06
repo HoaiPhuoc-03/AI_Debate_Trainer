@@ -19,6 +19,7 @@ from app.schemas.debate import (
 from app.services import ai_service
 from app.services.auth_service import get_debate_user
 from app.services.cer_scorer import normalize_cer_to_100
+from app.services.practice_prompt_service import build_practice_prompt
 from app.services.prompt_builder import normalize_practice_mode
 from app.data.topics import list_categories, list_topics, recommended_topics
 from app.services.normalization import normalize_session_payload, normalize_status, validate_debate_topic
@@ -34,7 +35,7 @@ from app.services.session_store import (
 
 router = APIRouter()
 logger = logging.getLogger("uvicorn.error")
-SINGLE_SKILL_MODES = {"claim_writing", "find_evidence", "quick_rebuttal"}
+SINGLE_SKILL_MODES = {"claim_writing", "find_evidence", "quick_rebuttal", "full_argument"}
 
 
 def _session_response(session: dict) -> dict:
@@ -139,13 +140,14 @@ def create_practice_prompt(
     topic_validation = validate_debate_topic(payload.topic)
     if not topic_validation["is_valid"]:
         raise HTTPException(status_code=400, detail=topic_validation["message"])
-    return ai_service.generate_practice_prompt(
+    return build_practice_prompt(
         mode=payload.mode,
         topic=payload.topic,
         difficulty=payload.difficulty,
-        round=payload.round,
-        language="vi",
-        previous_prompts=payload.previous_prompts,
+        category=payload.category,
+        round_number=payload.round,
+        session_id=payload.session_id,
+        used_prompts=payload.previous_prompts,
         previous_topics=payload.previous_topics,
         avoid_repeating=payload.avoid_repeating,
     )
@@ -174,8 +176,15 @@ def debate_turn(
     prior_turns = get_session_turns(payload.session_id)
     turn_history = prior_turns[-3:] if prior_turns else []
 
+    active_mode = normalize_practice_mode(payload.practice_mode or session.get("mode", "free_debate"))
+    analysis_topic = (
+        str(payload.practice_topic or "").strip()
+        if active_mode in SINGLE_SKILL_MODES
+        else ""
+    ) or session["topic"]
+
     result = ai_service.generate_debate_analysis(
-        topic=session["topic"],
+        topic=analysis_topic,
         stance=session["stance"],
         difficulty=session["difficulty"],
         user_argument=payload.user_argument,
@@ -194,7 +203,6 @@ def debate_turn(
     ai_done_ms = int((time.perf_counter() - turn_start) * 1000)
     turn_status = "active" if result["ok"] else result.get("status", "error")
 
-    active_mode = normalize_practice_mode(payload.practice_mode or session.get("mode", "free_debate"))
     saved = save_debate_turn(
         session=session,
         user_argument=payload.user_argument,

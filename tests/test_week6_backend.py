@@ -128,7 +128,7 @@ class Week6BackendTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok"})
 
-    @mock.patch("app.api.debate.ai_service.generate_practice_prompt")
+    @mock.patch("app.api.debate.build_practice_prompt")
     def test_practice_prompt_endpoint_returns_generated_round_prompt(self, mocked_prompt):
         app.dependency_overrides[debate_api.get_debate_user] = lambda: {"id": "demo-user"}
         mocked_prompt.return_value = {
@@ -163,12 +163,72 @@ class Week6BackendTests(unittest.TestCase):
             mode="evidence_practice",
             topic="Có nên cho học sinh dùng AI trong học tập?",
             difficulty="Trung cấp",
-            round=2,
-            language="vi",
-            previous_prompts=["Claim cũ"],
+            category=None,
+            round_number=2,
+            session_id=None,
+            used_prompts=["Claim cũ"],
             previous_topics=["Chủ đề cũ"],
             avoid_repeating=True,
         )
+
+    @mock.patch("app.api.debate.ai_service.generate_practice_prompt")
+    def test_quick_rebuttal_endpoint_is_deterministic_without_ai_provider(self, mocked_ai_prompt):
+        app.dependency_overrides[debate_api.get_debate_user] = lambda: {"id": "demo-user"}
+        try:
+            response = self.client.post(
+                "/api/v1/debate/practice-prompt",
+                json={
+                    "mode": "quick_rebuttal",
+                    "topic": "Điểm số có còn là thước đo tốt cho năng lực học sinh?",
+                    "difficulty": "Cơ bản",
+                    "round": 1,
+                    "previous_prompts": [],
+                    "previous_topics": [],
+                    "avoid_repeating": True,
+                },
+            )
+        finally:
+            app.dependency_overrides.pop(debate_api.get_debate_user, None)
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["mode"], "quick_rebuttal")
+        self.assertEqual(data["prompt_type"], "weak_argument")
+        self.assertEqual(data["prompt"], data["weak_argument"])
+        self.assertIn("Hãy chỉ ra", data["instruction"])
+        self.assertNotIn("? chắc chắn", data["weak_argument"])
+        self.assertNotIn("Hãy chỉ ra", data["weak_argument"])
+        mocked_ai_prompt.assert_not_called()
+
+    @mock.patch("app.api.debate.ai_service.generate_debate_analysis")
+    def test_full_argument_turn_uses_practice_topic_and_keeps_session_active(self, mocked_ai):
+        mocked_ai.return_value = fake_analysis()
+        payload = self.new_session_payload(
+            max_turns=1,
+            topic="Chủ đề ban đầu của phiên tranh biện",
+        )
+        payload["mode"] = "full_argument"
+        session = self.create_session(payload)
+
+        response = self.client.post(
+            "/api/v1/debate/turn",
+            json={
+                "session_id": session["session_id"],
+                "user_argument": "Claim, evidence and reasoning for the new topic.",
+                "practice_mode": "cer",
+                "practice_topic": "Có nên giới hạn thời gian sử dụng TikTok của thanh thiếu niên?",
+                "practice_prompt": "Hãy xây dựng một lập luận C-E-R đầy đủ.",
+                "practice_round": 2,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "active")
+        self.assertEqual(
+            mocked_ai.call_args.kwargs["topic"],
+            "Có nên giới hạn thời gian sử dụng TikTok của thanh thiếu niên?",
+        )
+        self.assertEqual(mocked_ai.call_args.kwargs["practice_mode"], "cer")
 
     def test_register_success(self):
         data = self.register_user()

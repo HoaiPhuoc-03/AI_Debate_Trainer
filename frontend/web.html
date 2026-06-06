@@ -2007,6 +2007,131 @@
       line-height: 1.5;
     }
 
+    .chat-topic-group {
+      --topic-accent: rgba(96, 165, 250, 0.72);
+      --topic-soft: rgba(239, 246, 255, 0.92);
+      display: flex;
+      flex-direction: column;
+      max-height: 520px;
+      overflow: hidden;
+      padding: 16px;
+      margin-top: 18px;
+      border: 1px solid var(--topic-accent);
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--topic-soft), rgba(255, 255, 255, 0.96));
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    .chat-topic-group--1 {
+      --topic-accent: rgba(52, 211, 153, 0.62);
+      --topic-soft: rgba(236, 253, 245, 0.92);
+    }
+
+    .chat-topic-group--2 {
+      --topic-accent: rgba(167, 139, 250, 0.64);
+      --topic-soft: rgba(245, 243, 255, 0.92);
+    }
+
+    .chat-topic-group--3 {
+      --topic-accent: rgba(251, 191, 36, 0.64);
+      --topic-soft: rgba(255, 251, 235, 0.92);
+    }
+
+    .chat-topic-group--4 {
+      --topic-accent: rgba(251, 113, 133, 0.54);
+      --topic-soft: rgba(255, 241, 242, 0.92);
+    }
+
+    .chat-topic-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      color: var(--text);
+      flex: 0 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+
+    .chat-topic-header strong {
+      min-width: 0;
+      line-height: 1.35;
+    }
+
+    .chat-topic-badge {
+      flex: 0 0 auto;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--topic-accent) 18%, transparent);
+      color: color-mix(in srgb, var(--topic-accent) 78%, #1e3a8a);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .chat-topic-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding-right: 6px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+    }
+
+    .chat-topic-body::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat-topic-body::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.45);
+      border-radius: 999px;
+    }
+
+    .chat-topic-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat-topic-group .transcript-item {
+      margin-top: 12px;
+    }
+
+    .chat-topic-body .transcript-item:first-child {
+      margin-top: 0;
+    }
+
+    .chat-topic-group .bubble {
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .chat-topic-group .bubble.error {
+      border-color: rgba(239, 68, 68, 0.35);
+      background: rgba(254, 242, 242, 0.86);
+      color: #b91c1c !important;
+    }
+
+    body[data-theme="dark"] .chat-topic-group {
+      --topic-soft: rgba(15, 23, 42, 0.9);
+      background: linear-gradient(135deg, var(--topic-soft), rgba(15, 23, 42, 0.76));
+    }
+
+    body[data-theme="dark"] .chat-topic-group .bubble {
+      background: rgba(15, 23, 42, 0.58);
+    }
+
+    @media (max-height: 760px) {
+      .chat-topic-group {
+        max-height: 420px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .chat-topic-group {
+        max-height: 460px;
+      }
+    }
+
     .screen-error {
       display: none;
       margin: 16px 0;
@@ -7208,6 +7333,8 @@
         usedPracticePrompts: [],
         usedPracticeTopics: [],
         lastPracticePrompt: "",
+        currentGroupId: "",
+        groups: [],
       },
     };
     let activeRebuttalAnimation = 0;
@@ -7220,9 +7347,15 @@
     let voiceSourceAudio = { url: "", type: "", size: 0 };
     let lumiAudioUrl = ""; // persisted URL for seekable Lumi player
     let voiceDraftTimerId = null;
-    let turnTimerId = null;
-    let turnTimeRemaining = 0;
-    let isTurnTimerRunning = false;
+    const turnTimerState = {
+      currentSpeaker: "user",
+      isUserTurnActive: false,
+      timerStartedForTurn: false,
+      turnStartedAt: null,
+      turnDurationSeconds: 0,
+      remainingSeconds: 0,
+      intervalId: null,
+    };
     let voiceAudioContext = null;
     let voiceSourceNode = null;
     let voiceProcessorNode = null;
@@ -7307,6 +7440,7 @@
       phan_bien_nhanh: "quick_rebuttal",
       quick_rebuttal: "quick_rebuttal",
       argument_builder: "full_argument",
+      cer: "full_argument",
       full_argument: "full_argument",
     };
     const MODE_METRICS = {
@@ -7316,8 +7450,8 @@
       quick_rebuttal: ["reasoning"],
       full_argument: ["claim", "evidence", "reasoning"],
     };
-    const AUTO_TOPIC_MODES = ["claim_writing", "find_evidence", "quick_rebuttal"];
-    const SINGLE_SKILL_PRACTICE_MODES = ["claim_writing", "find_evidence", "quick_rebuttal"];
+    const AUTO_TOPIC_MODES = ["claim_writing", "find_evidence", "quick_rebuttal", "full_argument"];
+    const SINGLE_SKILL_PRACTICE_MODES = ["claim_writing", "find_evidence", "quick_rebuttal", "full_argument"];
     const PRACTICE_PROMPT_UI = {
       claim_writing: {
         icon: "✍️",
@@ -7339,6 +7473,13 @@
         label: "Lập luận yếu",
         task: "Chỉ ra lỗ hổng và phản biện nhanh, trực diện.",
         placeholder: "Hãy phản biện lập luận yếu trên...",
+      },
+      full_argument: {
+        icon: "🧱",
+        heading: "CHỦ ĐỀ XÂY DỰNG LẬP LUẬN",
+        label: "Chủ đề",
+        task: "Hãy xây dựng một lập luận đầy đủ gồm Claim, Evidence và Reasoning cho chủ đề này.",
+        placeholder: "Hãy xây dựng lập luận đầy đủ gồm Claim, Evidence và Reasoning...",
       },
     };
     const displayLabels = {
@@ -7775,6 +7916,13 @@
         "Không cần bảo vệ rừng vì lượng oxy chủ yếu đến từ tảo đại dương.",
         "Học tiếng Anh là vô ích vì các công cụ dịch thuật AI đã rất phát triển.",
         "Nên tiêu tiền thay vì tiết kiệm vì ngày mai chúng ta có thể sẽ chết."
+      ],
+      full_argument: [
+        "Có nên giới hạn thời gian sử dụng TikTok của thanh thiếu niên?",
+        "Có nên dạy kỹ năng tài chính cá nhân bắt buộc ở trường phổ thông?",
+        "Có nên cấm hoàn toàn túi nilon dùng một lần?",
+        "Chính phủ có nên sử dụng AI trong dịch vụ công?",
+        "Có nên thay thế sách giáo khoa giấy bằng máy tính bảng?"
       ]
     };
 
@@ -8198,7 +8346,9 @@
       }
       if (view === "summary") renderSummary();
       if (view === "progress") renderProgressTopics();
-      if (view === "arena") initTurnTimer();
+      if (view === "arena") {
+        startUserTurnTimer({ reset: !turnTimerState.timerStartedForTurn });
+      }
     }
 
     function renderLumiCompanion() {
@@ -8340,19 +8490,20 @@
 
         state.sessionId = data.session_id;
         if (!state.sessionId) throw new Error("Máy chủ chưa trả về mã phiên.");
-    state.sessionStatus = normalizeStatus(data.status);
-    state.roundCount = 0;
-    state.history = [];
-    state.latest = null;
+        state.sessionStatus = normalizeStatus(data.status);
+        state.roundCount = 0;
+        state.history = [];
+        state.latest = null;
         resetPracticeState(state.mode);
-    clearSpeechAudioCache();
-    clearVoiceSourceAudio();
-    renderArenaShell();
-    goToView("arena");
+        resetUserTurnTimer();
+        clearSpeechAudioCache();
+        clearVoiceSourceAudio();
+        renderArenaShell();
+        goToView("arena");
         if (isSingleSkillPracticeMode()) {
           await initializePracticeRound();
         }
-    await syncSessionStatus();
+        await syncSessionStatus();
       } catch (error) {
         const message = error.message || "";
         const isTopicError = /topic|vui lòng|chủ đề/i.test(message);
@@ -8581,6 +8732,10 @@
       return SINGLE_SKILL_PRACTICE_MODES.includes(normalizePracticeMode(mode));
     }
 
+    function isGroupedPracticeMode(mode = state.mode) {
+      return normalizePracticeMode(mode) !== "free_debate";
+    }
+
     function resetPracticeState(mode = state.mode) {
       const normalizedMode = normalizePracticeMode(mode);
       state.practice.mode = normalizedMode;
@@ -8594,6 +8749,8 @@
       state.practice.warning = "";
       state.practice.isGeneratingPrompt = false;
       state.practice.lastPracticePrompt = "";
+      state.practice.currentGroupId = "";
+      state.practice.groups = [];
       if (!isSingleSkillPracticeMode(normalizedMode)) {
         state.practice.usedPracticePrompts = [];
         state.practice.usedPracticeTopics = [];
@@ -8632,6 +8789,95 @@
       state.practice.usedPracticeTopics = state.practice.usedPracticeTopics.slice(-12);
     }
 
+    function hashPracticeGroupText(value) {
+      let hash = 0;
+      const text = String(value || "");
+      for (let index = 0; index < text.length; index += 1) {
+        hash = ((hash << 5) - hash + text.charCodeAt(index)) | 0;
+      }
+      return Math.abs(hash).toString(36);
+    }
+
+    function truncatePracticeGroupTitle(value, maxLength = 72) {
+      const text = String(value || "").replace(/\s+/g, " ").trim();
+      if (text.length <= maxLength) return text;
+      return `${text.slice(0, maxLength - 1).trim()}…`;
+    }
+
+    function makePracticeGroupTitle(promptData = {}, round = state.practice.round) {
+      const source = promptData.topic
+        || promptData.scenario
+        || promptData.claim
+        || promptData.weak_argument
+        || promptData.prompt
+        || state.practice.currentTopic
+        || state.practice.currentPrompt
+        || getTopic()
+        || "Chủ đề luyện tập";
+      return `Chủ đề ${round}: ${truncatePracticeGroupTitle(source)}`;
+    }
+
+    function registerPracticeGroup(promptData = {}) {
+      const mode = normalizePracticeMode(promptData.mode || state.practice.mode || state.mode);
+      if (!isGroupedPracticeMode(mode)) return null;
+      const round = Number(promptData.round || state.practice.round || state.roundCount + 1) || 1;
+      const prompt = String(
+        promptData.prompt
+        || promptData.practice_prompt
+        || state.practice.currentPrompt
+        || getTopic()
+        || ""
+      ).trim();
+      const topic = String(
+        promptData.topic
+        || promptData.scenario
+        || state.practice.currentTopic
+        || prompt
+      ).trim();
+      const id = promptData.id
+        || promptData.practice_prompt_id
+        || `${mode}-${round}-${hashPracticeGroupText(`${topic}|${prompt}`)}`;
+      let group = state.practice.groups.find(item => item.id === id);
+      if (!group) {
+        group = {
+          id,
+          mode,
+          round,
+          prompt,
+          topic,
+          title: promptData.group_title || makePracticeGroupTitle({ ...promptData, prompt, topic }, round),
+          colorIndex: (Math.max(round, 1) - 1) % 5,
+          instruction: promptData.instruction || state.practice.instruction || "",
+          failedAttempts: [],
+          createdAt: Date.now(),
+        };
+        state.practice.groups.push(group);
+      }
+      state.practice.currentGroupId = group.id;
+      return group;
+    }
+
+    function getCurrentPracticeGroup() {
+      if (!isGroupedPracticeMode()) return null;
+      return state.practice.groups.find(group => group.id === state.practice.currentGroupId)
+        || registerPracticeGroup({
+          mode: state.practice.mode || state.mode,
+          round: isSingleSkillPracticeMode() ? state.practice.round : state.roundCount + 1,
+          prompt: state.practice.currentPrompt || getTopic(),
+          topic: state.practice.currentTopic || getTopic(),
+          instruction: state.practice.instruction,
+        });
+    }
+
+    function recordPracticeGroupError(group, userArgument, errorMessage) {
+      if (!group) return;
+      group.failedAttempts.push({
+        userArgument: String(userArgument || "").trim(),
+        error: String(errorMessage || "Không thể gửi lập luận.").trim(),
+        createdAt: Date.now(),
+      });
+    }
+
     async function generatePracticePrompt() {
       state.practice.isGeneratingPrompt = true;
       state.practice.warning = "";
@@ -8643,9 +8889,11 @@
         const data = await apiRequest("/api/v1/debate/practice-prompt", {
           method: "POST",
           body: {
+            session_id: state.sessionId,
             mode,
             round: state.practice.round,
             difficulty: state.difficulty,
+            category: state.selectedTopicCategory || null,
             topic: getTopic(),
             previous_prompts: state.practice.usedPracticePrompts,
             previous_topics: state.practice.usedPracticeTopics,
@@ -8665,7 +8913,10 @@
       const row = document.getElementById("practice-next-row");
       const nextButton = document.getElementById("practice-next-button");
       if (!row || !nextButton) return;
-      const visible = isSingleSkillPracticeMode() && Boolean(state.sessionId);
+      const visible = isSingleSkillPracticeMode()
+        && Boolean(state.sessionId)
+        && state.practice.hasEvaluation
+        && !state.practice.isAwaitingUserAnswer;
       row.classList.toggle("hidden", !visible);
       nextButton.disabled = state.practice.isGeneratingPrompt || state.isSubmitting;
       nextButton.textContent = state.practice.isGeneratingPrompt ? "Đang tạo đề..." : "Tiếp theo →";
@@ -8685,11 +8936,29 @@
       handleNextPracticeRound();
     }
 
+    function formatWeakArgumentText(text) {
+      const clean = String(text || "").replace(/\s+/g, " ").trim();
+      return {
+        label: "Lập luận yếu:",
+        content: clean
+          .replace(/^phản biện\s+lập luận yếu\s*:?\s*/i, "")
+          .replace(/^lập luận yếu\s*:?\s*/i, "")
+          .trim(),
+      };
+    }
+
     function renderPracticePrompt(promptData = state.practice) {
       const ui = getPracticePromptUi();
       if (!ui) return;
-      const prompt = promptData.currentPrompt || promptData.prompt || "";
+      const mode = normalizePracticeMode(promptData.mode || state.practice.mode || state.mode);
+      const rawPrompt = promptData.currentPrompt || promptData.prompt || "";
+      const weakArgumentDisplay = mode === "quick_rebuttal"
+        ? formatWeakArgumentText(promptData.weak_argument || rawPrompt)
+        : null;
+      const prompt = weakArgumentDisplay?.content || rawPrompt;
       const warning = promptData.warning || "";
+      const promptLabel = weakArgumentDisplay?.label
+        || (mode === "claim_writing" ? `${ui.label}:` : ui.label);
       const aiOutput = document.getElementById("ai-output");
       if (!aiOutput) return;
       aiOutput.className = "";
@@ -8697,7 +8966,7 @@
       <div class="practice-prompt-card">
         <div class="practice-prompt-kicker">${escapeHtml(ui.heading)}</div>
         <div class="practice-prompt-body">
-          <span>${escapeHtml(ui.label)}</span>
+          <span>${escapeHtml(promptLabel)}</span>
           <strong>${escapeHtml(prompt)}</strong>
         </div>
         <div class="practice-prompt-task">${escapeHtml(promptData.instruction || ui.task)}</div>
@@ -8715,12 +8984,36 @@
       aiOutput.innerHTML = `<div class="loading-dots">Lumi đang tạo đề luyện tập <span></span><span></span><span></span></div>`;
     }
 
+    function resetPracticeRoundUi() {
+      const input = document.getElementById("user-input");
+      if (input) {
+        input.value = "";
+        input.disabled = false;
+      }
+      state.latest = null;
+      state.pendingVoiceTranscript = "";
+      state.voiceDraftState = "idle";
+      state.voiceDraftMessage = "";
+      resetVoiceRecorder();
+      clearVoiceSourceAudio();
+      clearSpeechAudioCache();
+      hideError("form-error");
+      hideOptionalError("voice-error");
+      updateCharCount();
+      renderVoiceTranscript();
+      renderCER(null);
+      renderFeedback(null);
+      setArenaPulse("");
+    }
+
     async function initializePracticeRound() {
       if (!isSingleSkillPracticeMode()) return;
       state.practice.hasEvaluation = false;
       state.practice.isAwaitingUserAnswer = true;
       state.practice.currentPrompt = null;
       state.practice.currentTopic = "";
+      resetPracticeRoundUi();
+      renderPracticeNextButton();
       renderPracticeModeBar();
       const promptData = await generatePracticePrompt();
       state.practice.currentPrompt = promptData.prompt || promptData.topic || "";
@@ -8729,6 +9022,14 @@
       state.practice.instruction = promptData.instruction || getPracticePromptUi()?.task || "";
       state.practice.warning = promptData.warning || "";
       rememberPracticePrompt(promptData);
+      registerPracticeGroup({
+        ...promptData,
+        mode: state.practice.mode,
+        round: state.practice.round,
+        prompt: state.practice.currentPrompt,
+        topic: state.practice.currentTopic,
+        instruction: state.practice.instruction,
+      });
       renderArenaShell();
       renderPracticePrompt();
       renderPracticeNextButton();
@@ -8823,58 +9124,75 @@
       return 90;
     }
 
+    function isUserTurnTimerEnabled() {
+      return state.mode === "free_debate";
+    }
+
+    function resetUserTurnTimer() {
+      turnTimerState.turnDurationSeconds = parseResponseTime(state.responseTime);
+      turnTimerState.remainingSeconds = turnTimerState.turnDurationSeconds;
+      turnTimerState.timerStartedForTurn = false;
+      turnTimerState.turnStartedAt = null;
+      updateTurnTimerDisplay();
+    }
+
     function initTurnTimer() {
-      stopTurnTimer();
+      startUserTurnTimer({ reset: true });
+    }
+
+    function startUserTurnTimer({ reset = true } = {}) {
+      stopUserTurnTimer();
       const badge = document.getElementById("turn-timer");
-      if (state.mode !== "free_debate" || state.sessionStatus === "completed" || state.isSubmitting) {
+      if (!isUserTurnTimerEnabled() || state.sessionStatus === "completed" || state.isSubmitting || state.view !== "arena") {
         if (badge) badge.classList.add("hidden");
+        return;
+      }
+      if (reset) {
+        resetUserTurnTimer();
+      }
+      if (turnTimerState.remainingSeconds <= 0) {
+        updateTurnTimerDisplay();
         return;
       }
       if (badge) {
         badge.classList.remove("hidden", "warning");
       }
-      turnTimeRemaining = parseResponseTime(state.responseTime);
-      updateTurnTimerDisplay();
-      isTurnTimerRunning = false;
-    }
-
-    function startTurnTimer() {
-      if (isTurnTimerRunning) return;
-      const badge = document.getElementById("turn-timer");
-      if (state.mode !== "free_debate" || state.sessionStatus === "completed" || state.isSubmitting || state.view !== "arena") {
-        if (badge) badge.classList.add("hidden");
-        return;
-      }
-      if (turnTimeRemaining <= 0) {
-        turnTimeRemaining = parseResponseTime(state.responseTime);
+      turnTimerState.currentSpeaker = "user";
+      turnTimerState.isUserTurnActive = true;
+      turnTimerState.timerStartedForTurn = true;
+      turnTimerState.turnStartedAt = Date.now();
+      turnTimerState.intervalId = window.setInterval(() => {
+        if (!turnTimerState.isUserTurnActive || state.isSubmitting || state.sessionStatus === "completed" || state.view !== "arena") {
+          return;
+        }
+        turnTimerState.remainingSeconds -= 1;
         updateTurnTimerDisplay();
-      }
-      if (badge) badge.classList.remove("hidden", "warning");
-      isTurnTimerRunning = true;
-      if (turnTimerId) window.clearInterval(turnTimerId);
-      turnTimerId = window.setInterval(() => {
-        if (state.isSubmitting || state.sessionStatus === "completed" || state.view !== "arena") return;
-        turnTimeRemaining -= 1;
-        updateTurnTimerDisplay();
-        if (turnTimeRemaining <= 0) {
-          stopTurnTimer();
+        if (turnTimerState.remainingSeconds <= 0) {
+          turnTimerState.remainingSeconds = 0;
+          stopUserTurnTimer();
           handleTurnTimerTimeout();
         }
       }, 1000);
     }
 
-    function stopTurnTimer() {
-      if (turnTimerId) {
-        window.clearInterval(turnTimerId);
-        turnTimerId = null;
+    function stopUserTurnTimer() {
+      if (turnTimerState.intervalId) {
+        window.clearInterval(turnTimerState.intervalId);
+        turnTimerState.intervalId = null;
       }
-      isTurnTimerRunning = false;
+      turnTimerState.isUserTurnActive = false;
     }
+
+    function stopTurnTimer() {
+      stopUserTurnTimer();
+    }
+
+    window.addEventListener("pagehide", stopUserTurnTimer);
 
     function updateTurnTimerDisplay() {
       const badge = document.getElementById("turn-timer");
       if (!badge) return;
-      const total = Math.max(0, turnTimeRemaining);
+      const total = Math.max(0, turnTimerState.remainingSeconds);
       const minutes = Math.floor(total / 60);
       const seconds = total % 60;
       badge.textContent = `⏱ ${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
@@ -8885,6 +9203,7 @@
       const input = document.getElementById("user-input");
       let text = input ? input.value.trim() : "";
       showError("form-error", "Hết thời gian chuẩn bị!");
+      if (state.isListening) resetVoiceRecorder();
       if (!text) {
         text = "(Hết thời gian chuẩn bị - Không đưa ra lập luận)";
         if (input) {
@@ -8910,7 +9229,6 @@
         return;
       }
       renderVoiceControls();
-      if (current) startTurnTimer();
     }
 
     function clearVoiceSourceAudio() {
@@ -9246,7 +9564,7 @@
         state.rebuttalAudioState = "error";
         state.rebuttalAudioMessage = isRateLimited
           ? "Dịch vụ tạo âm thanh đang giới hạn lượt."
-          : "Không tạo được âm thanh phản biện";
+          : (error.message || "Không tạo được âm thanh phản biện");
         renderRebuttalAudio();
         return "";
       }
@@ -9266,7 +9584,6 @@
     }
 
     async function submitArgument(options = {}) {
-      stopTurnTimer();
       const input = document.getElementById("user-input");
       const argument = input.value.trim();
       hideError("form-error");
@@ -9280,16 +9597,21 @@
         return showError("form-error", "Lumi chưa tạo xong đề bài. Hãy bấm Tiếp theo hoặc thử lại.");
       }
 
+      stopUserTurnTimer();
+      turnTimerState.currentSpeaker = "ai";
       state.isSubmitting = true;
       input.disabled = true;
       const button = document.getElementById("debate-btn");
       setLoading(button, true, "Đang suy nghĩ...");
       renderLoadingState();
+      let completedUserTurn = false;
+      const practiceGroup = isGroupedPracticeMode() ? getCurrentPracticeGroup() : null;
 
       try {
         const body = { session_id: state.sessionId, user_argument: argument };
         if (isSingleSkillPracticeMode()) {
           body.practice_mode = state.practice.mode;
+          body.practice_topic = state.practice.currentTopic;
           body.practice_prompt = state.practice.currentPrompt;
           body.practice_round = state.practice.round;
         }
@@ -9306,6 +9628,13 @@
           turn.practice_round = state.practice.round;
           state.practice.hasEvaluation = true;
           state.practice.isAwaitingUserAnswer = false;
+        }
+        if (practiceGroup) {
+          turn.practice_group_id = practiceGroup.id;
+          turn.practice_group_title = practiceGroup.title;
+          turn.practice_group_topic = practiceGroup.topic;
+          turn.practice_group_color_index = practiceGroup.colorIndex;
+          turn.practice_created_at = practiceGroup.createdAt;
         }
         state.roundCount += 1;
         state.sessionStatus = turn.status;
@@ -9326,12 +9655,15 @@
         await generateRebuttalAudio(turn.ai_rebuttal);
         state.history.push(turn);
         renderTranscript();
+        completedUserTurn = true;
 
         if (turn.status === "completed") {
           showError("form-error", "Phiên đã hoàn tất. Bạn có thể xem tổng kết hoặc tạo chủ đề mới.");
         }
         await syncSessionStatus();
       } catch (error) {
+        recordPracticeGroupError(practiceGroup, argument, error.message);
+        renderTranscript();
         renderErrorState(error.message);
         showError("form-error", "Không thể gửi lập luận. Phiên hiện tại vẫn được giữ để bạn thử lại.");
       } finally {
@@ -9344,9 +9676,9 @@
         renderArenaStage();
         renderPracticeNextButton();
         if (state.sessionStatus === "completed") {
-          stopTurnTimer();
+          stopUserTurnTimer();
         } else {
-          initTurnTimer();
+          startUserTurnTimer({ reset: completedUserTurn });
         }
       }
     }
@@ -9373,6 +9705,7 @@
     }
 
     async function finishSession() {
+      stopUserTurnTimer();
       if (state.sessionId) {
         try {
           const data = await apiRequest(`/api/v1/debate/session/${encodeURIComponent(state.sessionId)}/end`, { method: "POST" });
@@ -9387,6 +9720,8 @@
     }
 
     function practiceAgain() {
+      stopUserTurnTimer();
+      resetUserTurnTimer();
       clearSpeechAudioCache();
       clearVoiceSourceAudio();
       state.sessionId = null;
@@ -9635,52 +9970,95 @@
     function renderTranscript() {
       const output = document.getElementById("transcript-output");
       const pending = String(state.pendingVoiceTranscript || "").trim();
-      const activePracticePrompt = isSingleSkillPracticeMode() && state.practice.currentPrompt && !state.practice.hasEvaluation
-        ? {
-          practice_mode: state.practice.mode,
-          practice_prompt: state.practice.currentPrompt,
-          practice_instruction: state.practice.instruction,
-          practice_round: state.practice.round,
-        }
-        : null;
-      if (!state.history.length && !pending && !activePracticePrompt) {
+      if (!state.history.length && !pending && !state.practice.groups.length) {
         output.className = "empty-message";
         output.textContent = "Hội thoại tranh biện sẽ xuất hiện ở đây sau mỗi lượt.";
         return;
       }
-      const renderPracticePromptBubble = (turn) => {
-        if (!turn?.practice_prompt) return "";
-        const mode = normalizePracticeMode(turn.practice_mode || state.mode);
-        const ui = getPracticePromptUi(mode);
+
+      const renderMessage = (speaker, content, options = {}) => {
+        if (!content) return "";
+        const speakerClass = options.ai ? "speaker ai" : "speaker";
+        const bubbleClass = options.error ? "bubble error" : "bubble";
         return `
       <div class="transcript-item">
-        <div class="speaker ai">Lumi</div>
-        <div class="bubble">${escapeHtml(ui.heading)}: ${escapeHtml(turn.practice_prompt)}</div>
+        <div class="${speakerClass}">${escapeHtml(speaker)}</div>
+        <div class="${bubbleClass}">${escapeHtml(content)}</div>
       </div>
     `;
       };
-      const pendingHtml = pending ? `
-      <div class="transcript-item">
-        <div class="speaker">Bạn</div>
-        <div class="bubble">${escapeHtml(pending)}</div>
-      </div>
-      <div class="transcript-item">
-        <div class="speaker ai">AI</div>
-        <div class="bubble">Chờ bạn kiểm tra văn bản và bấm Gửi...</div>
-      </div>
-    ` : "";
+
+      if (!isGroupedPracticeMode()) {
+        const pendingHtml = pending
+          ? renderMessage("Bạn", pending) + renderMessage("AI", "Chờ bạn kiểm tra văn bản và bấm Gửi...", { ai: true })
+          : "";
+        output.className = "";
+        output.innerHTML = state.history.slice(-3).map(turn =>
+          renderMessage("Bạn", turn.user_argument)
+          + renderMessage("AI", turn.ai_rebuttal, { ai: true })
+        ).join("") + pendingHtml;
+        return;
+      }
+
+      const groups = state.practice.groups.slice();
+      state.history.forEach((turn, index) => {
+        const groupId = turn.practice_group_id
+          || `${normalizePracticeMode(turn.practice_mode || state.mode)}-${turn.practice_round || index + 1}-${hashPracticeGroupText(turn.practice_prompt || turn.practice_group_topic || getTopic())}`;
+        if (groups.some(group => group.id === groupId)) return;
+        const mode = normalizePracticeMode(turn.practice_mode || state.mode);
+        const round = Number(turn.practice_round || index + 1) || index + 1;
+        groups.push({
+          id: groupId,
+          mode,
+          round,
+          prompt: turn.practice_prompt || turn.practice_group_topic || getTopic(),
+          topic: turn.practice_group_topic || turn.practice_prompt || getTopic(),
+          title: turn.practice_group_title || makePracticeGroupTitle({
+            topic: turn.practice_group_topic,
+            prompt: turn.practice_prompt,
+          }, round),
+          colorIndex: Number(turn.practice_group_color_index ?? ((round - 1) % 5)),
+          instruction: turn.practice_instruction || "",
+          failedAttempts: [],
+          createdAt: turn.practice_created_at || Date.now(),
+        });
+        turn.practice_group_id = groupId;
+      });
+
       output.className = "";
-      output.innerHTML = state.history.slice(-3).map(turn => `
-      ${renderPracticePromptBubble(turn)}
-      <div class="transcript-item">
-        <div class="speaker">Bạn</div>
-        <div class="bubble">${escapeHtml(turn.user_argument)}</div>
-      </div>
-      <div class="transcript-item">
-        <div class="speaker ai">AI</div>
-        <div class="bubble">${escapeHtml(turn.ai_rebuttal)}</div>
-      </div>
-    `).join("") + (activePracticePrompt ? renderPracticePromptBubble(activePracticePrompt) : "") + pendingHtml;
+      output.innerHTML = groups.map(group => {
+        const modeConfig = getPracticeModeConfig(group.mode);
+        const promptUi = getPracticePromptUi(group.mode);
+        const groupTurns = state.history.filter(turn => turn.practice_group_id === group.id);
+        const promptHeading = promptUi?.heading || "ĐỀ BÀI CỦA LUMI";
+        const promptText = group.prompt || group.topic;
+        const promptHtml = promptText
+          ? renderMessage("Lumi", `${promptHeading}: ${promptText}`, { ai: true })
+          : "";
+        const turnHtml = groupTurns.map(turn =>
+          renderMessage("Bạn", turn.user_argument)
+          + renderMessage("AI", turn.ai_rebuttal, { ai: true })
+        ).join("");
+        const errorHtml = (group.failedAttempts || []).map(attempt =>
+          renderMessage("Bạn", attempt.userArgument)
+          + renderMessage("AI", `Không thể xử lý lượt này: ${attempt.error}`, { ai: true, error: true })
+        ).join("");
+        const pendingHtml = group.id === state.practice.currentGroupId && pending
+          ? renderMessage("Bạn", pending) + renderMessage("AI", "Chờ bạn kiểm tra văn bản và bấm Gửi...", { ai: true })
+          : "";
+
+        return `
+      <section class="chat-topic-group chat-topic-group--${Number(group.colorIndex || 0) % 5}" data-practice-group-id="${escapeHtml(group.id)}">
+        <div class="chat-topic-header">
+          <span class="chat-topic-badge">${escapeHtml(modeConfig.title)}</span>
+          <strong>${escapeHtml(group.title)}</strong>
+        </div>
+        <div class="chat-topic-body">
+          ${promptHtml}${turnHtml}${errorHtml}${pendingHtml}
+        </div>
+      </section>
+    `;
+      }).join("");
     }
 
     function renderSummary() {
@@ -10239,12 +10617,8 @@
       }
       renderVoiceControls();
       if (count > 0 && state.view === "arena" && !state.isSubmitting) {
-        startTurnTimer();
         syncLumiState("typing");
       } else if (!state.isSubmitting) {
-        if (state.view === "arena" && state.mode === "free_debate") {
-          initTurnTimer();
-        }
         syncLumiState(getLumiStateForContext());
       }
     }

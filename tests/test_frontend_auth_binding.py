@@ -160,6 +160,7 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn('claim_practice: "claim_writing"', html)
         self.assertIn('evidence_practice: "find_evidence"', html)
         self.assertIn('argument_builder: "full_argument"', html)
+        self.assertIn('cer: "full_argument"', html)
         self.assertIn("function getActivePracticeMode()", html)
         self.assertIn("function normalizePracticeMode(value)", html)
         self.assertIn("function getPracticeModeConfig(value = getActivePracticeMode())", html)
@@ -182,21 +183,62 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn("function generatePracticePrompt", html)
         self.assertIn("/api/v1/debate/practice-prompt", html)
         self.assertIn("function handleNextPracticeRound", html)
+        self.assertIn("function resetPracticeRoundUi()", html)
         self.assertIn('data-practice-next', html)
         self.assertIn("nextButton.addEventListener(\"click\", handleNextPracticeRound)", html)
         self.assertIn("state.practice.isGeneratingPrompt = true", html)
         self.assertIn("previous_prompts: state.practice.usedPracticePrompts", html)
         self.assertIn("previous_topics: state.practice.usedPracticeTopics", html)
+        self.assertIn("session_id: state.sessionId", html)
+        self.assertIn("category: state.selectedTopicCategory || null", html)
         self.assertIn("avoid_repeating: true", html)
         self.assertIn("function rememberPracticePrompt", html)
         self.assertIn("renderPracticeNextButton();", html)
         self.assertIn("body.practice_mode = state.practice.mode", html)
         self.assertIn("body.practice_prompt = state.practice.currentPrompt", html)
+        self.assertIn("body.practice_topic = state.practice.currentTopic", html)
         self.assertIn("body.practice_round = state.practice.round", html)
         self.assertIn("ĐỀ BÀI CỦA LUMI", html)
         self.assertIn("CLAIM CẦN TÌM BẰNG CHỨNG", html)
         self.assertIn("LUẬN ĐIỂM YẾU CẦN PHẢN BIỆN", html)
+        self.assertIn("CHỦ ĐỀ XÂY DỰNG LẬP LUẬN", html)
         self.assertIn("Tiếp theo →", html)
+        self.assertIn(
+            'const SINGLE_SKILL_PRACTICE_MODES = ["claim_writing", "find_evidence", "quick_rebuttal", "full_argument"]',
+            html,
+        )
+
+        next_button_body = html.split("function renderPracticeNextButton()", 1)[1].split(
+            "function bindPracticeRoundControls", 1
+        )[0]
+        self.assertIn("state.practice.hasEvaluation", next_button_body)
+        self.assertIn("!state.practice.isAwaitingUserAnswer", next_button_body)
+
+        reset_body = html.split("function resetPracticeRoundUi()", 1)[1].split(
+            "async function initializePracticeRound", 1
+        )[0]
+        self.assertIn('input.value = ""', reset_body)
+        self.assertIn('state.pendingVoiceTranscript = ""', reset_body)
+        self.assertIn('state.voiceDraftState = "idle"', reset_body)
+        self.assertIn("clearVoiceSourceAudio()", reset_body)
+        self.assertIn("clearSpeechAudioCache()", reset_body)
+        self.assertIn("renderCER(null)", reset_body)
+        self.assertIn("renderFeedback(null)", reset_body)
+
+    def test_quick_rebuttal_label_is_rendered_once_by_frontend(self):
+        html = read_frontend()
+
+        self.assertIn("function formatWeakArgumentText(text)", html)
+        self.assertIn('label: "Lập luận yếu:"', html)
+        self.assertIn('.replace(/^lập luận yếu\\s*:?\\s*/i, "")', html)
+        render_body = html.split("function renderPracticePrompt(", 1)[1].split(
+            "function renderPracticePromptLoading", 1
+        )[0]
+        self.assertIn(
+            "formatWeakArgumentText(promptData.weak_argument || rawPrompt)",
+            render_body,
+        )
+        self.assertIn("${escapeHtml(promptLabel)}", render_body)
 
     def test_frontend_arena_shows_user_and_lumi_stance_badges(self):
         html = read_frontend()
@@ -287,6 +329,7 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn("function generateRebuttalAudio(text)", html)
         self.assertIn("speechAudioCache.text === clean", html)
         self.assertIn("Không tạo được âm thanh phản biện", html)
+        self.assertIn(': (error.message || "Không tạo được âm thanh phản biện")', html)
         self.assertIn("await generateRebuttalAudio(turn.ai_rebuttal)", html)
         self.assertNotIn("window.speechSynthesis", html)
 
@@ -333,6 +376,70 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertNotIn("webkitSpeechRecognition", html)
         self.assertNotIn("startWebSpeechTurn", html)
         self.assertNotIn("voiceRecognition", html)
+
+    def test_free_debate_timer_follows_turn_lifecycle_not_input_content(self):
+        html = read_frontend()
+        demo = (ROOT_DIR / "frontend" / "scripts" / "demoSession.js").read_text(encoding="utf-8")
+
+        self.assertIn("const turnTimerState = {", html)
+        self.assertIn('currentSpeaker: "user"', html)
+        self.assertIn("function startUserTurnTimer({ reset = true } = {})", html)
+        self.assertIn("function stopUserTurnTimer()", html)
+        self.assertIn("function resetUserTurnTimer()", html)
+        self.assertIn("startUserTurnTimer({ reset: !turnTimerState.timerStartedForTurn })", html)
+        self.assertIn('turnTimerState.currentSpeaker = "ai"', html)
+        self.assertIn("startUserTurnTimer({ reset: completedUserTurn })", html)
+        self.assertIn('window.addEventListener("pagehide", stopUserTurnTimer)', html)
+        self.assertIn("startUserTurnTimer({ reset: true })", demo)
+
+        char_count_body = html.split("function updateCharCount()", 1)[1].split("function setLoading", 1)[0]
+        voice_render_body = html.split("function renderVoiceTranscript()", 1)[1].split("function clearVoiceSourceAudio", 1)[0]
+        self.assertNotIn("startUserTurnTimer", char_count_body)
+        self.assertNotIn("resetUserTurnTimer", char_count_body)
+        self.assertNotIn("initTurnTimer", char_count_body)
+        self.assertNotIn("startUserTurnTimer", voice_render_body)
+        self.assertNotIn("resetUserTurnTimer", voice_render_body)
+        self.assertNotIn("initTurnTimer", voice_render_body)
+
+    def test_practice_history_is_grouped_by_prompt_without_changing_free_debate(self):
+        html = read_frontend()
+
+        self.assertIn('currentGroupId: ""', html)
+        self.assertIn("groups: []", html)
+        self.assertIn("function registerPracticeGroup(promptData = {})", html)
+        self.assertIn("function getCurrentPracticeGroup()", html)
+        self.assertIn("function recordPracticeGroupError(group, userArgument, errorMessage)", html)
+        self.assertIn('`${ui.label}:`', html)
+        self.assertIn("turn.practice_group_id = practiceGroup.id", html)
+        self.assertIn("turn.practice_group_title = practiceGroup.title", html)
+        self.assertIn("recordPracticeGroupError(practiceGroup, argument, error.message)", html)
+        self.assertIn('class="chat-topic-group chat-topic-group--${Number(group.colorIndex || 0) % 5}"', html)
+        self.assertIn('data-practice-group-id="${escapeHtml(group.id)}"', html)
+        self.assertIn("const groupTurns = state.history.filter(turn => turn.practice_group_id === group.id)", html)
+        self.assertIn("if (!isGroupedPracticeMode())", html)
+        self.assertIn("state.history.slice(-3)", html)
+
+        transcript_body = html.split("function renderTranscript()", 1)[1].split("function renderSummary", 1)[0]
+        self.assertIn("groups.map(group =>", transcript_body)
+        self.assertIn("group.failedAttempts", transcript_body)
+        self.assertNotIn("state.history.slice(-3).map(turn => `", transcript_body)
+
+    def test_practice_history_group_styles_include_five_distinct_variants(self):
+        html = read_frontend()
+
+        self.assertIn(".chat-topic-group {", html)
+        self.assertIn(".chat-topic-header {", html)
+        self.assertIn(".chat-topic-badge {", html)
+        self.assertIn(".chat-topic-body {", html)
+        self.assertIn("max-height: 520px", html)
+        self.assertIn("max-height: 420px", html)
+        self.assertIn("max-height: 460px", html)
+        self.assertIn("overflow-y: auto", html)
+        self.assertIn("overscroll-behavior: contain", html)
+        self.assertIn(".chat-topic-body::-webkit-scrollbar-thumb", html)
+        self.assertIn('<div class="chat-topic-body">', html)
+        for index in range(1, 5):
+            self.assertIn(f".chat-topic-group--{index} {{", html)
 
     def test_frontend_includes_lumi_mascot_companion(self):
         html = read_frontend()
