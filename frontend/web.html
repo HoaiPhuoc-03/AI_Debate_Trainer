@@ -65,6 +65,18 @@
       --pink: #fb7185;
       --danger: #ef4444;
       --success: #10b981;
+      --topic-primary: #60a5fa;
+      --topic-secondary: #a78bfa;
+      --topic-accent: #20e7d1;
+      --topic-card-bg: linear-gradient(135deg, rgba(13, 21, 38, 0.96) 0%, rgba(17, 26, 46, 0.96) 58%, rgba(24, 34, 53, 0.96) 100%);
+      --topic-card-border: rgba(96, 165, 250, 0.22);
+      --topic-card-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+      --topic-card-selected-bg: linear-gradient(135deg, rgba(14, 38, 58, 0.98) 0%, rgba(21, 45, 67, 0.98) 52%, rgba(39, 32, 72, 0.98) 100%);
+      --topic-title: #e5edf8;
+      --topic-description: #9fb0c8;
+      --topic-helper: #7e8fa8;
+      --topic-tag-bg: rgba(139, 92, 246, 0.16);
+      --topic-tag-text: #c4b5fd;
     }
 
     /* Blue Pastel Theme */
@@ -245,7 +257,22 @@
     }
 
     .flow-icon {
-      font-size: 20px;
+      width: 24px;
+      height: 24px;
+      display: inline-grid;
+      place-items: center;
+      color: currentColor;
+    }
+
+    .flow-icon svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
     }
 
     .flow-title {
@@ -940,9 +967,19 @@
       color: var(--topic-title);
       background: rgba(248, 251, 255, 0.92);
       border: 1px solid rgba(120, 170, 255, 0.22);
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
       font-size: 17px;
-      font-weight: 800;
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: 0;
+      text-rendering: auto;
+      -webkit-font-smoothing: antialiased;
       outline: none;
+    }
+
+    .topic-filter-select option {
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      font-weight: 600;
     }
 
     .topic-filter-select:focus {
@@ -1175,6 +1212,89 @@
       background: linear-gradient(135deg, #f8fbff, #f6f1ff);
       border: 1px dashed rgba(120, 170, 255, 0.3);
       box-shadow: var(--topic-card-shadow);
+    }
+
+    body[data-theme="dark"] .topic-search,
+    body[data-theme="dark"] .topic-filter-select {
+      background: rgba(13, 21, 38, 0.92);
+      border-color: rgba(96, 165, 250, 0.22);
+      color: var(--topic-title);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    body[data-theme="dark"] .topic-filter-select option {
+      background: #111a2e;
+      color: #e5edf8;
+    }
+
+    body[data-theme="dark"] .topic-chip,
+    body[data-theme="dark"] .topic-load-more {
+      background: rgba(17, 26, 46, 0.92);
+      border-color: rgba(96, 165, 250, 0.22);
+      color: var(--topic-title);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+    }
+
+    body[data-theme="dark"] .topic-chip:hover,
+    body[data-theme="dark"] .topic-load-more:hover {
+      background: rgba(24, 34, 53, 0.96);
+      border-color: rgba(96, 165, 250, 0.46);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    body[data-theme="dark"] .topic-chip.active {
+      background: linear-gradient(135deg, rgba(32, 231, 209, 0.18), rgba(96, 165, 250, 0.18));
+      border-color: rgba(32, 231, 209, 0.52);
+      color: #8ff5e8;
+      box-shadow: 0 0 0 3px rgba(32, 231, 209, 0.08), 0 12px 26px rgba(0, 0, 0, 0.28);
+    }
+
+    body[data-theme="dark"] .topic-card:hover {
+      border-color: rgba(96, 165, 250, 0.46);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+    }
+
+    body[data-theme="dark"] .topic-card.active {
+      border-color: rgba(96, 165, 250, 0.72);
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1), 0 18px 42px rgba(0, 0, 0, 0.34);
+    }
+
+    body[data-theme="dark"] .topic-card-check {
+      background: rgba(15, 23, 42, 0.82);
+      border-color: rgba(96, 165, 250, 0.42);
+    }
+
+    body[data-theme="dark"] .topic-category-badge {
+      background: rgba(16, 185, 129, 0.14);
+      color: #86efac;
+      border-color: rgba(134, 239, 172, 0.28);
+    }
+
+    body[data-theme="dark"] .topic-difficulty-badge.basic {
+      background: rgba(250, 204, 21, 0.14);
+      color: #fde68a;
+      border-color: rgba(253, 230, 138, 0.28);
+    }
+
+    body[data-theme="dark"] .topic-difficulty-badge.intermediate {
+      background: rgba(96, 165, 250, 0.14);
+      color: #bfdbfe;
+      border-color: rgba(191, 219, 254, 0.28);
+    }
+
+    body[data-theme="dark"] .topic-difficulty-badge.advanced {
+      background: rgba(251, 113, 133, 0.14);
+      color: #fecdd3;
+      border-color: rgba(254, 205, 211, 0.28);
+    }
+
+    body[data-theme="dark"] .topic-tag {
+      border-color: rgba(196, 181, 253, 0.22);
+    }
+
+    body[data-theme="dark"] .topic-empty-state {
+      background: linear-gradient(135deg, rgba(13, 21, 38, 0.92), rgba(24, 34, 53, 0.92));
+      border-color: rgba(96, 165, 250, 0.26);
     }
 
     .custom-topic {
@@ -3212,7 +3332,13 @@
     }
 
     .flow-icon {
-      font-size: 16px;
+      width: 20px;
+      height: 20px;
+    }
+
+    .flow-icon svg {
+      width: 18px;
+      height: 18px;
     }
 
     .flow-title {
@@ -3984,7 +4110,12 @@
         linear-gradient(135deg, #1c7ed6, var(--arena-cyan) 52%, var(--arena-green)) !important;
       color: #ffffff !important;
       box-shadow: 0 16px 34px rgba(28, 126, 214, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease, background-position 0.35s ease;
+    }
+
+    .auth-button {
+      background-size: 220% 100% !important;
+      background-position: left center !important;
     }
 
     .auth-button::after,
@@ -4005,6 +4136,11 @@
       transform: translateY(-2px);
     }
 
+    .auth-button:hover {
+      background-position: right center !important;
+      box-shadow: 0 20px 42px rgba(20, 184, 166, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.34) !important;
+    }
+
     .auth-button:hover::after,
     .primary-btn:hover::after {
       transform: translateX(110%);
@@ -4022,12 +4158,40 @@
       backdrop-filter: blur(12px);
     }
 
+    .auth-ghost {
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.62) 45%, var(--arena-cyan) 72%, var(--arena-violet) 100%) !important;
+      background-size: 240% 100% !important;
+      background-position: left center !important;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background-position 0.35s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .auth-ghost:hover {
+      background-position: right center !important;
+      border-color: rgba(255, 255, 255, 0.48) !important;
+      color: #ffffff !important;
+      box-shadow: 0 18px 38px rgba(70, 185, 216, 0.22);
+      transform: translateY(-2px);
+    }
+
     body[data-theme="dark"] .secondary-btn,
     body[data-theme="dark"] .auth-ghost,
     body[data-theme="dark"] .soft-pill,
     body[data-theme="dark"] .coach-pill,
     body[data-theme="dark"] .theme-toggle {
       background: rgba(15, 23, 42, 0.62) !important;
+    }
+
+    body[data-theme="dark"] .auth-ghost {
+      background:
+        linear-gradient(135deg, rgba(15, 23, 42, 0.62) 0%, rgba(15, 23, 42, 0.62) 45%, var(--arena-cyan) 72%, var(--arena-violet) 100%) !important;
+      background-size: 240% 100% !important;
+      background-position: left center !important;
+    }
+
+    body[data-theme="dark"] .auth-ghost:hover {
+      background-position: right center !important;
+      color: #ffffff !important;
     }
 
     .sidebar,
@@ -4188,12 +4352,38 @@
       box-shadow: 0 16px 36px rgba(70, 185, 216, 0.20);
     }
 
+    .hub-row.profile .hub-icon,
+    .hub-row.arena .hub-icon,
+    .hub-row.progress .hub-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: transparent;
+    }
+
     .hub-row.arena .hub-icon {
-      background: linear-gradient(135deg, var(--arena-coral), var(--arena-gold));
+      box-shadow: 0 16px 36px rgba(245, 166, 35, 0.22);
+    }
+
+    .hub-row.profile .hub-icon {
+      box-shadow: 0 16px 36px rgba(70, 185, 216, 0.22);
     }
 
     .hub-row.progress .hub-icon {
-      background: linear-gradient(135deg, var(--arena-green), var(--arena-cyan));
+      box-shadow: 0 16px 36px rgba(20, 184, 166, 0.22);
+    }
+
+    .hub-row.profile .hub-icon img,
+    .hub-row.arena .hub-icon img,
+    .hub-row.progress .hub-icon img {
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      object-fit: cover;
+      object-position: center;
+      transform: scale(1.12);
+      display: block;
     }
 
     .hub-icon svg,
@@ -6611,10 +6801,7 @@
           <div class="hub-stack">
             <article class="hub-row profile">
               <div class="hub-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <circle cx="12" cy="8" r="4"></circle>
-                  <path d="M4 20c1.7-4 14.3-4 16 0"></path>
-                </svg>
+                <img src="assets/lumi-avatar.png" alt="">
               </div>
               <div>
                 <div class="hub-kicker">Cá nhân hóa</div>
@@ -6631,12 +6818,7 @@
 
             <article class="hub-row arena">
               <div class="hub-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M7 4l10 16"></path>
-                  <path d="M17 4 7 20"></path>
-                  <path d="M5 7h4"></path>
-                  <path d="M15 7h4"></path>
-                </svg>
+                <img src="assets/dragon_fighting.png" alt="">
               </div>
               <div>
                 <div class="hub-kicker">Luồng chính</div>
@@ -6678,11 +6860,7 @@
 
             <article class="hub-row progress">
               <div class="hub-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24">
-                  <path d="M4 19V5"></path>
-                  <path d="M8 17l4-5 3 3 5-8"></path>
-                  <path d="M8 17h12"></path>
-                </svg>
+                <img src="assets/lumi-progress.png" alt="">
               </div>
               <div>
                 <div class="hub-kicker">Theo dõi</div>
@@ -7268,10 +7446,16 @@
     };
     const LUMI_GOOD_CER_THRESHOLD = 70;
 
+    const flowIcons = {
+      home: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"></path><path d="M5.5 10.5V20h13v-9.5"></path><path d="M9.5 20v-5h5v5"></path></svg>`,
+      debate: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 4 10 16"></path><path d="M17 4 7 20"></path><path d="M5.5 7.5h4"></path><path d="M14.5 7.5h4"></path></svg>`,
+      progress: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"></path><path d="M6 16l4-4 3 3 5-7"></path><path d="M18 8h-4"></path><path d="M18 8v4"></path></svg>`,
+    };
+
     const flowSteps = [
-      { id: "home", icon: "◆", title: "Trang chính", target: "home", matches: ["home"] },
-      { id: "debate", icon: "◇", title: "Đấu trường", target: "session", matches: ["session", "arena", "summary"] },
-      { id: "progress", icon: "◎", title: "Tiến độ", target: "progress", matches: ["progress"] },
+      { id: "home", icon: flowIcons.home, title: "Trang chính", target: "home", matches: ["home"] },
+      { id: "debate", icon: flowIcons.debate, title: "Đấu trường", target: "session", matches: ["session", "arena", "summary"] },
+      { id: "progress", icon: flowIcons.progress, title: "Tiến độ", target: "progress", matches: ["progress"] },
     ];
 
     const state = {
