@@ -2354,6 +2354,11 @@
       gap: 12px;
     }
 
+    .auth-home .auth-actions {
+      width: min(100%, 420px);
+      gap: 9px;
+    }
+
     .auth-button,
     .auth-ghost,
     .auth-link-button {
@@ -2367,6 +2372,18 @@
       font-weight: 800;
       font-size: 19px;
       cursor: pointer;
+    }
+
+    .auth-home .auth-button,
+    .auth-home .auth-ghost {
+      min-height: 46px;
+      border-radius: 14px;
+      font-size: 16px;
+    }
+
+    .auth-home .auth-link-button {
+      min-height: 30px;
+      font-size: 14px;
     }
 
     .auth-button {
@@ -4041,7 +4058,7 @@
       border-radius: 0;
       background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06)),
-        url("assets/login-dragon-battle-bg.png") center / cover no-repeat;
+        url("assets/Background.png") center / cover no-repeat;
       box-shadow: var(--arena-shadow);
       backdrop-filter: blur(18px);
     }
@@ -4056,10 +4073,135 @@
       z-index: 2;
     }
 
+    .auth-sky-effects {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+      opacity: 0.86;
+      --mouse-x: 50%;
+      --mouse-y: 42%;
+    }
+
+    .auth-sky-effects::before {
+      content: "";
+      position: absolute;
+      inset: -8%;
+      background-image:
+        radial-gradient(circle, rgba(255, 255, 255, 0.98) 0 1px, transparent 2px),
+        radial-gradient(circle, rgba(126, 232, 255, 0.78) 0 1.2px, transparent 2.4px),
+        radial-gradient(circle, rgba(217, 185, 255, 0.68) 0 1px, transparent 2.2px),
+        radial-gradient(circle, rgba(255, 239, 186, 0.72) 0 1px, transparent 2px);
+      background-size: 92px 92px, 138px 138px, 196px 196px, 260px 260px;
+      background-position: 24px 18px, 88px 74px, 132px 116px, 20px 210px;
+      animation: authStarDrift 16s linear infinite, authStarTwinkle 2.8s ease-in-out infinite alternate;
+    }
+
+    .auth-sky-effects::after {
+      content: "";
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      left: var(--mouse-x);
+      top: var(--mouse-y);
+      border-radius: 50%;
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.35);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.95) 0 1.4px, transparent 2.5px),
+        radial-gradient(circle at 42% 35%, rgba(119, 231, 255, 0.88) 0 1.2px, transparent 2.5px),
+        radial-gradient(circle at 62% 58%, rgba(218, 183, 255, 0.9) 0 1.4px, transparent 2.8px),
+        radial-gradient(circle at 36% 66%, rgba(255, 238, 176, 0.78) 0 1px, transparent 2.4px),
+        radial-gradient(circle, rgba(129, 225, 255, 0.18), transparent 58%);
+      background-size: 28px 28px, 38px 38px, 48px 48px, 64px 64px, 100% 100%;
+      filter: drop-shadow(0 0 10px rgba(125, 221, 255, 0.72));
+      transition: left 0.35s ease, top 0.35s ease, opacity 0.35s ease, transform 0.45s ease;
+    }
+
+    .auth-sky-effects.is-gathering::after {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+      animation: authStarCluster 1.8s ease-in-out infinite alternate;
+    }
+
+    .auth-sky-effects span {
+      position: absolute;
+      top: var(--top);
+      left: var(--left);
+      width: var(--width);
+      height: var(--height, 2px);
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), rgba(115, 218, 255, 0.72), transparent);
+      filter: drop-shadow(0 0 8px rgba(125, 221, 255, 0.72));
+      transform: rotate(var(--angle, -18deg)) translateX(-40vw);
+      opacity: 0;
+      animation: authMeteor var(--duration, 6.8s) ease-in-out infinite;
+      animation-delay: var(--delay);
+    }
+
+    @keyframes authStarDrift {
+      from {
+        transform: translate3d(0, 0, 0);
+      }
+
+      to {
+        transform: translate3d(-150px, 90px, 0);
+      }
+    }
+
+    @keyframes authStarTwinkle {
+      from {
+        opacity: 0.72;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes authStarCluster {
+      from {
+        filter: drop-shadow(0 0 8px rgba(125, 221, 255, 0.62));
+      }
+
+      to {
+        filter: drop-shadow(0 0 18px rgba(217, 185, 255, 0.84));
+      }
+    }
+
+    @keyframes authMeteor {
+      0%, 62% {
+        opacity: 0;
+        transform: rotate(var(--angle, -18deg)) translateX(-42vw);
+      }
+
+      70% {
+        opacity: 0.95;
+      }
+
+      88% {
+        opacity: 0;
+        transform: rotate(var(--angle, -18deg)) translateX(118vw);
+      }
+
+      100% {
+        opacity: 0;
+        transform: rotate(var(--angle, -18deg)) translateX(118vw);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .auth-sky-effects::before,
+      .auth-sky-effects span {
+        animation: none;
+      }
+    }
+
     body[data-theme="dark"] .auth-home {
       background:
         linear-gradient(180deg, rgba(14, 23, 42, 0.26), rgba(7, 12, 26, 0.18)),
-        url("assets/login-dragon-battle-bg.png") center / cover no-repeat;
+        url("assets/Background.png") center / cover no-repeat;
     }
 
     .auth-home::before,
@@ -4114,8 +4256,16 @@
     }
 
     .auth-button {
+      background:
+        linear-gradient(135deg, #1d9bf0 0%, #37d9ff 32%, #8b5cf6 68%, #d946ef 100%) !important;
       background-size: 220% 100% !important;
       background-position: left center !important;
+      border: 1px solid rgba(255, 255, 255, 0.55) !important;
+      text-shadow: 0 1px 2px rgba(38, 32, 84, 0.24);
+      box-shadow:
+        0 18px 42px rgba(79, 156, 255, 0.34),
+        0 0 0 1px rgba(255, 255, 255, 0.18) inset,
+        0 1px 0 rgba(255, 255, 255, 0.48) inset !important;
     }
 
     .auth-button::after,
@@ -4138,7 +4288,10 @@
 
     .auth-button:hover {
       background-position: right center !important;
-      box-shadow: 0 20px 42px rgba(20, 184, 166, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.34) !important;
+      box-shadow:
+        0 22px 50px rgba(176, 86, 255, 0.36),
+        0 0 0 1px rgba(255, 255, 255, 0.2) inset,
+        0 1px 0 rgba(255, 255, 255, 0.55) inset !important;
     }
 
     .auth-button:hover::after,
@@ -4160,17 +4313,19 @@
 
     .auth-ghost {
       background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.62) 45%, var(--arena-cyan) 72%, var(--arena-violet) 100%) !important;
+        linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(238, 247, 255, 0.72) 42%, rgba(99, 210, 255, 0.92) 70%, rgba(182, 92, 255, 0.94) 100%) !important;
       background-size: 240% 100% !important;
       background-position: left center !important;
+      border-color: rgba(141, 184, 255, 0.48) !important;
+      color: #264064 !important;
       transition: transform 0.2s ease, box-shadow 0.2s ease, background-position 0.35s ease, color 0.2s ease, border-color 0.2s ease;
     }
 
     .auth-ghost:hover {
       background-position: right center !important;
-      border-color: rgba(255, 255, 255, 0.48) !important;
+      border-color: rgba(255, 255, 255, 0.64) !important;
       color: #ffffff !important;
-      box-shadow: 0 18px 38px rgba(70, 185, 216, 0.22);
+      box-shadow: 0 18px 42px rgba(139, 92, 246, 0.28);
       transform: translateY(-2px);
     }
 
@@ -4184,14 +4339,17 @@
 
     body[data-theme="dark"] .auth-ghost {
       background:
-        linear-gradient(135deg, rgba(15, 23, 42, 0.62) 0%, rgba(15, 23, 42, 0.62) 45%, var(--arena-cyan) 72%, var(--arena-violet) 100%) !important;
+        linear-gradient(135deg, rgba(20, 32, 58, 0.72) 0%, rgba(32, 48, 86, 0.72) 44%, rgba(55, 217, 255, 0.9) 72%, rgba(139, 92, 246, 0.94) 100%) !important;
       background-size: 240% 100% !important;
       background-position: left center !important;
+      border-color: rgba(173, 210, 255, 0.36) !important;
+      color: #eaf5ff !important;
     }
 
     body[data-theme="dark"] .auth-ghost:hover {
       background-position: right center !important;
       color: #ffffff !important;
+      box-shadow: 0 18px 42px rgba(139, 92, 246, 0.34);
     }
 
     .sidebar,
@@ -6580,6 +6738,11 @@
 <body data-theme="blue-pastel">
   <div class="auth-shell" id="auth-shell">
     <section class="auth-view auth-home active" id="auth-home">
+      <div class="auth-sky-effects" aria-hidden="true">
+        <span style="--top: 16%; --left: 6%; --width: 150px; --delay: 0.4s"></span>
+        <span style="--top: 34%; --left: 42%; --width: 110px; --delay: 2.7s"></span>
+        <span style="--top: 24%; --left: 70%; --width: 180px; --delay: 4.6s"></span>
+      </div>
       <div class="auth-logo">&#10022;</div>
       <div class="auth-kicker">Đấu trường &middot; Huấn luyện viên</div>
       <h1 class="auth-title">AI Debate Trainer</h1>
