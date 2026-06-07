@@ -43,6 +43,13 @@ from google.cloud.firestore_v1 import FieldFilter
 
 from app.core.config import settings
 from app.services.cer_scorer import normalize_cer_to_100
+from app.services.memory_utils import (
+    default_user_memory,
+    merge_user_memory,
+    normalize_memory_mode,
+    update_memory_after_turn,
+)
+from app.services.store_factory import get_store
 
 
 # ---------------------------------------------------------------------------
@@ -205,7 +212,7 @@ def _ensure_demo_user() -> None:
         })
 
 
-def init_db() -> None:
+def _firebase_init_db() -> None:
     """
     Initialise Firestore and seed the demo user.
 
@@ -224,7 +231,7 @@ def init_db() -> None:
 # Users
 # ---------------------------------------------------------------------------
 
-def create_user(
+def _firebase_create_user(
     email: str,
     password_hash: str,
     display_name: str,
@@ -248,7 +255,7 @@ def create_user(
     return data
 
 
-def get_user_by_email(email: str) -> dict | None:
+def _firebase_get_user_by_email(email: str) -> dict | None:
     init_db()
     docs = (
         _db()
@@ -260,15 +267,15 @@ def get_user_by_email(email: str) -> dict | None:
     return docs[0].to_dict() if docs else None
 
 
-def get_user_by_id(user_id: str) -> dict | None:
+def _firebase_get_user_by_id(user_id: str) -> dict | None:
     init_db()
     doc = _db().collection("users").document(user_id).get()
     return doc.to_dict() if doc.exists else None
 
 
-def get_demo_user() -> dict | None:
+def _firebase_get_demo_user() -> dict | None:
     init_db()
-    return get_user_by_id(DEMO_USER_ID)
+    return _firebase_get_user_by_id(DEMO_USER_ID)
 
 
 # ---------------------------------------------------------------------------
@@ -280,7 +287,7 @@ def _enrich_auth_session(session_data: dict) -> dict:
     Merge user profile fields into an auth-session dict.
     Replicates the JOIN on users done in the SQLite version.
     """
-    user = get_user_by_id(session_data["user_id"]) or {}
+    user = _firebase_get_user_by_id(session_data["user_id"]) or {}
     return {
         **session_data,
         "email": user.get("email"),
@@ -291,7 +298,7 @@ def _enrich_auth_session(session_data: dict) -> dict:
     }
 
 
-def create_auth_session(
+def _firebase_create_auth_session(
     user_id: str,
     token: str,
     expires_at: datetime | str | None = None,
@@ -310,7 +317,7 @@ def create_auth_session(
     return _enrich_auth_session(data)
 
 
-def get_auth_session_by_token(token: str) -> dict | None:
+def _firebase_get_auth_session_by_token(token: str) -> dict | None:
     init_db()
     docs = (
         _db()
@@ -324,7 +331,7 @@ def get_auth_session_by_token(token: str) -> dict | None:
     return _enrich_auth_session(docs[0].to_dict())
 
 
-def deactivate_auth_session(token: str) -> dict | None:
+def _firebase_deactivate_auth_session(token: str) -> dict | None:
     init_db()
     db = _db()
     docs = (
@@ -372,7 +379,7 @@ def _compute_session_avg_score(db: firestore.Client, session_id: str) -> float |
     return round(sum(totals) / len(totals), 6) if totals else None
 
 
-def create_session(
+def _firebase_create_session(
     user_id: str,
     topic: str,
     stance: str,
@@ -425,7 +432,7 @@ def create_session(
     return data
 
 
-def get_session(session_id: str, user_id: str | None = None) -> dict | None:
+def _firebase_get_session(session_id: str, user_id: str | None = None) -> dict | None:
     init_db()
     doc = _db().collection("debate_sessions").document(session_id).get()
     if not doc.exists:
@@ -436,7 +443,7 @@ def get_session(session_id: str, user_id: str | None = None) -> dict | None:
     return data
 
 
-def end_session(session_id: str, user_id: str | None = None) -> dict | None:
+def _firebase_end_session(session_id: str, user_id: str | None = None) -> dict | None:
     init_db()
     db = _db()
     doc_ref = db.collection("debate_sessions").document(session_id)
@@ -462,7 +469,7 @@ def end_session(session_id: str, user_id: str | None = None) -> dict | None:
 # Debate turns
 # ---------------------------------------------------------------------------
 
-def save_debate_turn(
+def _firebase_save_debate_turn(
     session: dict,
     user_argument: str,
     ai_rebuttal: str,
@@ -472,11 +479,13 @@ def save_debate_turn(
     practice_mode: str | None = None,
     practice_prompt: str | None = None,
     practice_round: int | None = None,
+    practice_prompt_id: str | None = None,
     status: str = "active",
     count_for_completion: bool = True,
     complete_session: bool = True,
 ) -> dict:
-    init_db()
+    _ = practice_prompt_id
+    _firebase_init_db()
     db = _db()
     turn_id = str(uuid4())
     session_id = session["session_id"]
@@ -576,7 +585,7 @@ def save_debate_turn(
     }
 
 
-def get_session_turns(session_id: str) -> list[dict]:
+def _firebase_get_session_turns(session_id: str) -> list[dict]:
     init_db()
     db = _db()
 
@@ -643,12 +652,12 @@ def get_session_turns(session_id: str) -> list[dict]:
 # Summaries and progress
 # ---------------------------------------------------------------------------
 
-def get_session_summary(session_id: str, user_id: str | None = None) -> dict | None:
-    session = get_session(session_id, user_id=user_id)
+def _firebase_get_session_summary(session_id: str, user_id: str | None = None) -> dict | None:
+    session = _firebase_get_session(session_id, user_id=user_id)
     if not session:
         return None
 
-    turns = get_session_turns(session_id)
+    turns = _firebase_get_session_turns(session_id)
     scored_turns = [t for t in turns if t["status"] not in ("error", "invalid")]
     cer_scores = [t["cer"] for t in scored_turns]
     strengths: list[str] = []
@@ -677,7 +686,7 @@ def get_session_summary(session_id: str, user_id: str | None = None) -> dict | N
     }
 
 
-def get_progress_overview(user_id: str | None = None) -> dict:
+def _firebase_get_progress_overview(user_id: str | None = None) -> dict:
     init_db()
     db = _db()
 
@@ -835,3 +844,267 @@ def get_progress_overview(user_id: str | None = None) -> dict:
         "skill_strength":      _skill_label(scores, pick_highest=True),
         "skill_weakness":      _skill_label(scores, pick_highest=False),
     }
+
+
+# ---------------------------------------------------------------------------
+# Firebase implementations added for the provider facade
+# ---------------------------------------------------------------------------
+
+USER_MEMORY_FIELD = "debate_memory"
+
+
+def _firebase_update_session(
+    session_id: str,
+    updates: dict,
+    user_id: str | None = None,
+) -> dict | None:
+    session = _firebase_get_session(session_id, user_id=user_id)
+    if not session:
+        return None
+    payload = dict(updates)
+    payload.pop("id", None)
+    payload.pop("session_id", None)
+    payload["updated_at"] = _now()
+    ref = _db().collection("debate_sessions").document(session_id)
+    ref.update(payload)
+    return ref.get().to_dict()
+
+
+def _firebase_save_practice_prompt(
+    *,
+    session_id: str | None,
+    user_id: str,
+    mode: str,
+    topic: str | None,
+    topic_id: str | None = None,
+    category: str | None = None,
+    difficulty: str | None = None,
+    prompt_type: str | None = None,
+    prompt_text: str | None = None,
+    instruction: str | None = None,
+    round_number: int = 1,
+    metadata: dict | None = None,
+) -> dict:
+    _firebase_init_db()
+    prompt_id = str(uuid4())
+    data = {
+        "id": prompt_id,
+        "practice_prompt_id": prompt_id,
+        "session_id": session_id,
+        "user_id": user_id,
+        "mode": mode,
+        "topic": topic,
+        "topic_id": topic_id,
+        "category": category,
+        "difficulty": difficulty,
+        "prompt_type": prompt_type,
+        "prompt_text": prompt_text,
+        "prompt": prompt_text,
+        "instruction": instruction,
+        "round_number": int(round_number or 1),
+        "metadata": metadata or {},
+        "created_at": _now(),
+    }
+    _db().collection("practice_prompts").document(prompt_id).set(data)
+    return data
+
+
+def _firebase_get_used_practice_prompts(
+    session_id: str,
+    mode: str | None = None,
+) -> list[dict]:
+    _firebase_init_db()
+    query = _db().collection("practice_prompts").where(
+        filter=FieldFilter("session_id", "==", session_id)
+    )
+    if mode:
+        query = query.where(filter=FieldFilter("mode", "==", mode))
+    rows = [doc.to_dict() for doc in query.get()]
+    return sorted(rows, key=lambda row: _parse_datetime(row.get("created_at")) or _now())
+
+
+def _firebase_get_recent_turns(session_id: str, limit: int = 3) -> list[dict]:
+    turns = _firebase_get_session_turns(session_id)
+    return turns[-max(1, int(limit)):]
+
+
+def _default_user_memory(user_id: str) -> dict:
+    return default_user_memory(user_id)
+
+
+def _merge_user_memory(memory: dict | None, user_id: str) -> dict:
+    return merge_user_memory(memory, user_id)
+
+
+def _firebase_get_user_memory(user_id: str) -> dict:
+    init_db()
+    doc = _db().collection("users").document(user_id).get()
+    raw = doc.to_dict() if doc.exists else {}
+    return merge_user_memory((raw or {}).get(USER_MEMORY_FIELD), user_id)
+
+
+def _firebase_update_user_memory_after_turn(
+    *,
+    user_id: str,
+    mode: str | None,
+    topic: str,
+    topic_category: str | None,
+    user_argument: str,
+    ai_result: dict,
+) -> dict:
+    _ = topic, user_argument
+    memory = update_memory_after_turn(
+        _firebase_get_user_memory(user_id),
+        user_id=user_id,
+        mode=mode,
+        topic_category=topic_category,
+        ai_result=ai_result,
+    )
+    _db().collection("users").document(user_id).set(
+        {USER_MEMORY_FIELD: memory},
+        merge=True,
+    )
+    return memory
+
+
+def _firebase_reset_user_memory(user_id: str) -> dict:
+    init_db()
+    memory = default_user_memory(user_id)
+    _db().collection("users").document(user_id).set(
+        {USER_MEMORY_FIELD: memory},
+        merge=True,
+    )
+    return memory
+
+
+def _firebase_get_session_memory(
+    session_id: str,
+    user_id: str | None = None,
+) -> dict:
+    init_db()
+    doc = _db().collection("session_memories").document(session_id).get()
+    if not doc.exists:
+        return {}
+    data = doc.to_dict() or {}
+    if user_id is not None and data.get("user_id") != user_id:
+        return {}
+    return dict(data.get("memory") or {})
+
+
+def _firebase_update_session_memory(
+    session_id: str,
+    user_id: str,
+    memory: dict,
+) -> dict:
+    init_db()
+    _db().collection("session_memories").document(session_id).set(
+        {
+            "session_id": session_id,
+            "user_id": user_id,
+            "memory": memory or {},
+            "updated_at": _now(),
+        },
+        merge=True,
+    )
+    return dict(memory or {})
+
+
+# ---------------------------------------------------------------------------
+# Public storage facade. The selected provider owns users, auth metadata,
+# debate data, progress, and memory.
+# ---------------------------------------------------------------------------
+
+def init_db():
+    return get_store().init_db()
+
+
+def create_user(*args, **kwargs):
+    return get_store().create_user(*args, **kwargs)
+
+
+def get_user_by_email(*args, **kwargs):
+    return get_store().get_user_by_email(*args, **kwargs)
+
+
+def get_user_by_id(*args, **kwargs):
+    return get_store().get_user_by_id(*args, **kwargs)
+
+
+def get_demo_user():
+    return get_store().get_demo_user()
+
+
+def create_auth_session(*args, **kwargs):
+    return get_store().create_auth_session(*args, **kwargs)
+
+
+def get_auth_session_by_token(*args, **kwargs):
+    return get_store().get_auth_session_by_token(*args, **kwargs)
+
+
+def deactivate_auth_session(*args, **kwargs):
+    return get_store().deactivate_auth_session(*args, **kwargs)
+
+
+def create_session(*args, **kwargs):
+    return get_store().create_session(*args, **kwargs)
+
+
+def get_session(*args, **kwargs):
+    return get_store().get_session(*args, **kwargs)
+
+
+def update_session(*args, **kwargs):
+    return get_store().update_session(*args, **kwargs)
+
+
+def end_session(*args, **kwargs):
+    return get_store().end_session(*args, **kwargs)
+
+
+def save_practice_prompt(*args, **kwargs):
+    return get_store().save_practice_prompt(*args, **kwargs)
+
+
+def get_used_practice_prompts(*args, **kwargs):
+    return get_store().get_used_practice_prompts(*args, **kwargs)
+
+
+def save_debate_turn(*args, **kwargs):
+    return get_store().save_debate_turn(*args, **kwargs)
+
+
+def get_recent_turns(*args, **kwargs):
+    return get_store().get_recent_turns(*args, **kwargs)
+
+
+def get_session_turns(*args, **kwargs):
+    return get_store().get_session_turns(*args, **kwargs)
+
+
+def get_session_summary(*args, **kwargs):
+    return get_store().get_session_summary(*args, **kwargs)
+
+
+def get_progress_overview(*args, **kwargs):
+    return get_store().get_progress_overview(*args, **kwargs)
+
+
+def get_session_memory(*args, **kwargs):
+    return get_store().get_session_memory(*args, **kwargs)
+
+
+def update_session_memory(*args, **kwargs):
+    return get_store().update_session_memory(*args, **kwargs)
+
+
+def get_user_memory(*args, **kwargs):
+    return get_store().get_user_memory(*args, **kwargs)
+
+
+def update_user_memory_after_turn(*args, **kwargs):
+    return get_store().update_user_memory_after_turn(*args, **kwargs)
+
+
+def reset_user_memory(*args, **kwargs):
+    return get_store().reset_user_memory(*args, **kwargs)

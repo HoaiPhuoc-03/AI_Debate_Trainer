@@ -77,6 +77,7 @@ class DebateTurnRequest(BaseModel):
     practice_mode: str | None = Field(default=None, example="evidence_practice")
     practice_topic: str | None = Field(default=None, example="Should online learning replace homework?")
     practice_prompt: str | None = Field(default=None, example="Online learning helps students manage their own time.")
+    practice_prompt_id: str | None = Field(default=None, example="f3d7c43d-...")
     practice_round: int | None = Field(default=None, ge=1, example=1)
 
 
@@ -107,6 +108,7 @@ class PracticePromptResponse(BaseModel):
     category: str | None = None
     difficulty: str | None = None
     fallacy_hint: str | None = None
+    practice_prompt_id: str | None = None
 
 
 class CERScoreResponse(BaseModel):

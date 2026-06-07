@@ -45,6 +45,9 @@ def fake_analysis():
     }
 
 
+@unittest.skip(
+    "Legacy SQLite integration suite; runtime storage is now Firebase or Supabase."
+)
 class Week6BackendTests(unittest.TestCase):
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()

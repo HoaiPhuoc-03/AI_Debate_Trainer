@@ -7233,7 +7233,8 @@
 
   <script>
     const BACKEND_API_URL = "http://127.0.0.1:8000";
-    const AUTH_TOKEN_KEY = "ai_debate_trainer.authToken";
+    const AUTH_TOKEN_KEY = "access_token";
+    const LEGACY_AUTH_TOKEN_KEY = "ai_debate_trainer.authToken";
     const SIGNUP_DRAFT_KEY = "ai_debate_trainer.signupDraft";
     const THEME_KEY = "ai_debate_theme";
     const DEFAULT_THEME = "blue-pastel";
@@ -7323,6 +7324,7 @@
         mode: null,
         round: 1,
         currentPrompt: null,
+        currentPromptId: null,
         currentTopic: "",
         currentPromptType: null,
         instruction: "",
@@ -7591,7 +7593,10 @@
     }
 
     function loadStoredAuth() {
-      state.authToken = localStorage.getItem(AUTH_TOKEN_KEY) || sessionStorage.getItem(AUTH_TOKEN_KEY);
+      state.authToken = localStorage.getItem(AUTH_TOKEN_KEY)
+        || sessionStorage.getItem(AUTH_TOKEN_KEY)
+        || localStorage.getItem(LEGACY_AUTH_TOKEN_KEY)
+        || sessionStorage.getItem(LEGACY_AUTH_TOKEN_KEY);
       state.isAuthenticated = Boolean(state.authToken);
       state.guestMode = false;
       state.currentUser = null;
@@ -7609,10 +7614,11 @@
     }
 
     function applyAuthSession(data, persist = true) {
-      if (!data?.token || !data?.user) {
+      const accessToken = data?.access_token || data?.token;
+      if (!accessToken || !data?.user) {
         throw new Error("Máy chủ chưa trả về phiên đăng nhập hợp lệ.");
       }
-      applyCurrentUser(data.user, data.token, persist);
+      applyCurrentUser(data.user, accessToken, persist);
     }
 
     function applyCurrentUser(user, token, persist = true) {
@@ -7628,6 +7634,8 @@
       state.language = "Tiếng Việt";
       localStorage.removeItem(AUTH_TOKEN_KEY);
       sessionStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
+      sessionStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
       const storage = persist ? localStorage : sessionStorage;
       storage.setItem(AUTH_TOKEN_KEY, token);
       updateUserTopbar();
@@ -7673,10 +7681,12 @@
         if (el) el.textContent = value;
       });
       localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
       localStorage.removeItem("authToken");
       localStorage.removeItem("currentUser");
       localStorage.removeItem("ai_debate_trainer.currentUser");
       sessionStorage.removeItem(AUTH_TOKEN_KEY);
+      sessionStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
       sessionStorage.removeItem("authToken");
       sessionStorage.removeItem("currentUser");
       sessionStorage.removeItem("ai_debate_trainer.currentUser");
@@ -7694,6 +7704,8 @@
         state.userEmail = "";
         localStorage.removeItem(AUTH_TOKEN_KEY);
         sessionStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
+        sessionStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
       }
       document.getElementById("auth-shell").classList.add("hidden");
       document.getElementById("app-shell").classList.remove("hidden");
@@ -7753,6 +7765,14 @@
           },
           skipAuth: true,
         });
+        if (!data.access_token && !data.token) {
+          sessionStorage.removeItem(SIGNUP_DRAFT_KEY);
+          goToAuthView("login");
+          return showAuthError(
+            "auth-login-error",
+            data.message || "Tài khoản đã được tạo. Vui lòng xác nhận email trước khi đăng nhập."
+          );
+        }
         applyAuthSession(data);
         sessionStorage.removeItem(SIGNUP_DRAFT_KEY);
         goToAuthView("success");
@@ -8741,6 +8761,7 @@
       state.practice.mode = normalizedMode;
       state.practice.round = 1;
       state.practice.currentPrompt = null;
+      state.practice.currentPromptId = null;
       state.practice.currentTopic = "";
       state.practice.currentPromptType = null;
       state.practice.instruction = "";
@@ -9017,6 +9038,7 @@
       renderPracticeModeBar();
       const promptData = await generatePracticePrompt();
       state.practice.currentPrompt = promptData.prompt || promptData.topic || "";
+      state.practice.currentPromptId = promptData.practice_prompt_id || promptData.id || null;
       state.practice.currentTopic = promptData.topic || promptData.prompt || "";
       state.practice.currentPromptType = promptData.prompt_type || state.practice.mode;
       state.practice.instruction = promptData.instruction || getPracticePromptUi()?.task || "";
@@ -9613,6 +9635,7 @@
           body.practice_mode = state.practice.mode;
           body.practice_topic = state.practice.currentTopic;
           body.practice_prompt = state.practice.currentPrompt;
+          body.practice_prompt_id = state.practice.currentPromptId;
           body.practice_round = state.practice.round;
         }
         const data = await apiRequest("/api/v1/debate/turn", {

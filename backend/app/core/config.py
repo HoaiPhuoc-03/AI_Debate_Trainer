@@ -7,6 +7,13 @@ ENV_PATH = BASE_DIR / ".env"
 load_dotenv(dotenv_path=ENV_PATH)
 
 class Settings:
+    STORAGE_PROVIDER = os.getenv("STORAGE_PROVIDER", "firebase").strip().lower()
+    AUTH_PROVIDER = os.getenv("AUTH_PROVIDER", STORAGE_PROVIDER).strip().lower()
+    SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+    SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
+    SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+    DATABASE_URL = os.getenv("DATABASE_URL", "")
+
     GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
     GROQ_BASE_URL = os.getenv(
         "GROQ_BASE_URL",

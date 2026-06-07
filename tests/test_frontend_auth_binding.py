@@ -25,6 +25,8 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn("/api/v1/auth/login", html)
         self.assertIn("/api/v1/auth/me", html)
         self.assertIn("applyAuthSession(data", html)
+        self.assertIn('const AUTH_TOKEN_KEY = "access_token"', html)
+        self.assertIn("data?.access_token || data?.token", html)
         self.assertIn("sessionStorage.getItem(AUTH_TOKEN_KEY)", html)
         self.assertIn("const storage = persist ? localStorage : sessionStorage", html)
         self.assertIn("storage.setItem(AUTH_TOKEN_KEY, token)", html)

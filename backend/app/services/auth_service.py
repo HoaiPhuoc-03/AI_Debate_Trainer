@@ -6,12 +6,14 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import Header, HTTPException
 
+from app.core.config import settings
 from app.services.normalization import (
     normalize_age_group,
     normalize_debate_level,
     normalize_language,
     optional_text,
 )
+from app.services.supabase_store import SupabaseStore
 from app.services.session_store import (
     create_auth_session,
     create_user,
@@ -126,7 +128,7 @@ def issue_token_for_user(user: dict) -> dict:
     }
 
 
-def register_user(payload) -> dict:
+def _legacy_register_user(payload) -> dict:
     email = normalize_email(payload.email)
     _validate_email(email)
     _validate_password(payload.password)
@@ -146,7 +148,7 @@ def register_user(payload) -> dict:
     return issue_token_for_user(user)
 
 
-def login_user(payload) -> dict:
+def _legacy_login_user(payload) -> dict:
     email = normalize_email(payload.email)
     _validate_email(email)
     user = get_user_by_email(email)
@@ -166,7 +168,7 @@ def _extract_bearer_token(authorization: str | None) -> str | None:
     return token.strip()
 
 
-def get_user_from_token(token: str) -> dict:
+def _legacy_get_user_from_token(token: str) -> dict:
     auth_session = get_auth_session_by_token(token)
     if (
         not auth_session
@@ -175,6 +177,96 @@ def get_user_from_token(token: str) -> dict:
     ):
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     return _session_user(auth_session)
+
+
+def _auth_provider() -> str:
+    provider = str(settings.AUTH_PROVIDER or "firebase").strip().lower()
+    if provider not in {"firebase", "supabase"}:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                f"Unsupported AUTH_PROVIDER '{provider}'. "
+                "Use 'firebase' or 'supabase'."
+            ),
+        )
+    return provider
+
+
+def _supabase_profile(
+    auth_user: dict,
+    *,
+    age_group: str | None = None,
+    debate_level: str | None = None,
+    language: str | None = None,
+) -> dict:
+    metadata = dict(auth_user.get("metadata") or {})
+    profile = SupabaseStore().ensure_profile(
+        auth_user["id"],
+        email=auth_user.get("email"),
+        display_name=auth_user.get("display_name"),
+        age_group=age_group or metadata.get("age_group"),
+        debate_level=debate_level or metadata.get("debate_level"),
+        language=language or metadata.get("language"),
+        metadata={"auth_source": "supabase_auth"},
+    )
+    return _public_user(profile)
+
+
+def _supabase_token_response(result: dict, user: dict) -> dict:
+    access_token = result.get("access_token")
+    return {
+        "token": access_token,
+        "access_token": access_token,
+        "refresh_token": result.get("refresh_token"),
+        "token_type": result.get("token_type") or "bearer",
+        "user": user,
+        "message": result.get("message"),
+    }
+
+
+def register_user(payload) -> dict:
+    if _auth_provider() == "firebase":
+        return _legacy_register_user(payload)
+
+    email = normalize_email(payload.email)
+    _validate_email(email)
+    _validate_password(payload.password)
+    display_name = optional_text(payload.display_name) or email.split("@", 1)[0]
+
+    from app.services.supabase_auth_service import sign_up_with_email
+
+    result = sign_up_with_email(email, payload.password, display_name)
+    user = _supabase_profile(
+        result["user"],
+        age_group=normalize_age_group(payload.age_group),
+        debate_level=normalize_debate_level(payload.debate_level),
+        language=normalize_language(payload.language),
+    )
+    return _supabase_token_response(result, user)
+
+
+def login_user(payload) -> dict:
+    if _auth_provider() == "firebase":
+        return _legacy_login_user(payload)
+
+    email = normalize_email(payload.email)
+    _validate_email(email)
+
+    from app.services.supabase_auth_service import sign_in_with_email
+
+    result = sign_in_with_email(email, payload.password)
+    user = _supabase_profile(result["user"])
+    return _supabase_token_response(result, user)
+
+
+def get_user_from_token(token: str) -> dict:
+    if _auth_provider() == "firebase":
+        return _legacy_get_user_from_token(token)
+
+    from app.services.supabase_auth_service import get_user_from_access_token
+
+    auth_user = get_user_from_access_token(token)
+    return _supabase_profile(auth_user)
 
 
 def get_current_user(authorization: str | None = Header(default=None)) -> dict:
@@ -195,6 +287,12 @@ def logout_token(authorization: str | None) -> dict:
     token = _extract_bearer_token(authorization)
     if not token:
         raise HTTPException(status_code=401, detail="Authentication required")
+    if _auth_provider() == "firebase":
+        _legacy_get_user_from_token(token)
+        deactivate_auth_session(token)
+        return {"status": "ok"}
+
     get_user_from_token(token)
-    deactivate_auth_session(token)
-    return {"status": "ok"}
+    from app.services.supabase_auth_service import sign_out
+
+    return sign_out(token)
