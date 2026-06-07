@@ -2323,6 +2323,49 @@
       background: linear-gradient(135deg, #08c8f6, var(--cyan));
       box-shadow: 0 18px 45px rgba(32, 231, 209, 0.24);
     }
+        /* 1. CHỈNH LOGO TO LÊN */
+    .auth-logo {
+      margin-bottom: 20px !important; /* Tạo khoảng cách với chữ bên dưới */
+    }
+    .auth-logo img {
+      width: 75px !important;  /* Tăng kích thước logo (mày có thể tăng lên 80px hoặc 90px tùy ý) */
+      height: 75px !important;
+      object-fit: contain;
+    }
+
+    /* 2. CHỮ "AI DEBATE TRAINER" ĐỔI MÀU ĐỘNG XUYÊN SUỐT (XANH DƯƠNG - TÍM ĐẬM) */
+    .auth-title {
+      font-size: 50px !important;
+      font-weight: 800 !important;
+      
+      /* Tạo dải màu gồm Xanh dương, Indigo và Tím đậm nối tiếp nhau */
+      background: linear-gradient(270deg, #1d4ed8, #3b82f6, #6d28d9, #4c1d95, #1d4ed8);
+      background-size: 400% 400% !important;
+      
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      
+      /* Kích hoạt hiệu ứng chuyển màu liên tục, chạy trong 6 giây và lập lại vô hạn */
+      animation: waveGradient 6s ease infinite !important;
+    }
+
+    /* Định nghĩa chuyển động mượt mà cho dải màu */
+    @keyframes waveGradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* 3. LÀM DÒNG CHỮ PHỤ (LUYỆN LẬP LUẬN...) ĐẬM NÉT VÀ RÕ HƠN */
+    /* Vì app của mày nền tối (Dark mode) nên tao tăng độ sáng màu chữ và làm nét chữ dày (bold) lên cho dễ nhìn */
+    .auth-kicker, .auth-subtitle, [class*="kicker"] {
+      color: #cbd5e1 !important;   /* Đổi sang màu xám sáng/trắng sữa để nổi bật trên nền tối */
+      font-weight: 600 !important;  /* Làm nét chữ đậm lên hẳn */
+      font-size: 15px !important;   /* Tăng kích thước chữ lên một chút */
+      opacity: 1 !important;        /* Loại bỏ độ mờ (nếu có) */
+      margin-top: 10px !important;
+    }
 
     .auth-kicker {
       color: var(--cyan);
@@ -2930,6 +2973,29 @@
       font-weight: 700;
       color: var(--text);
       line-height: 1.45;
+    }
+      /* Hiệu ứng làm nổi bật tên App ở màn hình chờ */
+    .title-glow {
+      /* Chuyển màu chữ thành dải màu Gradient */
+      background: linear-gradient(135deg, #20e7d1 0%, #3b82f6 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      
+      /* Làm chữ to và đậm hơn một chút */
+      font-size: 52px !important; 
+      font-weight: 900 !important;
+      
+      /* Đổ bóng phát sáng (Glow) quanh chữ */
+      text-shadow: 0px 8px 24px rgba(32, 231, 209, 0.35);
+      
+      /* Hiệu ứng chuyển động nhẹ khi di chuột vào (thích thì để) */
+      transition: transform 0.3s ease, text-shadow 0.3s ease;
+    }
+
+    .title-glow:hover {
+      transform: scale(1.02); /* Phóng to lên xíu khi lướt chuột */
+      text-shadow: 0px 12px 30px rgba(59, 130, 246, 0.5); /* Sáng mạnh hơn */
     }
 
     .insight-text,
@@ -6743,9 +6809,11 @@
         <span style="--top: 34%; --left: 42%; --width: 110px; --delay: 2.7s"></span>
         <span style="--top: 24%; --left: 70%; --width: 180px; --delay: 4.6s"></span>
       </div>
-      <div class="auth-logo">&#10022;</div>
+      <div>
+        <img src="assets/lumi-logo.png" alt="Logo" style="width: 36px; height: 36px; object-fit: contain;">
+      </div>
       <div class="auth-kicker">Đấu trường &middot; Huấn luyện viên</div>
-      <h1 class="auth-title">AI Debate Trainer</h1>
+      <h1 class="auth-title title-glow">AI Debate Trainer</h1>
       <p class="auth-copy">Luyện lập luận, nhận phản biện từ AI và cải thiện tư duy logic với điểm CER cùng huấn luyện
         viên tranh biện cá nhân.</p>
       <div class="auth-actions">
