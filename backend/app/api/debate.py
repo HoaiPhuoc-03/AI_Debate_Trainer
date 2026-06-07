@@ -17,7 +17,7 @@ from app.schemas.debate import (
     StartSessionResponse,
 )
 from app.services import ai_service
-from app.services.auth_service import get_debate_user
+from app.services.auth_service import get_current_user, get_debate_user
 from app.services.cer_scorer import normalize_cer_to_100
 from app.services.practice_prompt_service import build_practice_prompt
 from app.services.prompt_builder import normalize_practice_mode
@@ -30,7 +30,13 @@ from app.services.session_store import (
     get_session,
     get_session_summary,
     get_session_turns,
+    get_session_memory,
+    get_user_memory,
+    reset_user_memory,
+    save_practice_prompt,
     save_debate_turn,
+    update_session_memory,
+    update_user_memory_after_turn,
 )
 
 router = APIRouter()
@@ -136,11 +142,13 @@ def create_practice_prompt(
     payload: PracticePromptRequest,
     current_user: dict = Depends(get_debate_user),
 ):
-    _ = current_user
     topic_validation = validate_debate_topic(payload.topic)
     if not topic_validation["is_valid"]:
         raise HTTPException(status_code=400, detail=topic_validation["message"])
-    return build_practice_prompt(
+    if payload.session_id and not get_session(payload.session_id, user_id=current_user["id"]):
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    result = build_practice_prompt(
         mode=payload.mode,
         topic=payload.topic,
         difficulty=payload.difficulty,
@@ -151,6 +159,40 @@ def create_practice_prompt(
         previous_topics=payload.previous_topics,
         avoid_repeating=payload.avoid_repeating,
     )
+    saved = save_practice_prompt(
+        session_id=payload.session_id,
+        user_id=current_user["id"],
+        mode=result["mode"],
+        topic=result.get("topic") or payload.topic,
+        topic_id=result.get("topic_id"),
+        category=result.get("category") or payload.category,
+        difficulty=result.get("difficulty") or payload.difficulty,
+        prompt_type=result.get("prompt_type"),
+        prompt_text=result.get("prompt"),
+        instruction=result.get("instruction"),
+        round_number=payload.round,
+        metadata={
+            "source": result.get("source"),
+            "warning": result.get("warning"),
+        },
+    )
+    result["practice_prompt_id"] = saved["practice_prompt_id"]
+    if payload.session_id:
+        memory = get_session_memory(payload.session_id, current_user["id"])
+        prompts = list(memory.get("practice_prompts") or [])
+        prompts.append(
+            {
+                "practice_prompt_id": saved["practice_prompt_id"],
+                "mode": result["mode"],
+                "topic": result.get("topic") or payload.topic,
+                "prompt": result.get("prompt"),
+                "round": payload.round,
+            }
+        )
+        memory["practice_prompts"] = prompts[-12:]
+        memory["active_mode"] = result["mode"]
+        update_session_memory(payload.session_id, current_user["id"], memory)
+    return result
 
 
 @router.post("/turn", response_model=DebateTurnResponseV2)
@@ -173,8 +215,7 @@ def debate_turn(
     # Fetch recent turns for conversation history.
     # Limit to last 3 to keep the prompt size bounded while giving enough
     # context for the LLM to produce evolving, non-repetitive rebuttals.
-    prior_turns = get_session_turns(payload.session_id)
-    turn_history = prior_turns[-3:] if prior_turns else []
+    turn_history = get_session_turns(payload.session_id)[-3:]
 
     active_mode = normalize_practice_mode(payload.practice_mode or session.get("mode", "free_debate"))
     analysis_topic = (
@@ -182,6 +223,8 @@ def debate_turn(
         if active_mode in SINGLE_SKILL_MODES
         else ""
     ) or session["topic"]
+    user_memory = get_user_memory(current_user["id"])
+    mode_state = (user_memory.get("mode_state") or {}).get(active_mode, {})
 
     result = ai_service.generate_debate_analysis(
         topic=analysis_topic,
@@ -198,6 +241,10 @@ def debate_turn(
         practice_mode=payload.practice_mode,
         practice_prompt=payload.practice_prompt,
         practice_round=payload.practice_round,
+        memory_context={
+            "user_memory": user_memory,
+            "mode_state": mode_state,
+        },
     )
     result["cer"] = normalize_cer_to_100(result.get("cer"))
     ai_done_ms = int((time.perf_counter() - turn_start) * 1000)
@@ -213,11 +260,31 @@ def debate_turn(
         practice_mode=payload.practice_mode,
         practice_prompt=payload.practice_prompt,
         practice_round=payload.practice_round,
+        practice_prompt_id=payload.practice_prompt_id,
         status=turn_status,
         count_for_completion=result["ok"],
         complete_session=active_mode not in SINGLE_SKILL_MODES,
     )
     response_status = saved["session"]["status"] if result["ok"] else turn_status
+    if result["ok"]:
+        update_user_memory_after_turn(
+            user_id=current_user["id"],
+            mode=active_mode,
+            topic=analysis_topic,
+            topic_category=session.get("topic_category"),
+            user_argument=payload.user_argument,
+            ai_result=result,
+        )
+        session_memory = get_session_memory(payload.session_id, current_user["id"])
+        session_memory.update(
+            {
+                "active_mode": active_mode,
+                "last_turn_id": saved["turn_id"],
+                "last_turn_number": saved["turn_number"],
+                "last_practice_prompt_id": payload.practice_prompt_id,
+            }
+        )
+        update_session_memory(payload.session_id, current_user["id"], session_memory)
     total_turn_ms = int((time.perf_counter() - turn_start) * 1000)
     timings = result.get("timings", {})
     logger.info(
@@ -288,3 +355,13 @@ def get_session_summary_route(
 @router.get("/progress/overview", response_model=ProgressOverviewResponse)
 def get_progress_overview_route(current_user: dict = Depends(get_debate_user)):
     return get_progress_overview(user_id=current_user["id"])
+
+
+@router.get("/user-memory")
+def get_user_memory_route(current_user: dict = Depends(get_current_user)):
+    return {"memory": get_user_memory(current_user["id"])}
+
+
+@router.delete("/user-memory")
+def reset_user_memory_route(current_user: dict = Depends(get_current_user)):
+    return {"memory": reset_user_memory(current_user["id"])}

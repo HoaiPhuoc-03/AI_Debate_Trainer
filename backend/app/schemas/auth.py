@@ -25,9 +25,12 @@ class AuthUserResponse(BaseModel):
 
 
 class AuthTokenResponse(BaseModel):
-    token: str
+    token: str | None = None
+    access_token: str | None = None
+    refresh_token: str | None = None
     token_type: str = "bearer"
     user: AuthUserResponse
+    message: str | None = None
 
 
 class LogoutResponse(BaseModel):

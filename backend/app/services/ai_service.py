@@ -78,6 +78,7 @@ def build_messages(
     practice_mode: str | None = None,
     practice_prompt: str | None = None,
     practice_round: int | None = None,
+    memory_context: dict | None = None,
 ) -> list[dict[str, str]]:
     # Use build_cer_messages() which returns a proper [system, user] pair.
     # GEPA design: the system prompt is written IN Vietnamese so the model's
@@ -97,6 +98,7 @@ def build_messages(
         practice_mode=practice_mode,
         practice_prompt=practice_prompt,
         practice_round=practice_round,
+        memory_context=memory_context,
     )
 
 
@@ -360,6 +362,7 @@ def generate_debate_analysis(
     practice_mode: str | None = None,
     practice_prompt: str | None = None,
     practice_round: int | None = None,
+    memory_context: dict | None = None,
 ) -> dict:
     validation = validate_user_argument(topic, user_argument)
     if not validation["is_valid"]:
@@ -402,6 +405,7 @@ def generate_debate_analysis(
             practice_mode=practice_mode,
             practice_prompt=practice_prompt,
             practice_round=practice_round,
+            memory_context=memory_context,
         )
         build_prompt_ms = int((time.perf_counter() - build_start) * 1000)
 

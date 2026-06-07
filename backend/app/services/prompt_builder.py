@@ -377,6 +377,27 @@ def _practice_context(mode: str, practice_prompt: str | None, practice_round: in
     )
 
 
+def _memory_context(memory_context: dict | None) -> str:
+    if not memory_context:
+        return ""
+    user_memory = memory_context.get("user_memory") or {}
+    global_state = user_memory.get("global") or {}
+    mode_state = memory_context.get("mode_state") or {}
+    weaknesses = global_state.get("recurring_weaknesses") or []
+    suggestions = global_state.get("recurring_suggestions") or []
+    mode_weaknesses = mode_state.get("common_weaknesses") or []
+    if not any((weaknesses, suggestions, mode_weaknesses)):
+        return ""
+    return (
+        "=== USER MEMORY ===\n"
+        f"Recurring weaknesses: {weaknesses}\n"
+        f"Recurring suggestions: {suggestions}\n"
+        f"Current mode weaknesses: {mode_weaknesses}\n"
+        "Use this only to personalize coaching and avoid repetitive feedback. "
+        "Do not change CER scores because of past performance.\n\n"
+    )
+
+
 def _system_prompt_for_mode(mode: str, output_language: str, age_group: str, debate_level: str) -> str:
     mode = normalize_practice_mode(mode)
     if mode == "claim_writing":
@@ -410,6 +431,7 @@ def build_cer_messages(
     practice_mode: str | None = None,
     practice_prompt: str | None = None,
     practice_round: int | None = None,
+    memory_context: dict | None = None,
 ) -> list[dict[str, str]]:
     """
     Returns a [system, user] message pair for the Groq API.
@@ -429,6 +451,7 @@ def build_cer_messages(
     history_block = _format_turn_history(turn_history)
     history_section = f"\n{history_block}\n" if history_block else ""
     practice_section = _practice_context(mode, practice_prompt, practice_round)
+    memory_section = _memory_context(memory_context)
 
     user_prompt = (
         f"=== NGỮ CẢNH ===\n"
@@ -437,6 +460,7 @@ def build_cer_messages(
         f"Độ khó   : {difficulty}\n"
         f"Nhập liệu: {_input_mode_rule(input_mode)}\n"
         f"{history_section}"
+        f"{memory_section}"
         f"{practice_section}"
         f"\n=== LẬP LUẬN HIỆN TẠI CỦA NGƯỜI DÙNG ===\n"
         f"{user_argument}\n"
@@ -602,6 +626,7 @@ def build_groq_messages(
     practice_mode: str | None = None,
     practice_prompt: str | None = None,
     practice_round: int | None = None,
+    memory_context: dict | None = None,
 ) -> list[dict[str, str]]:
     """Legacy entry point — routes to build_cer_messages."""
     return build_cer_messages(
@@ -613,4 +638,5 @@ def build_groq_messages(
         practice_mode=practice_mode,
         practice_prompt=practice_prompt,
         practice_round=practice_round,
+        memory_context=memory_context,
     )

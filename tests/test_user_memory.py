@@ -58,12 +58,21 @@ class FakeDb:
 
 class UserMemoryTests(unittest.TestCase):
     def setUp(self):
+        self.provider_patch = mock.patch.object(
+            session_store.settings,
+            "STORAGE_PROVIDER",
+            "firebase",
+        )
+        self.provider_patch.start()
         self.users = {
             "user-1": {
                 "id": "user-1",
                 "email": "user@example.com",
             }
         }
+
+    def tearDown(self):
+        self.provider_patch.stop()
 
     def fake_db(self):
         return FakeDb(self.users)
