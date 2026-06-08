@@ -1719,11 +1719,6 @@
       box-shadow: 0 14px 36px rgba(240, 109, 143, 0.10);
     }
 
-    .debate-card--neutral {
-      border-top: 4px solid #9B8CFF;
-      box-shadow: 0 14px 36px rgba(155, 140, 255, 0.10);
-    }
-
     .panel-head {
       display: flex;
       align-items: center;
@@ -1775,7 +1770,6 @@
       border: 1px solid #f1c3cf;
     }
 
-    .stance-badge--neutral,
     .stance-badge--unknown,
     .stance-badge--opposite {
       background: #f1ebff;
@@ -5589,12 +5583,6 @@
       opacity: 1;
     }
 
-    .arena-panel.debate-card--neutral::before {
-      height: 4px;
-      background: #9B8CFF;
-      opacity: 1;
-    }
-
     .arena-textarea {
       background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(248, 251, 255, 0.86)) !important;
@@ -7929,7 +7917,7 @@
       ["Intermediate", "Trao đổi phản biện có cấu trúc", "♨"],
       ["Advanced", "Lập luận sâu và phản biện khó hơn", "♕"],
     ];
-    const stances = [["Ủng hộ", "👍"], ["Phản đối", "👎"], ["Trung lập", "⚖"]];
+    const stances = [["Ủng hộ", "👍"], ["Phản đối", "👎"]];
     const difficulties = [["Basic", "●○○"], ["Intermediate", "●●○"], ["Advanced", "●●●"]];
     const times = [["60 sec", "Luyện nhanh"], ["90 sec", "Nhịp cân bằng"], ["3 min", "Suy luận sâu"]];
     const authLanguages = [["Tiếng Việt", "Mặc định"]];
@@ -7979,28 +7967,28 @@
         icon: "✍️",
         heading: "ĐỀ BÀI CỦA LUMI",
         label: "Tình huống",
-        task: "Viết một claim rõ, có thể tranh biện và đúng trọng tâm.",
+        task: "Viết một claim rõ, theo lập trường ủng hộ hoặc phản đối và đúng trọng tâm.",
         placeholder: "Hãy viết claim ngắn gọn, thể hiện rõ lập trường...",
       },
       find_evidence: {
         icon: "🔎",
         heading: "CLAIM CẦN TÌM BẰNG CHỨNG",
         label: "Claim",
-        task: "Tìm bằng chứng cụ thể, đáng tin cậy để hỗ trợ claim này.",
+        task: "Tìm bằng chứng cụ thể, đáng tin cậy để hỗ trợ hoặc phản bác claim này.",
         placeholder: "Hãy đưa ra bằng chứng cụ thể cho claim trên...",
       },
       quick_rebuttal: {
         icon: "⚡",
         heading: "LUẬN ĐIỂM YẾU CẦN PHẢN BIỆN",
         label: "Lập luận yếu",
-        task: "Chỉ ra lỗ hổng và phản biện nhanh, trực diện.",
+        task: "Chỉ ra lỗ hổng và phản biện nhanh một lập trường yếu, trực diện.",
         placeholder: "Hãy phản biện lập luận yếu trên...",
       },
       full_argument: {
         icon: "🧱",
         heading: "CHỦ ĐỀ XÂY DỰNG LẬP LUẬN",
         label: "Chủ đề",
-        task: "Hãy xây dựng một lập luận đầy đủ gồm Claim, Evidence và Reasoning cho chủ đề này.",
+        task: "Hãy xây dựng một lập luận đầy đủ theo lập trường ủng hộ hoặc phản đối, gồm Claim, Evidence và Reasoning.",
         placeholder: "Hãy xây dựng lập luận đầy đủ gồm Claim, Evidence và Reasoning...",
       },
     };
@@ -9168,22 +9156,18 @@
       const key = normalizeSearchKey(value);
       if (["support", "agree", "pro", "for", "ung ho"].includes(key)) return "support";
       if (["oppose", "disagree", "con", "against", "anti", "phan doi"].includes(key)) return "oppose";
-      if (["neutral", "balanced", "trung lap"].includes(key)) return "neutral";
-      return "unknown";
+      return "support";
     }
 
     function getOppositeStance(stance) {
       if (stance === "support") return "oppose";
-      if (stance === "oppose") return "support";
-      if (stance === "neutral") return "opposite";
-      return "opposite";
+      return "support";
     }
 
     function getStanceLabel(stance) {
       return {
         support: "Ủng hộ",
         oppose: "Phản đối",
-        neutral: "Trung lập",
         opposite: "Đối lập",
         unknown: "Chưa chọn lập trường",
       }[stance] || "Chưa chọn lập trường";
@@ -9192,7 +9176,6 @@
     function getStanceClass(stance) {
       if (stance === "support") return "support";
       if (stance === "oppose") return "oppose";
-      if (stance === "neutral") return "neutral";
       if (stance === "opposite") return "opposite";
       return "unknown";
     }
@@ -9217,9 +9200,9 @@
     function updateDebateCardStance(id, stance) {
       const card = document.getElementById(id);
       if (!card) return;
-      card.classList.remove("debate-card--support", "debate-card--oppose", "debate-card--neutral");
+      card.classList.remove("debate-card--support", "debate-card--oppose");
       const className = getStanceClass(stance);
-      if (["support", "oppose", "neutral"].includes(className)) {
+      if (["support", "oppose"].includes(className)) {
         card.classList.add(`debate-card--${className}`);
       }
     }
@@ -9964,9 +9947,12 @@
     async function transcribeSpeechBlob(blob) {
       const language = getSpeechLanguage();
       const sessionQuery = state.sessionId ? `&session_id=${encodeURIComponent(state.sessionId)}` : "";
+      const practiceTopic = isSingleSkillPracticeMode() ? String(state.practice.currentTopic || "").trim() : "";
+      const practiceTopicQuery = practiceTopic ? `&practice_topic=${encodeURIComponent(practiceTopic)}` : "";
+      const stanceQuery = state.stance ? `&practice_stance=${encodeURIComponent(state.stance)}` : "";
       const path = language === "vi"
-        ? `/api/v1/speech/stt?language=vi${sessionQuery}`
-        : `/api/v1/speech/stt?language=${language}${sessionQuery}`;
+        ? `/api/v1/speech/stt?language=vi${sessionQuery}${practiceTopicQuery}${stanceQuery}`
+        : `/api/v1/speech/stt?language=${language}${sessionQuery}${practiceTopicQuery}${stanceQuery}`;
       return apiRequest(path, {
         method: "POST",
         rawBody: blob,

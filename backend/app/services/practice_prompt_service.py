@@ -324,9 +324,9 @@ def _finalize_prompt_result(result: dict) -> dict:
         finalized["instruction"] = QUICK_REBUTTAL_INSTRUCTION
     else:
         default_instructions = {
-            "claim_writing": "Hãy viết một claim rõ ràng, thể hiện lập trường và có thể tranh luận được.",
+            "claim_writing": "Hãy viết một claim rõ ràng, thể hiện lập trường ủng hộ hoặc phản đối và có thể tranh luận được.",
             "find_evidence": "Hãy đưa ra bằng chứng cụ thể để hỗ trợ hoặc phản bác claim này.",
-            "full_argument": "Hãy xây dựng một lập luận đầy đủ gồm Claim, Evidence và Reasoning cho chủ đề này.",
+            "full_argument": "Hãy xây dựng một lập luận đầy đủ gồm Claim, Evidence và Reasoning theo lập trường ủng hộ hoặc phản đối.",
         }
         finalized.setdefault("instruction", default_instructions.get(mode, "Hãy trả lời đề bài luyện tập."))
 
@@ -337,7 +337,7 @@ def _build_topic_prompt(mode: str, topic: dict, *, round_number: int | None = No
     title = str(topic.get("title") or "").strip()
     metadata = _topic_metadata(topic)
     if mode == "claim_writing":
-        instruction = "Hãy viết một claim rõ ràng, thể hiện lập trường và có thể tranh luận được."
+        instruction = "Hãy viết một claim rõ ràng, thể hiện lập trường ủng hộ hoặc phản đối và có thể tranh luận được."
         prompt = f"Chủ đề: {title}\n\n{instruction}"
         return {
             "mode": mode,
@@ -365,7 +365,7 @@ def _build_topic_prompt(mode: str, topic: dict, *, round_number: int | None = No
     if mode == "quick_rebuttal":
         return _build_quick_rebuttal_prompt_from_topic(topic, round_number)
 
-    instruction = "Hãy xây dựng một lập luận đầy đủ gồm Claim, Evidence và Reasoning cho chủ đề này."
+    instruction = "Hãy xây dựng một lập luận đầy đủ gồm Claim, Evidence và Reasoning theo lập trường ủng hộ hoặc phản đối."
     prompt = f": {title}\n\n{instruction}"
     return {
         "mode": mode,

@@ -26,6 +26,8 @@ async def transcribe_speech(
     request: Request,
     language: str | None = None,
     session_id: str | None = None,
+    practice_topic: str | None = None,
+    practice_stance: str | None = None,
     current_user: dict = Depends(get_debate_user),
 ):
     content_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
@@ -35,6 +37,14 @@ async def transcribe_speech(
     session_context = None
     if session_id:
         session_context = get_session(session_id, user_id=current_user["id"])
+    current_topic = str(practice_topic or "").strip()
+    if current_topic:
+        session_context = dict(session_context or {})
+        session_context["topic"] = current_topic
+    current_stance = str(practice_stance or "").strip()
+    if current_stance:
+        session_context = dict(session_context or {})
+        session_context["stance"] = current_stance
 
     audio_bytes = await request.body()
     result = await run_in_threadpool(

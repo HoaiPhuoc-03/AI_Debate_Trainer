@@ -260,6 +260,10 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn("function renderArenaStanceBadges()", html)
         self.assertIn('const lumiStance = getOppositeStance(userStance)', html)
         self.assertIn('badge.textContent = `${owner} · ${getStanceLabel(stance)}`', html)
+        self.assertIn('const stances = [["Ủng hộ", "👍"], ["Phản đối", "👎"]]', html)
+        self.assertNotIn('["Trung lập", "⚖"]', html)
+        self.assertNotIn("debate-card--neutral", html)
+        self.assertNotIn("stance-badge--neutral", html)
 
     def test_frontend_ends_session_from_arena(self):
         html = read_frontend()
@@ -358,6 +362,9 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn("pendingVoiceTranscript", html)
         self.assertIn("function renderVoiceTranscript()", html)
         self.assertIn("/api/v1/speech/stt?language=vi", html)
+        self.assertIn("state.practice.currentTopic", html)
+        self.assertIn("practice_topic=${encodeURIComponent(practiceTopic)}", html)
+        self.assertIn("practice_stance=${encodeURIComponent(state.stance)}", html)
         self.assertIn('language: "vi"', html)
         self.assertIn("rawBody: blob", html)
         self.assertIn("new MediaRecorder(voiceStream", html)

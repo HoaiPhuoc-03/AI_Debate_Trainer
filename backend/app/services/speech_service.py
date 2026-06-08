@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.services.elevenlabs_stt_client import transcribe_audio as transcribe_elevenlabs_audio
 from app.services.groq_client import call_groq
 from app.services.groq_stt_client import transcribe_groq_audio
+from app.services.normalization import normalize_stance
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +66,15 @@ def normalize_voice_provider(provider: str | None) -> str:
     return aliases.get(normalized, normalized)
 
 
+def format_stt_stance(stance: str | None) -> str:
+    normalized = normalize_stance(stance)
+    labels = {
+        "support": "Ủng hộ",
+        "oppose": "Phản đối",
+    }
+    return labels.get(normalized, "Ủng hộ")
+
+
 def run_async_blocking(async_fn, *args, **kwargs):
     try:
         asyncio.get_running_loop()
@@ -88,7 +98,7 @@ def validate_audio_request(audio_bytes: bytes, content_type: str) -> tuple[bool,
 def build_groq_stt_prompt(session_context: dict | None = None) -> str:
     context = session_context or {}
     topic = str(context.get("topic") or "").strip()
-    stance = str(context.get("stance") or "").strip()
+    stance = format_stt_stance(context.get("stance"))
     difficulty = str(context.get("difficulty") or "").strip()
     parts = [
         "Đây là bản ghi âm tiếng Việt trong ứng dụng luyện tranh biện.",
@@ -129,7 +139,7 @@ def cleanup_voice_transcript(raw_text: str, *, session_context: dict | None = No
 
     context = session_context or {}
     topic = str(context.get("topic") or "").strip()
-    stance = str(context.get("stance") or "").strip()
+    stance = format_stt_stance(context.get("stance"))
     difficulty = str(context.get("difficulty") or "").strip()
     context_hint = (
         f"Chủ đề tranh biện: {topic or 'không có chủ đề cụ thể'}\n"

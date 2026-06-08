@@ -73,6 +73,38 @@ class SpeechBackendTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["transcript"], "Toi ung ho quan diem nay.")
 
+    @mock.patch("app.api.speech.get_session")
+    @mock.patch("app.api.speech.transcribe_audio")
+    def test_stt_endpoint_prefers_practice_topic_and_stance_context(self, mocked_transcribe, mocked_get_session):
+        mocked_get_session.return_value = {
+            "session_id": "session-1",
+            "topic": "Old session topic",
+            "stance": "oppose",
+            "difficulty": "co ban",
+        }
+        mocked_transcribe.return_value = {
+            "ok": True,
+            "text": "Transcript theo topic moi.",
+            "raw_text": "Transcript theo topic moi.",
+            "provider": "groq",
+            "model": "whisper-large-v3",
+            "error": "",
+        }
+
+        response = self.client.post(
+            "/api/v1/speech/stt?language=vi&session_id=session-1&practice_topic=Current%20practice%20topic&practice_stance=Ung%20ho",
+            content=b"fake-webm-audio",
+            headers={"Content-Type": "audio/webm"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        mocked_get_session.assert_called_once()
+        context = mocked_transcribe.call_args.kwargs["session_context"]
+        self.assertEqual(context["topic"], "Current practice topic")
+        self.assertEqual(context["stance"], "Ung ho")
+        self.assertEqual(mocked_get_session.return_value["topic"], "Old session topic")
+        self.assertEqual(mocked_get_session.return_value["stance"], "oppose")
+
     def test_transcribe_endpoint_rejects_unsupported_content_type(self):
         response = self.client.post(
             "/api/v1/speech/transcribe",
@@ -128,7 +160,7 @@ class SpeechBackendTests(unittest.TestCase):
         self.assertEqual(kwargs["content_type"], "audio/webm")
         self.assertEqual(kwargs["language"], "vi")
         self.assertIn("Sinh vien nam nhat co nen di lam them?", kwargs["prompt"])
-        self.assertIn("Ung ho", kwargs["prompt"])
+        self.assertIn("Ủng hộ", kwargs["prompt"])
         self.assertIn("không dịch sang tiếng Anh", kwargs["prompt"])
 
     @mock.patch("app.services.speech_service.cleanup_voice_transcript")
@@ -252,6 +284,7 @@ class SpeechBackendTests(unittest.TestCase):
         self.assertEqual(result["text"], "Toi la sinh vien nam nhat, co nen di lam them.")
         self.assertEqual(result["raw_text"], "Toi la sinh vien nam nhat du gi tang them.")
         self.assertIn("sinh vien nam nhat co nen di lam them", mocked_groq.call_args.args[0][1]["content"])
+        self.assertIn("Ủng hộ", mocked_groq.call_args.args[0][1]["content"])
         self.assertIn("Không bịa thêm nội dung", mocked_groq.call_args.args[0][0]["content"])
         self.assertIn("có, không, nên, không nên", mocked_groq.call_args.args[0][0]["content"])
 
