@@ -78,6 +78,7 @@ def _build_system_prompt(output_language: str, age_group: str, debate_level: str
     return f"""Bạn là hệ thống chấm điểm và phản biện tranh luận bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
 
 NHIỆM VỤ — phân tích nội bộ rồi trả về DUY NHẤT JSON (không có text nào trước JSON):
+  Người dùng luôn chọn một trong hai lập trường: Ủng hộ hoặc Phản đối. AI giữ vai trò đối lập với lập trường của người dùng.
   Trước khi điền JSON, xác định nội bộ:
   a) Có nguồn/tổ chức/số liệu có tên cụ thể không?
   b) Lập luận chính là gì? Phạm vi có rõ không?
@@ -156,6 +157,7 @@ def _build_claim_writing_system_prompt(output_language: str, age_group: str, deb
     return f"""Bạn là huấn luyện viên luyện viết LUẬN ĐIỂM (Claim) bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
 
 NHIỆM VỤ:
+  Người dùng luôn chọn một trong hai lập trường: Ủng hộ hoặc Phản đối.
   Bạn sẽ ĐÁNH GIÁ luận điểm (claim) mà người dùng viết.
   Trước khi điền JSON, xác định nội bộ:
   a) Luận điểm có lập trường rõ ràng không?
@@ -188,6 +190,7 @@ def _build_find_evidence_system_prompt(output_language: str, age_group: str, deb
     return f"""Bạn là huấn luyện viên luyện tìm BẰNG CHỨNG (Evidence) bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
 
 NHIỆM VỤ:
+  Người dùng luôn chọn một trong hai lập trường: Ủng hộ hoặc Phản đối.
   Bạn sẽ ĐÁNH GIÁ bằng chứng mà người dùng đưa ra để hỗ trợ một luận điểm.
   Trước khi điền JSON, xác định nội bộ:
   a) Có nguồn/tổ chức/số liệu có tên cụ thể không?
@@ -228,6 +231,7 @@ def _build_quick_rebuttal_system_prompt(output_language: str, age_group: str, de
     return f"""Bạn là huấn luyện viên luyện PHẢN BIỆN NHANH (Quick Rebuttal) bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
 
 NHIỆM VỤ:
+  Người dùng luôn chọn một trong hai lập trường: Ủng hộ hoặc Phản đối.
   Bạn sẽ ĐÁNH GIÁ khả năng phản biện và phát hiện lỗ hổng logic của người dùng.
   Trước khi điền JSON, xác định nội bộ:
   a) Người dùng có xác định đúng điểm yếu trong lập luận không?
@@ -260,6 +264,7 @@ def _build_full_argument_system_prompt(output_language: str, age_group: str, deb
     return f"""Bạn là hệ thống chấm điểm và phản biện lập luận HOÀN CHỈNH (C+E+R) bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
 
 NHIỆM VỤ — phân tích nội bộ rồi trả về DUY NHẤT JSON (không có text nào trước JSON):
+  Người dùng luôn chọn một trong hai lập trường: Ủng hộ hoặc Phản đối.
   Trước khi điền JSON, xác định nội bộ:
   a) Có nguồn/tổ chức/số liệu có tên cụ thể không?
   b) Lập luận chính là gì? Phạm vi có rõ không?

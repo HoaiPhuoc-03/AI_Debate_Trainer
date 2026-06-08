@@ -22,7 +22,13 @@ from app.services.cer_scorer import normalize_cer_to_100
 from app.services.practice_prompt_service import build_practice_prompt
 from app.services.prompt_builder import normalize_practice_mode
 from app.data.topics import list_categories, list_topics, recommended_topics
-from app.services.normalization import normalize_session_payload, normalize_status, validate_debate_topic
+from app.services.normalization import (
+    normalize_session_payload,
+    normalize_stance,
+    normalize_status,
+    validate_debate_topic,
+    validate_stance,
+)
 from app.services.session_store import (
     create_session,
     end_session,
@@ -52,7 +58,7 @@ def _session_response(session: dict) -> dict:
         "topic_category": session.get("topic_category"),
         "topic_tags": session.get("topic_tags"),
         "custom_topic": session.get("custom_topic"),
-        "stance": session["stance"],
+        "stance": normalize_stance(session.get("stance")),
         "difficulty": session["difficulty"],
         "input_mode": session["input_mode"],
         "age_group": session.get("age_group") or "adult",
@@ -132,6 +138,9 @@ def start_session(
     topic_validation = validate_debate_topic(payload.topic)
     if not topic_validation["is_valid"]:
         raise HTTPException(status_code=400, detail=topic_validation["message"])
+    stance_validation = validate_stance(payload.stance)
+    if not stance_validation["is_valid"]:
+        raise HTTPException(status_code=400, detail=stance_validation["message"])
     normalized = normalize_session_payload(payload)
     session = create_session(user_id=current_user["id"], **normalized)
     return _session_response(session)
@@ -226,9 +235,10 @@ def debate_turn(
     user_memory = get_user_memory(current_user["id"])
     mode_state = (user_memory.get("mode_state") or {}).get(active_mode, {})
 
+    session_stance = normalize_stance(session.get("stance"))
     result = ai_service.generate_debate_analysis(
         topic=analysis_topic,
-        stance=session["stance"],
+        stance=session_stance,
         difficulty=session["difficulty"],
         user_argument=payload.user_argument,
         age_group=session.get("age_group"),
@@ -349,6 +359,7 @@ def get_session_summary_route(
     if not summary:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    summary["stance"] = normalize_stance(summary.get("stance"))
     return summary
 
 

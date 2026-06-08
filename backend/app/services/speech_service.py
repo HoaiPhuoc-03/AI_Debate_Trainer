@@ -3,13 +3,13 @@ import re
 import asyncio
 import logging
 import socket
-import unicodedata
 from concurrent.futures import ThreadPoolExecutor
 
 from app.core.config import settings
 from app.services.elevenlabs_stt_client import transcribe_audio as transcribe_elevenlabs_audio
 from app.services.groq_client import call_groq
 from app.services.groq_stt_client import transcribe_groq_audio
+from app.services.normalization import normalize_stance
 
 logger = logging.getLogger(__name__)
 
@@ -67,26 +67,12 @@ def normalize_voice_provider(provider: str | None) -> str:
 
 
 def format_stt_stance(stance: str | None) -> str:
-    clean = str(stance or "").strip()
-    key = unicodedata.normalize("NFD", clean.lower())
-    key = "".join(char for char in key if unicodedata.category(char) != "Mn")
-    key = re.sub(r"[\s_-]+", " ", key.replace("đ", "d")).strip()
+    normalized = normalize_stance(stance)
     labels = {
         "support": "Ủng hộ",
-        "pro": "Ủng hộ",
-        "for": "Ủng hộ",
-        "agree": "Ủng hộ",
-        "ung ho": "Ủng hộ",
         "oppose": "Phản đối",
-        "against": "Phản đối",
-        "anti": "Phản đối",
-        "disagree": "Phản đối",
-        "phan doi": "Phản đối",
-        "neutral": "Trung lập",
-        "balanced": "Trung lập",
-        "trung lap": "Trung lập",
     }
-    return labels.get(key, clean)
+    return labels.get(normalized, "Ủng hộ")
 
 
 def run_async_blocking(async_fn, *args, **kwargs):

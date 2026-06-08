@@ -260,6 +260,10 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn("function renderArenaStanceBadges()", html)
         self.assertIn('const lumiStance = getOppositeStance(userStance)', html)
         self.assertIn('badge.textContent = `${owner} · ${getStanceLabel(stance)}`', html)
+        self.assertIn('const stances = [["Ủng hộ", "👍"], ["Phản đối", "👎"]]', html)
+        self.assertNotIn('["Trung lập", "⚖"]', html)
+        self.assertNotIn("debate-card--neutral", html)
+        self.assertNotIn("stance-badge--neutral", html)
 
     def test_frontend_ends_session_from_arena(self):
         html = read_frontend()

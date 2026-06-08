@@ -170,25 +170,38 @@ def normalize_topic(topic: str | None, topic_category: str | None, custom_topic:
     return "General Debate"
 
 
+VALID_STANCE_ERROR = "Lập trường không hợp lệ. Chỉ hỗ trợ: Ủng hộ, Phản đối."
+_SUPPORTED_STANCE_ALIASES = {
+    "support": "support",
+    "pro": "support",
+    "for": "support",
+    "agree": "support",
+    "ung ho": "support",
+    "oppose": "oppose",
+    "opposition": "oppose",
+    "against": "oppose",
+    "anti": "oppose",
+    "disagree": "oppose",
+    "phan doi": "oppose",
+}
+_LEGACY_NEUTRAL_STANCE_ALIASES = {"neutral", "balanced", "trung lap"}
+
+
+def validate_stance(value) -> dict:
+    key = _key(value)
+    if key in _SUPPORTED_STANCE_ALIASES:
+        return {"is_valid": True, "stance": _SUPPORTED_STANCE_ALIASES[key], "message": ""}
+    return {"is_valid": False, "stance": "", "message": VALID_STANCE_ERROR}
+
+
 def normalize_stance(value) -> str:
+    key = _key(value)
+    if key in _LEGACY_NEUTRAL_STANCE_ALIASES:
+        return "support"
     return _lookup(
         value,
-        {
-            "support": "support",
-            "pro": "support",
-            "for": "support",
-            "agree": "support",
-            "ung ho": "support",
-            "oppose": "oppose",
-            "against": "oppose",
-            "anti": "oppose",
-            "disagree": "oppose",
-            "phan doi": "oppose",
-            "neutral": "neutral",
-            "balanced": "neutral",
-            "trung lap": "neutral",
-        },
-        "neutral",
+        _SUPPORTED_STANCE_ALIASES,
+        "support",
     )
 
 
