@@ -71,6 +71,47 @@ class PromptBuilderTests(unittest.TestCase):
         self.assertIn("AI giúp học sinh tự chủ hơn", user_prompt)
         self.assertIn("Lượt: 2", user_prompt)
 
+    def test_quick_rebuttal_prompt_uses_flaw_detection_rubric(self):
+        messages = build_groq_messages(
+            topic="Dùng AI viết bài có phải là gian lận không?",
+            stance="support",
+            difficulty="intermediate",
+            user_argument="Câu này yếu vì nói ai cũng thấy lợi ích nhưng không chứng minh lợi ích là gì.",
+            mode="quick_rebuttal",
+            practice_mode="quick_rebuttal",
+            practice_prompt="Dùng AI viết bài chắc chắn đúng vì ai cũng thấy lợi ích của nó.",
+            practice_round=1,
+            language="vi",
+        )
+
+        combined = "\n".join(message["content"] for message in messages)
+
+        self.assertIn("MODE: QUICK_REBUTTAL", combined)
+        self.assertIn("flaw_detection", combined)
+        self.assertIn("counter_example", combined)
+        self.assertIn("not writing a full argument", combined)
+        self.assertIn("claim = quality of flaw detection", combined)
+        self.assertIn("evidence = quality of counterexample or targeted rebuttal", combined)
+        self.assertNotIn("TRỌNG TÂM: Chấm ĐẦY ĐỦ", combined)
+
+    def test_other_practice_modes_do_not_use_quick_rebuttal_rubric(self):
+        messages = build_groq_messages(
+            topic="Dùng AI viết bài có phải là gian lận không?",
+            stance="support",
+            difficulty="intermediate",
+            user_argument="OECD 2023 cho thấy AI có thể hỗ trợ cá nhân hóa học tập.",
+            mode="find_evidence",
+            practice_mode="find_evidence",
+            practice_prompt="AI giúp học sinh tự chủ hơn trong việc học.",
+            language="vi",
+        )
+
+        combined = "\n".join(message["content"] for message in messages)
+
+        self.assertIn("evidence_score", combined)
+        self.assertNotIn("MODE: QUICK_REBUTTAL", combined)
+        self.assertNotIn("flaw_detection", combined)
+
     def test_build_practice_prompt_messages_requests_claim_prompt_json(self):
         messages = build_practice_prompt_messages(
             mode="evidence_practice",

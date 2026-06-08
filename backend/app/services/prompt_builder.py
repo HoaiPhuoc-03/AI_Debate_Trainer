@@ -75,77 +75,95 @@ def _format_turn_history(turn_history: list[dict] | None, max_turns: int = 3) ->
 # System prompt — written IN Vietnamese, NO numeric scores
 # ---------------------------------------------------------------------------
 def _build_system_prompt(output_language: str, age_group: str, debate_level: str) -> str:
-    return f"""Bạn là hệ thống chấm điểm và phản biện tranh luận bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
+    return f"""Ban la he thong cham diem va phan bien tranh luan bang {output_language}. Khong dung tieng Anh trong noi dung feedback.
 
-NHIỆM VỤ — phân tích nội bộ rồi trả về DUY NHẤT JSON (không có text nào trước JSON):
-  Người dùng luôn chọn một trong hai lập trường: Ủng hộ hoặc Phản đối. AI giữ vai trò đối lập với lập trường của người dùng.
-  Trước khi điền JSON, xác định nội bộ:
-  a) Có nguồn/tổ chức/số liệu có tên cụ thể không?
-  b) Lập luận chính là gì? Phạm vi có rõ không?
-  c) Có lỗi logic hoặc giả định ẩn không?
+NHIEM VU - phan tich noi bo roi tra ve DUY NHAT JSON hop le:
+  Nguoi dung chon mot lap truong: Ung ho hoac Phan doi. AI giu vai tro doi lap voi lap truong cua nguoi dung.
+  Truoc khi dien JSON, xac dinh noi bo:
+  a) Co nguon/to chuc/so lieu co ten cu the khong?
+  b) Lap luan chinh la gi? Pham vi co ro khong?
+  c) Co loi logic hoac gia dinh an khong?
 
-Viết "ai_rebuttal" — 4–6 câu phản biện bằng {output_language}:
-  - PHẢI mở đầu bằng: "Tuy nhiên,", "Thực tế cho thấy," hoặc "Ngược lại,"
-  - PHẢI đề cập hoặc phản hồi nội dung CỤ THỂ trong lập luận (dẫn luận điểm, số liệu hoặc từ khoá của người dùng)
-  - KHÔNG được viết phản biện chung chung áp dụng cho mọi lập luận
-  - KHÔNG mở đầu bằng "Lập luận của bạn", "Bạn nên", "Hãy"
-  - Giọng ({age_group}): {_tone_rule(age_group)}
-  - Độ sâu ({debate_level}): {_level_rule(debate_level)}
+Viet ai_rebuttal - 4-6 cau phan bien bang {output_language}:
+  - Phai mo dau bang: "Tuy nhien,", "Thuc te cho thay," hoac "Nguoc lai,"
+  - Phai phan hoi noi dung cu the trong lap luan cua nguoi dung.
+  - Khong viet phan bien chung chung ap dung cho moi lap luan.
+  - Giong ({age_group}): {_tone_rule(age_group)}
+  - Do sau ({debate_level}): {_level_rule(debate_level)}
 
-CỔNG BẰNG CHỨNG — bắt buộc áp dụng trước khi chấm:
-  CÓ bằng chứng thực (has_real_evidence=true, evidence_score > 0):
-    → Tên tổ chức + năm: "WHO 2023", "McKinsey 2022", "báo cáo OECD", "nghiên cứu Harvard"
-    → Số liệu cụ thể: "23%", "tăng 3 lần", "15 triệu người"
-    → Sự kiện có ngày: "từ năm 2019", "tháng 3/2024"
-  KHÔNG phải bằng chứng (has_real_evidence=false, evidence_score=0):
-    → "Nhiều nghiên cứu cho thấy", "mọi người biết", "thực tế là", "rõ ràng"
-    → Lý luận thuần túy không có nguồn
+CONG BANG CHUNG - bat buoc ap dung truoc khi cham:
+  Co bang chung thuc: ten to chuc + nam, so lieu cu the, su kien co ngay.
+  Khong phai bang chung: "nhieu nghien cuu cho thay", "moi nguoi biet", ly luan thuan tuy khong co nguon.
 
-THANG ĐIỂM (chấm theo TỪNG TRƯỜNG HỢP CỤ THỂ):
-  claim_score: Chất lượng luận điểm chính (0–100)
-    - Có lập trường rõ + phạm vi cụ thể + kết nối với chủ đề: 50–80
-    - Có lập trường nhưng mơ hồ, không phạm vi: 20–45
-    - Không có lập trường rõ: 0–20
-  evidence_score: Chất lượng bằng chứng (0–100, = 0 nếu không có bằng chứng thực)
-    - Nhiều nguồn cụ thể + số liệu + sự kiện: 60–90
-    - Một nguồn cụ thể: 30–60
-    - Không có nguồn thực: 0
-  reasoning_score: Chất lượng suy luận (0–100)
-    - Chuỗi nhân quả rõ + không có lỗi logic: 50–80
-    - Có liên kết logic nhưng có lỗ hổng: 25–50
-    - Suy luận yếu hoặc circular: 0–25
-  overall_score = round(claim×0.3 + evidence×0.3 + reasoning×0.4)
+THANG DIEM:
+  claim_score: chat luong luan diem chinh (0-100)
+  evidence_score: chat luong bang chung (0-100, = 0 neu khong co bang chung thuc)
+  reasoning_score: chat luong suy luan (0-100)
+  overall_score = round(claim*0.3 + evidence*0.3 + reasoning*0.4)
 
-CHỐNG DỒN ĐIỂM:
-  - KHÔNG dùng cùng điểm cho các lập luận khác nhau về chất lượng
-  - KHÔNG dùng số tròn trăm hoặc trừ các giá trị cuối bằng 0 (10,20,30...)
-  - Lập luận khác nhau PHẢI có điểm khác nhau"""
+CHONG DON DIEM:
+  - Khong dung cung diem cho cac lap luan khac nhau ve chat luong.
+  - Khong dung toan so tron.
+  - Diem phai phan anh tung cau tra loi cu the."""
 
 
 # ---------------------------------------------------------------------------
-# JSON schema — string placeholders, NO numeric anchors
+# JSON schema - string placeholders, NO numeric anchors
 # ---------------------------------------------------------------------------
-def _json_schema(output_language: str) -> str:
+def _json_schema(output_language: str, mode: str | None = None) -> str:
+    if str(mode or "").strip().lower() == "quick_rebuttal":
+        return (
+            "{\n"
+            '  "is_valid": true,\n'
+            '  "evidence_quote": "NONE",\n'
+            '  "checklist": {"identified_weak_argument": true/false, "named_flaw": true/false, "explained_why_weak": true/false, "has_counter_example": true/false, "stays_focused": true/false},\n'
+            f'  "ai_rebuttal": "<3-5 cau nhan xet huan luyen ve kha nang bat loi lap luan bang {output_language}>",\n'
+            '  "mode_scores": {\n'
+            '    "flaw_detection": <0-100 nhan dien dung loi chinh>,\n'
+            '    "counter_example": <0-100 co phan vi du, cau hoi phan bien, hoac huong bac bo>,\n'
+            '    "explanation": <0-100 giai thich vi sao loi lam yeu lap luan>,\n'
+            '    "focus": <0-100 bam sat weak argument>,\n'
+            '    "overall": <round(flaw_detection*0.40 + explanation*0.25 + counter_example*0.20 + focus*0.15)>\n'
+            '  },\n'
+            '  "cer": {\n'
+            '    "claim": <same as mode_scores.flaw_detection>,\n'
+            '    "evidence": <same as mode_scores.counter_example>,\n'
+            '    "reasoning": <same as mode_scores.explanation>,\n'
+            '    "overall": <same as mode_scores.overall>,\n'
+            '    "total": <same as mode_scores.overall>\n'
+            '  },\n'
+            '  "claim_score": <same as mode_scores.flaw_detection>,\n'
+            '  "evidence_score": <same as mode_scores.counter_example>,\n'
+            '  "reasoning_score": <same as mode_scores.explanation>,\n'
+            '  "overall_score": <same as mode_scores.overall>,\n'
+            '  "claim_breakdown": {"clarity": <nhan dien loi chinh 0-40>, "relevance": <bam dung weak argument 0-30>, "specificity": <goi ten/cat dung cum yeu 0-30>},\n'
+            '  "evidence_breakdown": {"presence": <co phan vi du/cau hoi phan bien 0-40>, "evidence_specificity": <phan vi du cu the 0-30>, "evidence_relevance": <phan vi du dung trong tam 0-30>},\n'
+            '  "reasoning_breakdown": {"logical_connection": <giai thich vi sao loi lam yeu lap luan 0-40>, "causal_explanation": <noi loi voi he qua logic 0-40>, "fallacy_control": <khong tao loi moi 0-20>},\n'
+            f'  "strengths": ["<chi nhan xet diem manh ve bat loi/nguy bien bang {output_language}>"],\n'
+            f'  "weaknesses": ["<chi nhan xet diem yeu ve bat loi/giai thich/phan vi du/focus bang {output_language}>"],\n'
+            f'  "suggestions": ["<goi y ngan de goi ten loi, trich cum yeu, them phan vi du bang {output_language}>"]\n'
+            "}"
+        )
     return (
-        '{{\n'
+        "{\n"
         '  "is_valid": true,\n'
-        '  "evidence_quote": "<trích nguyên văn nguồn/số liệu từ lập luận, hoặc NONE>",\n'
-        '  "checklist": {{"has_clear_position": true/false, "has_bounded_scope": true/false, "has_real_evidence": true/false, "has_causal_chain": true/false}},\n'
-        f'  "ai_rebuttal": "<4–6 câu phản biện TRỰC TIẾP lập luận trên bằng {output_language}>",\n'
-        '  "claim_score": <số nguyên>,\n'
-        '  "evidence_score": <số nguyên, bắt buộc 0 nếu không có bằng chứng thực>,\n'
-        '  "reasoning_score": <số nguyên>,\n'
-        '  "overall_score": <round(claim×0.3 + evidence×0.3 + reasoning×0.4)>,\n'
-        '  "claim_breakdown": {{"clarity": <0–40>, "relevance": <0–30>, "specificity": <0–30>}},\n'
-        '  "evidence_breakdown": {{"presence": <0–40>, "evidence_specificity": <0–30>, "evidence_relevance": <0–30>}},\n'
-        '  "reasoning_breakdown": {{"logical_connection": <0–40>, "causal_explanation": <0–40>, "fallacy_control": <0–20>}},\n'
-        f'  "claim_explanation": "<lý do điểm claim bằng {output_language}>",\n'
-        f'  "evidence_explanation": "<lý do điểm evidence bằng {output_language}>",\n'
-        f'  "reasoning_explanation": "<lý do điểm reasoning bằng {output_language}>",\n'
-        f'  "strengths": ["<điểm mạnh bằng {output_language}>"],\n'
-        f'  "weaknesses": ["<điểm yếu bằng {output_language}>"],\n'
-        f'  "suggestions": ["<gợi ý bằng {output_language}>"]\n'
-        '}}'
+        '  "evidence_quote": "<trich nguyen van nguon/so lieu tu lap luan, hoac NONE>",\n'
+        '  "checklist": {"has_clear_position": true/false, "has_bounded_scope": true/false, "has_real_evidence": true/false, "has_causal_chain": true/false},\n'
+        f'  "ai_rebuttal": "<4-6 cau phan bien truc tiep lap luan tren bang {output_language}>",\n'
+        '  "claim_score": <so nguyen>,\n'
+        '  "evidence_score": <so nguyen, bat buoc 0 neu khong co bang chung thuc>,\n'
+        '  "reasoning_score": <so nguyen>,\n'
+        '  "overall_score": <round(claim*0.3 + evidence*0.3 + reasoning*0.4)>,\n'
+        '  "claim_breakdown": {"clarity": <0-40>, "relevance": <0-30>, "specificity": <0-30>},\n'
+        '  "evidence_breakdown": {"presence": <0-40>, "evidence_specificity": <0-30>, "evidence_relevance": <0-30>},\n'
+        '  "reasoning_breakdown": {"logical_connection": <0-40>, "causal_explanation": <0-40>, "fallacy_control": <0-20>},\n'
+        f'  "claim_explanation": "<ly do diem claim bang {output_language}>",\n'
+        f'  "evidence_explanation": "<ly do diem evidence bang {output_language}>",\n'
+        f'  "reasoning_explanation": "<ly do diem reasoning bang {output_language}>",\n'
+        f'  "strengths": ["<diem manh bang {output_language}>"],\n'
+        f'  "weaknesses": ["<diem yeu bang {output_language}>"],\n'
+        f'  "suggestions": ["<goi y bang {output_language}>"]\n'
+        "}"
     )
 
 
@@ -258,6 +276,69 @@ THANG ĐIỂM reasoning_score (0–100):
 CHỐNG DỒN ĐIỂM:
   - KHÔNG dùng cùng điểm cho các phản biện khác nhau về chất lượng
   - KHÔNG dùng số tròn trăm (10,20,30...)"""
+
+
+def _build_quick_rebuttal_system_prompt_v2(output_language: str, age_group: str, debate_level: str) -> str:
+    return f"""MODE: QUICK_REBUTTAL
+
+Ban la huan luyen vien che do PHAN BIEN NHANH bang {output_language}. Khong dung tieng Anh trong noi dung feedback, tru cac ten khoa rubric bat buoc.
+
+Ban chat flow:
+  - Lumi da dua cho nguoi dung mot weak argument / luan diem yeu.
+  - Nguoi dung khong viet mot bai tranh bien day du; the user is not writing a full argument and not writing a full CER argument.
+  - Nhiem vu cua nguoi dung la chi ra lo hong, gia dinh sai, nguy bien, hoac phan vi du ngan.
+  - Nhiem vu cua ban la cham xem nguoi dung co bat dung loi chinh khong va huan luyen ky nang phan bien nhanh.
+
+Tuyet doi khong cham nhu free_debate hoac full CER:
+  - Khong yeu cau viet Claim-Evidence-Reasoning day du.
+  - Khong che chung chung rang user thieu dan chung cu the, khong co lap luan logic, can xay dung C-E-R.
+  - Chi nhac "thieu bang chung" neu do la ten loi cua weak argument va nguoi dung chua nhan ra loi do.
+
+Rubric rieng — DUNG mode_scores, KHONG dung CER truc tiep:
+  1. flaw_detection (0-100): nhan dien dung loi chinh trong weak argument.
+     - 90-100: bat dung loi chinh VA goi ten duoc nguy bien (vd: khai quat hoa voi vang, nguyen nhan gia, dua vao so dong).
+     - 70-89: bat dung loi nhung chua goi ten ro.
+     - 40-69: co thay van de nhung con mo ho.
+     - 0-39: khong bat duoc loi chinh.
+  2. counter_example (0-100): co phan vi du, cau hoi phan bien, hoac huong bac bo.
+     - 90-100: phan vi du cu the, truc tiep bac bo luan diem.
+     - 70-89: co cau hoi phan bien hoac huong bac bo tot.
+     - 40-69: co y phan bac nhung chua cu the.
+     - 0-39: khong co phan vi du/cau hoi phan bien.
+  3. explanation (0-100): giai thich vi sao loi do lam weak argument kem thuyet phuc.
+     - 90-100: giai thich ro rang, noi loi voi hau qua logic.
+     - 70-89: co giai thich nhung chua sau.
+     - 40-69: chi noi loi ma khong giai thich.
+     - 0-39: khong giai thich.
+  4. focus (0-100): bam sat weak argument, khong lan man.
+     - 90-100: hoan toan bam sat luan diem yeu.
+     - 70-89: phan lon dung trong tam.
+     - 40-69: co lan man sang chu de khac.
+     - 0-39: phan hoi leech hoan toan.
+
+overall = round(flaw_detection * 0.40 + explanation * 0.25 + counter_example * 0.20 + focus * 0.15)
+
+For quick_rebuttal, the CER fields are reused only for backward compatibility:
+  - claim_score = mode_scores.flaw_detection
+  - evidence_score = mode_scores.counter_example
+  - reasoning_score = mode_scores.explanation
+  - overall_score = mode_scores.overall
+  - claim = quality of flaw detection
+  - evidence = quality of counterexample or targeted rebuttal
+  - reasoning = quality of explanation
+  - claim = flaw_detection / quality of flaw detection
+  - evidence = counter_example / quality of counterexample or targeted rebuttal
+  - reasoning = explanation / quality of explanation
+Do not evaluate this as a full CER argument.
+
+Viet "ai_rebuttal" gom 3-5 cau huan luyen:
+  - No ro user da bat dung diem nao trong weak argument.
+  - Neu sai hoac thieu, chi ra loi chinh bi bo sot.
+  - Goi y cach sua: goi ten loi, trich cum yeu, them mot phan vi du/cau hoi phan bien.
+  - Giong ({age_group}): {_tone_rule(age_group)}
+  - Do sau ({debate_level}): {_level_rule(debate_level)}
+
+Feedback chi tap trung vao quick rebuttal quality, khong dung free debate or full CER feedback."""
 
 
 def _build_full_argument_system_prompt(output_language: str, age_group: str, debate_level: str) -> str:
@@ -410,7 +491,7 @@ def _system_prompt_for_mode(mode: str, output_language: str, age_group: str, deb
     elif mode == "find_evidence":
         return _build_find_evidence_system_prompt(output_language, age_group, debate_level)
     elif mode == "quick_rebuttal":
-        return _build_quick_rebuttal_system_prompt(output_language, age_group, debate_level)
+        return _build_quick_rebuttal_system_prompt_v2(output_language, age_group, debate_level)
     elif mode == "full_argument":
         return _build_full_argument_system_prompt(output_language, age_group, debate_level)
     # Default: free_debate
@@ -471,7 +552,7 @@ def build_cer_messages(
         f"{user_argument}\n"
         f"\n=== YÊU CẦU ===\n"
         f"Phân tích lập luận trên và trả về DUY NHẤT JSON hợp lệ (không có text nào trước JSON, không markdown):\n"
-        f"{_json_schema(output_language)}"
+        f"{_json_schema(output_language, mode)}"
     )
 
     return [

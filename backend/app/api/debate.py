@@ -226,7 +226,9 @@ def debate_turn(
     # context for the LLM to produce evolving, non-repetitive rebuttals.
     turn_history = get_session_turns(payload.session_id)[-3:]
 
-    active_mode = normalize_practice_mode(payload.practice_mode or session.get("mode", "free_debate"))
+    active_mode = normalize_practice_mode(
+        payload.practice_mode or session.get("practice_mode") or session.get("mode", "free_debate")
+    )
     analysis_topic = (
         str(payload.practice_topic or "").strip()
         if active_mode in SINGLE_SKILL_MODES
@@ -266,8 +268,9 @@ def debate_turn(
         ai_rebuttal=result["rebuttal"],
         cer=result["cer"],
         feedback=result["feedback"],
+        mode_scores=result.get("mode_scores"),
         content_flags=result.get("content_flags", []),
-        practice_mode=payload.practice_mode,
+        practice_mode=active_mode,
         practice_prompt=payload.practice_prompt,
         practice_round=payload.practice_round,
         practice_prompt_id=payload.practice_prompt_id,
@@ -313,12 +316,14 @@ def debate_turn(
         session_id=payload.session_id,
         user_argument=payload.user_argument,
         ai_rebuttal=result["rebuttal"],
+        practice_mode=active_mode,
         is_valid=result.get("is_valid", result["ok"]),
         cer_breakdown=result.get("cer_breakdown"),
         turn_number=int(saved["turn_number"]),
         max_turns=int(saved["session"].get("max_turns") or session["max_turns"]),
         status=normalize_status(response_status),
         cer=result["cer"],
+        mode_scores=result.get("mode_scores") if active_mode == "quick_rebuttal" else None,
         feedback=result["feedback"],
     )
 

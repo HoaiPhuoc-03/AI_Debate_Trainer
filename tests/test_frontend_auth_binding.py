@@ -169,6 +169,11 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn("function renderPracticeModeBar()", html)
         self.assertIn('setText("practice-mode-title", mode.title)', html)
         self.assertIn("renderPracticeModeBar();", html)
+        self.assertIn('quick_rebuttal: ["claim", "evidence", "reasoning"]', html)
+        self.assertIn("function metricLabelFor", html)
+        self.assertIn('claim: "Bắt lỗi"', html)
+        self.assertIn('evidence: "Phản ví dụ"', html)
+        self.assertIn('reasoning: "Giải thích"', html)
 
     def test_frontend_practice_round_flow_is_wired(self):
         html = read_frontend()

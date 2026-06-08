@@ -662,6 +662,7 @@ class SupabaseStore:
         ai_rebuttal: str,
         cer: dict,
         feedback: dict,
+        mode_scores: dict | None = None,
         content_flags: list | None = None,
         practice_mode: str | None = None,
         practice_prompt: str | None = None,
@@ -675,6 +676,15 @@ class SupabaseStore:
         user_id = session["user_id"]
         turn_number = self._next_turn_number(session_id)
         is_valid = status not in ("invalid", "error")
+        turn_metadata = {
+            "practice_prompt": practice_prompt,
+            "practice_round": practice_round,
+            "status": status,
+        }
+        if practice_mode == "quick_rebuttal" and mode_scores:
+            turn_metadata["mode_scores"] = mode_scores
+            turn_metadata["score_schema"] = "quick_rebuttal_v1"
+
         turn_id = self.save_turn(
             session_id=session_id,
             user_id=user_id,
@@ -685,11 +695,7 @@ class SupabaseStore:
             input_type=session.get("input_mode", "text"),
             practice_mode=practice_mode,
             is_valid=is_valid,
-            metadata={
-                "practice_prompt": practice_prompt,
-                "practice_round": practice_round,
-                "status": status,
-            },
+            metadata=turn_metadata,
         )
         self.save_cer_score(
             turn_id=turn_id,

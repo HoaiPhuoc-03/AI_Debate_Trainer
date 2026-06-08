@@ -7784,7 +7784,7 @@
       free_debate: ["claim", "evidence", "reasoning"],
       claim_writing: ["claim"],
       find_evidence: ["evidence"],
-      quick_rebuttal: ["reasoning"],
+      quick_rebuttal: ["claim", "evidence", "reasoning"],
       full_argument: ["claim", "evidence", "reasoning"],
     };
     const AUTO_TOPIC_MODES = ["claim_writing", "find_evidence", "quick_rebuttal", "full_argument"];
@@ -10147,21 +10147,39 @@
 
     function normalizeTurnResponse(data = {}, fallbackArgument = "") {
       const cer = data.cer && typeof data.cer === "object" ? data.cer : {};
+      const modeScores = data.mode_scores && typeof data.mode_scores === "object" ? data.mode_scores : {};
+      const activeMode = normalizePracticeMode(data.practice_mode || state.mode);
+      const displayCer = activeMode === "quick_rebuttal" && Object.keys(modeScores).length
+        ? {
+          claim: modeScores.flaw_detection,
+          evidence: modeScores.counter_example,
+          reasoning: modeScores.explanation,
+          overall: modeScores.overall,
+          total: modeScores.overall,
+        }
+        : cer;
       const feedback = data.feedback && typeof data.feedback === "object" ? data.feedback : {};
       return {
         session_id: data.session_id || state.sessionId || "",
         user_argument: data.user_argument || fallbackArgument,
         ai_rebuttal: data.ai_rebuttal || "AI chưa trả về phản biện. Hãy thử lại sau.",
         cer: (() => {
-          const total = toScore(cer.overall ?? cer.total);
+          const total = toScore(displayCer.overall ?? displayCer.total);
           return {
-            claim: toScore(cer.claim),
-            evidence: toScore(cer.evidence),
-            reasoning: toScore(cer.reasoning),
+            claim: toScore(displayCer.claim),
+            evidence: toScore(displayCer.evidence),
+            reasoning: toScore(displayCer.reasoning),
             overall: total,
             total,
           };
         })(),
+        mode_scores: {
+          flaw_detection: toScore(modeScores.flaw_detection),
+          counter_example: toScore(modeScores.counter_example),
+          explanation: toScore(modeScores.explanation),
+          focus: toScore(modeScores.focus),
+          overall: toScore(modeScores.overall),
+        },
         feedback: {
           strengths: toList(feedback.strengths),
           weaknesses: toList(feedback.weaknesses),
@@ -10249,7 +10267,7 @@
         } else if (state.mode === "find_evidence") {
           titleEl.innerHTML = `<span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> Điểm Bằng chứng`;
         } else if (state.mode === "quick_rebuttal") {
-          titleEl.innerHTML = `<span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> Điểm Lập luận`;
+          titleEl.innerHTML = `<span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> Điểm Bắt lỗi`;
         } else {
           titleEl.innerHTML = `<span class="icon-box" style="background:#064e52;color:#7fffe8">🛡</span> Điểm CER`;
         }
@@ -10271,9 +10289,9 @@
       }
 
       const allRows = [
-        ["claim", "Luận điểm", cer.claim, ""],
-        ["evidence", "Bằng chứng", cer.evidence, "evidence"],
-        ["reasoning", "Lập luận", cer.reasoning, "reasoning"],
+        ["claim", metricLabelFor("claim"), cer.claim, ""],
+        ["evidence", metricLabelFor("evidence"), cer.evidence, "evidence"],
+        ["reasoning", metricLabelFor("reasoning"), cer.reasoning, "reasoning"],
       ];
       const rows = allRows.filter(([key]) => activeMetrics.includes(key));
       output.className = "";
@@ -10433,7 +10451,7 @@
         } else if (state.mode === "find_evidence") {
           labelEl.textContent = "Bằng chứng trung bình";
         } else if (state.mode === "quick_rebuttal") {
-          labelEl.textContent = "Lập luận trung bình";
+          labelEl.textContent = "Phản biện nhanh trung bình";
         } else {
           labelEl.textContent = "CER trung bình";
         }
@@ -10444,12 +10462,12 @@
       const activeMetrics = MODE_METRICS[state.mode] || MODE_METRICS.free_debate;
       const focusMetrics = activeMetrics.filter(k => (cer[k] || 0) < 70);
       document.getElementById("summary-focus").textContent = focusMetrics.length
-        ? `Cần luyện: ${focusMetrics.map(k => labelFor(k)).join(", ")}`
+        ? `Cần luyện: ${focusMetrics.map(k => metricLabelFor(k)).join(", ")}`
         : "Tất cả kỹ năng đều vững!";
       document.getElementById("summary-cer").innerHTML = `
       ${activeMetrics.map(key => {
         const value = Math.round(cer[key] || 0);
-        return `<div class="score-row"><div class="score-line"><span>${labelFor(key)}</span><strong>${value}/100</strong></div><div class="bar"><div class="bar-fill ${key}" style="--value:${value}%"></div></div></div>`;
+        return `<div class="score-row"><div class="score-line"><span>${metricLabelFor(key)}</span><strong>${value}/100</strong></div><div class="bar"><div class="bar-fill ${key}" style="--value:${value}%"></div></div></div>`;
       }).join("")}
     `;
       document.getElementById("progress-avg").textContent = average || 0;
@@ -11022,6 +11040,19 @@
     function labelFor(key) {
       const normalized = String(key || "").toLowerCase();
       return displayLabels[normalized] || displayValue(key);
+    }
+
+    function metricLabelFor(key, mode = state.mode) {
+      const normalized = String(key || "").toLowerCase();
+      if (normalizePracticeMode(mode) === "quick_rebuttal") {
+        const quickLabels = {
+          claim: "Bắt lỗi",
+          evidence: "Phản ví dụ",
+          reasoning: "Giải thích",
+        };
+        return quickLabels[normalized] || labelFor(key);
+      }
+      return labelFor(key);
     }
 
     function displayValue(value) {

@@ -151,6 +151,7 @@ def _rubric_to_analysis(rubric: dict, *, provider: str = "groq", model: str = ""
         "status": rubric["status"],
         "rebuttal": rebuttal,
         "cer": rubric["cer"],
+        "mode_scores": rubric.get("mode_scores"),
         "cer_breakdown": rubric["cer_breakdown"],
         "feedback": rubric["feedback"],
         # New fields from the updated prompt — passed through for callers that
@@ -364,15 +365,17 @@ def generate_debate_analysis(
     practice_round: int | None = None,
     memory_context: dict | None = None,
 ) -> dict:
+    active_mode = normalize_practice_mode(practice_mode or mode)
     validation = validate_user_argument(topic, user_argument)
     if not validation["is_valid"]:
-        invalid = invalid_cer_result(validation["reason"])
+        invalid = invalid_cer_result(validation["reason"], mode=active_mode)
         return {
             "ok": False,
             "is_valid": False,
             "status": "invalid",
             "rebuttal": INVALID_REBUTTAL,
             "cer": invalid["cer"],
+            "mode_scores": invalid.get("mode_scores"),
             "cer_breakdown": invalid["cer_breakdown"],
             "feedback": invalid["feedback"],
             "raw_text": "",
@@ -420,7 +423,7 @@ def generate_debate_analysis(
             )
 
         parse_start = time.perf_counter()
-        rubric = parse_cer_rubric_output(llm_result["text"])
+        rubric = parse_cer_rubric_output(llm_result["text"], mode=active_mode)
         parse_output_ms = int((time.perf_counter() - parse_start) * 1000)
 
         # Only hard-error when the rubric itself is marked invalid or errored.

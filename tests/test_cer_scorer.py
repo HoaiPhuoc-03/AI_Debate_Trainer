@@ -57,6 +57,50 @@ class CERRubricTests(unittest.TestCase):
         self.assertEqual(result["cer"]["overall"], 47.0)
         self.assertTrue(result["feedback"]["weaknesses"])
 
+    def test_quick_rebuttal_parse_error_uses_mode_specific_feedback(self):
+        result = parse_cer_rubric_output("not json", mode="quick_rebuttal")
+        feedback_text = " ".join(
+            item
+            for group in result["feedback"].values()
+            for item in group
+        )
+
+        self.assertTrue(result["is_valid"])
+        self.assertIn("cer", result)
+        self.assertIn("feedback", result)
+        self.assertIn("lỗi", feedback_text)
+        self.assertNotIn("Không có lập luận logic", feedback_text)
+        self.assertNotIn("Thiếu bằng chứng cụ thể", feedback_text)
+        self.assertNotIn("C-E-R", feedback_text)
+
+    def test_quick_rebuttal_json_keeps_contract_and_overall_score(self):
+        raw = """
+{
+  "is_valid": true,
+  "ai_rebuttal": "Bạn đã bắt đúng cụm yếu trong lập luận và giải thích được vì sao khẳng định đó chưa được chứng minh.",
+  "evidence_quote": "NONE",
+  "checklist": {"has_real_evidence": false, "identified_weak_argument": true, "has_counter_example": true},
+  "claim_score": 72,
+  "evidence_score": 58,
+  "reasoning_score": 66,
+  "overall_score": 64,
+  "claim_breakdown": {"clarity": 30, "relevance": 22, "specificity": 20},
+  "evidence_breakdown": {"presence": 25, "specificity": 18, "relevance": 15},
+  "reasoning_breakdown": {"logical_connection": 28, "causal_explanation": 24, "fallacy_control": 14}
+}
+""".strip()
+
+        result = parse_cer_rubric_output(raw, mode="quick_rebuttal")
+
+        self.assertTrue(result["is_valid"])
+        self.assertEqual(result["cer"]["claim"], 72.0)
+        self.assertEqual(result["cer"]["evidence"], 58.0)
+        self.assertEqual(result["cer"]["reasoning"], 66.0)
+        self.assertEqual(result["cer"]["overall"], 64.0)
+        self.assertTrue(result["feedback"]["strengths"])
+        self.assertTrue(result["feedback"]["weaknesses"])
+        self.assertTrue(result["feedback"]["suggestions"])
+
     def test_parse_groq_marker_rubric_output(self):
         raw = """
 [REBUTTAL]

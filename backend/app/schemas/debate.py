@@ -149,10 +149,27 @@ class FeedbackResponse(BaseModel):
     suggestions: list[str]
 
 
+class ModeScoresResponse(BaseModel):
+    """Quick Rebuttal scoring schema.
+
+    Quick Rebuttal compatibility mapping:
+      flaw_detection  → CER claim
+      counter_example → CER evidence
+      explanation     → CER reasoning
+    This is NOT normal CER scoring.
+    """
+    flaw_detection: float = 0.0
+    counter_example: float = 0.0
+    explanation: float = 0.0
+    focus: float = 0.0
+    overall: float = 0.0
+
+
 class DebateTurnResponse(BaseModel):
     session_id: str
     user_argument: str
     ai_rebuttal: str
+    practice_mode: str | None = None
     is_valid: bool | None = None
     cer: CERScoreResponse | None = None
     cer_breakdown: CERBreakdownResponse | None = None
@@ -167,6 +184,7 @@ class DebateTurnResponseV2(DebateTurnResponse):
     feedback: FeedbackResponse
     turn_number: int
     max_turns: int
+    mode_scores: ModeScoresResponse | None = None
 
 
 class SessionInfoResponse(BaseModel):

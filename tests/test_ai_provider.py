@@ -74,6 +74,51 @@ class AIGroqOnlyTests(unittest.TestCase):
         mocked_groq.assert_called_once()
 
     @mock.patch("app.services.ai_service.call_groq")
+    def test_generate_quick_rebuttal_analysis_passes_mode_to_prompt(self, mocked_groq):
+        mocked_groq.return_value = {
+            "ok": True,
+            "text": """
+{
+  "is_valid": true,
+  "ai_rebuttal": "Bạn đã nhận ra lập luận yếu dựa vào cảm giác chung, nhưng cần thêm một phản ví dụ ngắn.",
+  "evidence_quote": "NONE",
+  "checklist": {"identified_weak_argument": true, "has_counter_example": false},
+  "claim_score": 70,
+  "evidence_score": 35,
+  "reasoning_score": 60,
+  "overall_score": 56,
+  "claim_breakdown": {"clarity": 30, "relevance": 22, "specificity": 18},
+  "evidence_breakdown": {"presence": 10, "specificity": 10, "relevance": 15},
+  "reasoning_breakdown": {"logical_connection": 24, "causal_explanation": 22, "fallacy_control": 14},
+  "strengths": ["Bạn đã bắt được khẳng định chưa chứng minh."],
+  "weaknesses": ["Chưa có phản ví dụ hoặc câu hỏi phản biện."],
+  "suggestions": ["Hãy hỏi: lợi ích cho ai và bằng chứng ở đâu?"]
+}
+""".strip(),
+            "provider": "groq",
+            "model": "llama-3.3-70b-versatile",
+            "error": "",
+        }
+
+        result = ai_service.generate_debate_analysis(
+            topic="Dùng AI viết bài có phải là gian lận không?",
+            stance="support",
+            difficulty="intermediate",
+            user_argument="Câu này yếu vì nói ai cũng thấy lợi ích nhưng không chứng minh lợi ích là gì.",
+            mode="free_debate",
+            practice_mode="quick_rebuttal",
+            practice_prompt="Dùng AI viết bài chắc chắn đúng vì ai cũng thấy lợi ích của nó.",
+            practice_round=1,
+        )
+
+        combined_prompt = "\n".join(message["content"] for message in mocked_groq.call_args.args[0])
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["cer"]["overall"], 56.0)
+        self.assertIn("MODE: QUICK_REBUTTAL", combined_prompt)
+        self.assertIn("flaw_detection", combined_prompt)
+
+    @mock.patch("app.services.ai_service.call_groq")
     def test_groq_error_does_not_use_sample_rebuttal(self, mocked_groq):
         mocked_groq.return_value = {
             "ok": False,

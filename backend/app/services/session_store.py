@@ -475,6 +475,7 @@ def _firebase_save_debate_turn(
     ai_rebuttal: str,
     cer: dict,
     feedback: dict,
+    mode_scores: dict | None = None,
     content_flags: list | None = None,
     practice_mode: str | None = None,
     practice_prompt: str | None = None,
@@ -493,6 +494,14 @@ def _firebase_save_debate_turn(
     cer = normalize_cer_to_100(cer)
     flags = content_flags or []
     now = _now()
+    turn_metadata = {
+        "practice_prompt": practice_prompt,
+        "practice_round": practice_round,
+        "status": status,
+    }
+    if practice_mode == "quick_rebuttal" and mode_scores:
+        turn_metadata["mode_scores"] = mode_scores
+        turn_metadata["score_schema"] = "quick_rebuttal_v1"
 
     # ── atomic batch write for all sub-documents ───────────────────────────
     batch = db.batch()
@@ -509,6 +518,7 @@ def _firebase_save_debate_turn(
         "practice_prompt": practice_prompt,
         "practice_round": practice_round,
         "status": status,
+        "metadata": turn_metadata,
         "created_at": now,
     })
 
@@ -643,6 +653,9 @@ def _firebase_get_session_turns(session_id: str) -> list[dict]:
             "reasoning": float(raw.get("reasoning", 0.0)),
             "total":     float(raw.get("total",     0.0)),
         })
+        metadata = dict(turn.get("metadata") or {})
+        turn["mode_scores"] = metadata.get("mode_scores")
+        turn["score_schema"] = metadata.get("score_schema")
         turn["feedback"] = feedback_by_turn[tid]
 
     return turns

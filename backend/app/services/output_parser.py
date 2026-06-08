@@ -13,6 +13,13 @@ DEFAULT_FEEDBACK = {
     "weaknesses": ["Phản hồi AI chưa có cấu trúc đầy đủ."],
     "suggestions": ["Hãy thử lại với lập luận rõ ràng hơn hoặc tạo lại phản hồi."],
 }
+DEFAULT_MODE_SCORES = {
+    "flaw_detection": 0.0,
+    "counter_example": 0.0,
+    "explanation": 0.0,
+    "focus": 0.0,
+    "overall": 0.0,
+}
 
 
 def clamp_score(value) -> float:
@@ -65,6 +72,37 @@ def _build_cer(cer_text: str) -> dict:
         "claim": claim,
         "evidence": evidence,
         "reasoning": reasoning,
+        "overall": overall,
+        "total": overall,
+    }
+
+
+def _is_quick_rebuttal_mode(mode: str | None) -> bool:
+    key = str(mode or "").strip().casefold().replace("-", "_").replace(" ", "_")
+    return key in {"quick_rebuttal", "rebuttal", "phan_bien_nhanh"}
+
+
+def _quick_rebuttal_mode_scores_from_cer(cer: dict) -> dict:
+    return {
+        "flaw_detection": clamp_score(cer.get("claim")),
+        "counter_example": clamp_score(cer.get("evidence")),
+        "explanation": clamp_score(cer.get("reasoning")),
+        "focus": clamp_score(cer.get("overall") or cer.get("total")),
+        "overall": clamp_score(cer.get("overall") or cer.get("total")),
+    }
+
+
+def _quick_rebuttal_compat_cer(mode_scores: dict) -> dict:
+    # Quick Rebuttal compatibility mapping:
+    # claim = flaw_detection
+    # evidence = counter_example
+    # reasoning = explanation
+    # This is not normal CER scoring.
+    overall = clamp_score(mode_scores.get("overall"))
+    return {
+        "claim": clamp_score(mode_scores.get("flaw_detection")),
+        "evidence": clamp_score(mode_scores.get("counter_example")),
+        "reasoning": clamp_score(mode_scores.get("explanation")),
         "overall": overall,
         "total": overall,
     }

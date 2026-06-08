@@ -14,6 +14,18 @@ INVALID_FEEDBACK = {
     "suggestions": ["Hãy nêu rõ quan điểm, lý do và bằng chứng hỗ trợ cho lập luận."],
 }
 
+QUICK_REBUTTAL_INVALID_FEEDBACK = {
+    "strengths": [],
+    "weaknesses": ["Câu trả lời chưa đủ rõ để xác định bạn đã bắt đúng lỗi trong luận điểm yếu hay chưa."],
+    "suggestions": ["Hãy chỉ ra cụm yếu trong luận điểm, gọi tên lỗi/ngụy biện và giải thích ngắn vì sao lỗi đó làm lập luận kém thuyết phục."],
+}
+
+QUICK_REBUTTAL_FALLBACK_FEEDBACK = {
+    "strengths": ["Đã có nỗ lực phản biện lại luận điểm yếu."],
+    "weaknesses": ["Cần chỉ rõ lỗi chính trong luận điểm yếu và giải thích vì sao lỗi đó làm lập luận kém thuyết phục."],
+    "suggestions": ["Hãy gọi tên lỗi/ngụy biện, trích cụm yếu trong luận điểm và thêm một phản ví dụ ngắn."],
+}
+
 DEFAULT_BREAKDOWN = {
     "claim": {"clarity": 0.0, "relevance": 0.0, "specificity": 0.0},
     "evidence": {"presence": 0.0, "specificity": 0.0, "relevance": 0.0},
@@ -33,6 +45,137 @@ FALLBACK_BREAKDOWN = {
         "fallacy_control": 10.0,
     },
 }
+
+QUICK_REBUTTAL_FALLBACK_BREAKDOWN = {
+    "claim": {"clarity": 18.0, "relevance": 15.0, "specificity": 10.0},
+    "evidence": {"presence": 14.0, "specificity": 10.0, "relevance": 12.0},
+    "reasoning": {
+        "logical_connection": 18.0,
+        "causal_explanation": 16.0,
+        "fallacy_control": 10.0,
+    },
+}
+
+DEFAULT_MODE_SCORES = {
+    "flaw_detection": 0.0,
+    "counter_example": 0.0,
+    "explanation": 0.0,
+    "focus": 0.0,
+    "overall": 0.0,
+}
+
+FALLBACK_MODE_SCORES = DEFAULT_MODE_SCORES.copy()
+
+
+def _is_quick_rebuttal_mode(mode: str | None) -> bool:
+    key = str(mode or "").strip().casefold().replace("-", "_").replace(" ", "_")
+    return key in {"quick_rebuttal", "rebuttal", "phan_bien_nhanh"}
+
+
+def _compute_qr_overall(
+    flaw_detection: float,
+    counter_example: float,
+    explanation: float,
+    focus: float,
+) -> float:
+    """Weighted overall for quick_rebuttal mode.
+
+    Weights: flaw_detection 40%, explanation 25%, counter_example 20%, focus 15%.
+    """
+    return round(
+        flaw_detection * 0.40
+        + explanation * 0.25
+        + counter_example * 0.20
+        + focus * 0.15,
+        1,
+    )
+
+
+def build_quick_rebuttal_mode_scores(payload: dict) -> dict:
+    """Extract mode_scores from LLM JSON output for quick_rebuttal mode.
+
+    Handles three scenarios:
+    1. LLM returns mode_scores directly
+    2. LLM returns only CER fields → map to mode_scores
+    3. Missing fields → safe defaults
+    """
+    payload = payload or {}
+    # Scenario 1: LLM returned mode_scores
+    raw_ms = payload.get("mode_scores") or {}
+    flaw = _score_to_100(raw_ms.get("flaw_detection"))
+    counter = _score_to_100(raw_ms.get("counter_example"))
+    explanation = _score_to_100(raw_ms.get("explanation"))
+    focus = _score_to_100(raw_ms.get("focus"))
+    raw_cer = payload.get("cer") or {}
+
+    # Scenario 2: fallback individual missing fields to legacy CER-compatible keys.
+    if not raw_ms or raw_ms.get("flaw_detection") is None:
+        flaw = _score_to_100(payload.get("claim_score", raw_cer.get("claim")))
+    if not raw_ms or raw_ms.get("counter_example") is None:
+        counter = _score_to_100(payload.get("evidence_score", raw_cer.get("evidence")))
+    if not raw_ms or raw_ms.get("explanation") is None:
+        explanation = _score_to_100(payload.get("reasoning_score", raw_cer.get("reasoning")))
+    if not raw_ms or raw_ms.get("focus") is None:
+        checklist = payload.get("checklist") or {}
+        if "stays_focused" in checklist:
+            focus = 75.0 if checklist.get("stays_focused") else 40.0
+        else:
+            focus = _score_to_100(raw_cer.get("focus", raw_cer.get("overall") or payload.get("overall_score")))
+
+    # Overall: prefer LLM value, fallback to weighted formula
+    raw_overall = (
+        raw_ms.get("overall")
+        if raw_ms.get("overall") is not None
+        else payload.get("overall_score", raw_cer.get("overall", raw_cer.get("total")))
+    )
+    if raw_overall is not None and str(raw_overall).strip() not in ("", "null"):
+        overall = _score_to_100(raw_overall)
+    else:
+        overall = _compute_qr_overall(flaw, counter, explanation, focus)
+
+    return {
+        "flaw_detection": flaw,
+        "counter_example": counter,
+        "explanation": explanation,
+        "focus": focus,
+        "overall": overall,
+    }
+
+
+def build_quick_rebuttal_compat_cer(mode_scores: dict) -> dict:
+    """Build CER-compatible dict from quick_rebuttal mode_scores.
+
+    Quick Rebuttal compatibility mapping:
+      claim     = flaw_detection
+      evidence  = counter_example
+      reasoning = explanation
+    This is NOT normal CER scoring — it exists only to keep the
+    existing frontend/API contract stable.
+    """
+    mode_scores = mode_scores or {}
+    overall = _score_to_100(mode_scores.get("overall", 0.0))
+    # Quick Rebuttal compatibility mapping:
+    # claim = flaw_detection
+    # evidence = counter_example
+    # reasoning = explanation
+    # This is only to keep the existing frontend/API contract stable.
+    return {
+        "claim": _score_to_100(mode_scores.get("flaw_detection", 0.0)),
+        "evidence": _score_to_100(mode_scores.get("counter_example", 0.0)),
+        "reasoning": _score_to_100(mode_scores.get("explanation", 0.0)),
+        "overall": overall,
+        "total": overall,
+    }
+
+
+def _feedback_defaults_for_mode(mode: str | None) -> dict[str, list[str]]:
+    if _is_quick_rebuttal_mode(mode):
+        return QUICK_REBUTTAL_FALLBACK_FEEDBACK
+    return {
+        "strengths": [],
+        "weaknesses": ["Cần làm rõ hơn bằng chứng và suy luận."],
+        "suggestions": ["Bổ sung ví dụ cụ thể và giải thích quan hệ nhân quả."],
+    }
 
 
 def _word_count(text: str) -> int:
@@ -111,12 +254,12 @@ def _proportional_breakdown(score: float, weights: dict[str, float]) -> dict[str
     return {key: round(_clamp(score * weight, 0.0, cap), 1) for key, (weight, cap) in weights.items()}
 
 
-def _parse_marker_rubric_output(raw_text: str) -> dict:
+def _parse_marker_rubric_output(raw_text: str, mode: str | None = None) -> dict:
     rebuttal = _extract_section(raw_text, "REBUTTAL")
     cer_text = _extract_section(raw_text, "CER")
     feedback_text = _extract_section(raw_text, "FEEDBACK")
     if not rebuttal or not cer_text:
-        result = fallback_cer_result("missing_marker_sections")
+        result = fallback_cer_result("missing_marker_sections", mode=mode)
         result["raw_scoring_text"] = raw_text or ""
         return result
 
@@ -128,8 +271,9 @@ def _parse_marker_rubric_output(raw_text: str) -> dict:
     strengths = _parse_bullets(_feedback_subsection(feedback_text, "Strengths"))
     weaknesses = _parse_bullets(_feedback_subsection(feedback_text, "Weaknesses"))
     suggestions = _parse_bullets(_feedback_subsection(feedback_text, "Suggestions"))
+    feedback_defaults = _feedback_defaults_for_mode(mode)
 
-    return {
+    result = {
         "is_valid": True,
         "status": "success",
         "rebuttal": rebuttal,
@@ -167,13 +311,24 @@ def _parse_marker_rubric_output(raw_text: str) -> dict:
             ),
         },
         "feedback": {
-            "strengths": strengths,
-            "weaknesses": weaknesses or ["Cần làm rõ hơn bằng chứng và suy luận."],
-            "suggestions": suggestions or ["Bổ sung ví dụ cụ thể và giải thích quan hệ nhân quả."],
+            "strengths": strengths or feedback_defaults["strengths"],
+            "weaknesses": weaknesses or feedback_defaults["weaknesses"],
+            "suggestions": suggestions or feedback_defaults["suggestions"],
         },
         "raw_scoring_text": raw_text or "",
         "scoring_error": "",
     }
+    if _is_quick_rebuttal_mode(mode):
+        ms_payload = {
+            "claim_score": claim,
+            "evidence_score": evidence,
+            "reasoning_score": reasoning,
+        }
+        ms = build_quick_rebuttal_mode_scores(ms_payload)
+        result["mode_scores"] = ms
+        result["cer"] = build_quick_rebuttal_compat_cer(ms)
+    return result
+
 
 
 def _weighted_overall(claim: float, evidence: float, reasoning: float) -> float:
@@ -227,28 +382,43 @@ def strip_json_code_block(raw_text: str) -> str:
     return text
 
 
-def invalid_cer_result(reason: str = "invalid") -> dict:
-    return {
+def invalid_cer_result(reason: str = "invalid", mode: str | None = None) -> dict:
+    feedback = QUICK_REBUTTAL_INVALID_FEEDBACK.copy() if _is_quick_rebuttal_mode(mode) else INVALID_FEEDBACK.copy()
+    result = {
         "is_valid": False,
         "status": "invalid",
         "rebuttal": INVALID_REBUTTAL,
         "cer": {"claim": 0.0, "evidence": 0.0, "reasoning": 0.0, "overall": 0.0, "total": 0.0},
         "cer_breakdown": DEFAULT_BREAKDOWN.copy(),
-        "feedback": INVALID_FEEDBACK.copy(),
+        "feedback": feedback,
         "raw_scoring_text": "",
         "scoring_error": reason,
     }
+    if _is_quick_rebuttal_mode(mode):
+        result["mode_scores"] = DEFAULT_MODE_SCORES.copy()
+    return result
 
 
-def fallback_cer_result(error: str = "parse_error") -> dict:
-    claim = 50.0
-    evidence = 40.0
-    reasoning = 50.0
-    overall = _weighted_overall(claim, evidence, reasoning)
-    return {
+
+def fallback_cer_result(error: str = "parse_error", mode: str | None = None) -> dict:
+    quick_rebuttal = _is_quick_rebuttal_mode(mode)
+    claim = 0.0 if quick_rebuttal else 50.0
+    evidence = 0.0 if quick_rebuttal else 40.0
+    reasoning = 0.0 if quick_rebuttal else 50.0
+    overall = 0.0 if quick_rebuttal else _weighted_overall(claim, evidence, reasoning)
+    feedback = QUICK_REBUTTAL_FALLBACK_FEEDBACK.copy() if quick_rebuttal else {
+        "strengths": ["Lập luận có thể hiện một quan điểm ban đầu."],
+        "weaknesses": ["Hệ thống chưa parse được đầy đủ điểm rubric từ AI."],
+        "suggestions": ["Hãy bổ sung claim rõ, dẫn chứng cụ thể và giải thích liên kết logic."],
+    }
+    result = {
         "is_valid": True,
         "status": "success",
-        "rebuttal": "AI chưa tạo được phản biện chi tiết, nhưng hệ thống đã chấm điểm cơ bản cho lập luận.",
+        "rebuttal": (
+            "Lumi chưa đọc được điểm rubric chi tiết, nhưng sẽ chấm tạm theo kỹ năng bắt lỗi lập luận yếu."
+            if quick_rebuttal
+            else "AI chưa tạo được phản biện chi tiết, nhưng hệ thống đã chấm điểm cơ bản cho lập luận."
+        ),
         "cer": {
             "claim": claim,
             "evidence": evidence,
@@ -256,34 +426,36 @@ def fallback_cer_result(error: str = "parse_error") -> dict:
             "overall": overall,
             "total": overall,
         },
-        "cer_breakdown": FALLBACK_BREAKDOWN.copy(),
-        "feedback": {
-            "strengths": ["Lập luận có thể hiện một quan điểm ban đầu."],
-            "weaknesses": ["Hệ thống chưa parse được đầy đủ điểm rubric từ AI."],
-            "suggestions": ["Hãy bổ sung claim rõ, dẫn chứng cụ thể và giải thích liên kết logic."],
-        },
+        "cer_breakdown": QUICK_REBUTTAL_FALLBACK_BREAKDOWN.copy() if quick_rebuttal else FALLBACK_BREAKDOWN.copy(),
+        "feedback": feedback,
         "raw_scoring_text": "",
         "scoring_error": error,
     }
+    if quick_rebuttal:
+        result["mode_scores"] = FALLBACK_MODE_SCORES.copy()
+        result["cer"] = build_quick_rebuttal_compat_cer(result["mode_scores"])
+    return result
 
 
-def parse_cer_rubric_output(raw_text: str) -> dict:
+
+def parse_cer_rubric_output(raw_text: str, mode: str | None = None) -> dict:
     try:
         payload = json.loads(strip_json_code_block(raw_text))
     except (TypeError, ValueError, json.JSONDecodeError) as exc:
         if _extract_section(raw_text, "REBUTTAL"):
-            return _parse_marker_rubric_output(raw_text)
-        result = fallback_cer_result(str(exc))
+            return _parse_marker_rubric_output(raw_text, mode=mode)
+        result = fallback_cer_result(str(exc), mode=mode)
         result["raw_scoring_text"] = raw_text or ""
         return result
 
     is_valid = bool(payload.get("is_valid", True))
     if not is_valid:
-        result = invalid_cer_result(str(payload.get("status") or "invalid"))
+        result = invalid_cer_result(str(payload.get("status") or "invalid"), mode=mode)
         result["raw_scoring_text"] = raw_text or ""
         return result
 
     rebuttal = str(payload.get("ai_rebuttal") or payload.get("rebuttal") or "").strip()
+    quick_rebuttal = _is_quick_rebuttal_mode(mode)
 
     # Python-side evidence gate: if the model found no evidence (quote is
     # "NONE" or absent, or checklist says has_real_evidence=False), hard-zero
@@ -291,7 +463,7 @@ def parse_cer_rubric_output(raw_text: str) -> dict:
     evidence_quote = str(payload.get("evidence_quote") or "").strip().upper()
     checklist = payload.get("checklist") or {}
     has_real_evidence = bool(checklist.get("has_real_evidence", True))
-    evidence_gate_zero = (evidence_quote == "NONE") or (not has_real_evidence)
+    evidence_gate_zero = False if quick_rebuttal else ((evidence_quote == "NONE") or (not has_real_evidence))
 
     claim_breakdown = payload.get("claim_breakdown") or {}
     evidence_breakdown = payload.get("evidence_breakdown") or {}
@@ -353,9 +525,15 @@ def parse_cer_rubric_output(raw_text: str) -> dict:
             breakdown["reasoning"],
             {"logical_connection": 40, "causal_explanation": 40, "fallacy_control": 20},
         )
-    overall = _weighted_overall(claim, evidence, reasoning)
+    overall_raw = payload.get("overall_score")
+    if quick_rebuttal and overall_raw is not None and str(overall_raw).strip() not in ("", "null"):
+        overall = _score_to_100(overall_raw)
+    else:
+        overall = _weighted_overall(claim, evidence, reasoning)
+    feedback_defaults = _feedback_defaults_for_mode(mode)
+    raw_feedback = payload.get("feedback") or {}
 
-    return {
+    result = {
         "is_valid": True,
         "status": "success",
         "rebuttal": rebuttal,
@@ -368,13 +546,20 @@ def parse_cer_rubric_output(raw_text: str) -> dict:
         },
         "cer_breakdown": breakdown,
         "feedback": {
-            "strengths": _clean_list(payload.get("strengths")),
-            "weaknesses": _clean_list(payload.get("weaknesses"), ["Cần làm rõ hơn bằng chứng và suy luận."]),
-            "suggestions": _clean_list(payload.get("suggestions"), ["Bổ sung ví dụ cụ thể và giải thích quan hệ nhân quả."]),
+            "strengths": _clean_list(payload.get("strengths", raw_feedback.get("strengths")), feedback_defaults["strengths"]),
+            "weaknesses": _clean_list(payload.get("weaknesses", raw_feedback.get("weaknesses")), feedback_defaults["weaknesses"]),
+            "suggestions": _clean_list(payload.get("suggestions", raw_feedback.get("suggestions")), feedback_defaults["suggestions"]),
         },
         "raw_scoring_text": raw_text or "",
         "scoring_error": "",
     }
+    if quick_rebuttal:
+        ms = build_quick_rebuttal_mode_scores(payload)
+        result["mode_scores"] = ms
+        # Overwrite CER with compat mapping so scores are consistent
+        result["cer"] = build_quick_rebuttal_compat_cer(ms)
+    return result
+
 
 
 def normalize_cer_to_100(cer: dict | None) -> dict:
