@@ -75,36 +75,36 @@ def _format_turn_history(turn_history: list[dict] | None, max_turns: int = 3) ->
 # System prompt — written IN Vietnamese, NO numeric scores
 # ---------------------------------------------------------------------------
 def _build_system_prompt(output_language: str, age_group: str, debate_level: str) -> str:
-    return f"""Ban la he thong cham diem va phan bien tranh luan bang {output_language}. Khong dung tieng Anh trong noi dung feedback.
+    return f"""Bạn là hệ thống chấm điểm và phản biện tranh luận bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung feedback.
 
-NHIEM VU - phan tich noi bo roi tra ve DUY NHAT JSON hop le:
-  Nguoi dung chon mot lap truong: Ung ho hoac Phan doi. AI giu vai tro doi lap voi lap truong cua nguoi dung.
-  Truoc khi dien JSON, xac dinh noi bo:
-  a) Co nguon/to chuc/so lieu co ten cu the khong?
-  b) Lap luan chinh la gi? Pham vi co ro khong?
-  c) Co loi logic hoac gia dinh an khong?
+NHIỆM VỤ - phân tích nội bộ rồi trả về DUY NHẤT JSON hợp lệ:
+  Người dùng chọn một lập trường: Ủng hộ hoặc Phản đối. AI giữ vai trò đối lập với lập trường của người dùng.
+  Trước khi điền JSON, xác định nội bộ:
+  a) Có nguồn/tổ chức/số liệu có tên cụ thể không?
+  b) Lập luận chính là gì? Phạm vi có rõ không?
+  c) Có lỗi logic hoặc giả định ẩn không?
 
-Viet ai_rebuttal - 4-6 cau phan bien bang {output_language}:
-  - Phai mo dau bang: "Tuy nhien,", "Thuc te cho thay," hoac "Nguoc lai,"
-  - Phai phan hoi noi dung cu the trong lap luan cua nguoi dung.
-  - Khong viet phan bien chung chung ap dung cho moi lap luan.
-  - Giong ({age_group}): {_tone_rule(age_group)}
-  - Do sau ({debate_level}): {_level_rule(debate_level)}
+Viết "ai_rebuttal" - 4–6 câu phản biện bằng {output_language}:
+  - Phải mở đầu bằng: "Tuy nhiên,", "Thực tế cho thấy," hoặc "Ngược lại,"
+  - Phải phản hồi nội dung cụ thể trong lập luận của người dùng.
+  - Không viết phản biện chung chung áp dụng cho mọi lập luận.
+  - Giọng ({age_group}): {_tone_rule(age_group)}
+  - Độ sâu ({debate_level}): {_level_rule(debate_level)}
 
-CONG BANG CHUNG - bat buoc ap dung truoc khi cham:
-  Co bang chung thuc: ten to chuc + nam, so lieu cu the, su kien co ngay.
-  Khong phai bang chung: "nhieu nghien cuu cho thay", "moi nguoi biet", ly luan thuan tuy khong co nguon.
+CỔNG BẰNG CHỨNG - bắt buộc áp dụng trước khi chấm:
+  Có bằng chứng thực: tên tổ chức + năm, số liệu cụ thể, sự kiện có ngày.
+  Không phải bằng chứng: "nhiều nghiên cứu cho thấy", "mọi người biết", lý luận thuần túy không có nguồn.
 
-THANG DIEM:
-  claim_score: chat luong luan diem chinh (0-100)
-  evidence_score: chat luong bang chung (0-100, = 0 neu khong co bang chung thuc)
-  reasoning_score: chat luong suy luan (0-100)
+THANG ĐIỂM:
+  claim_score: chất lượng luận điểm chính (0-100)
+  evidence_score: chất lượng bằng chứng (0-100, = 0 nếu không có bằng chứng thực)
+  reasoning_score: chất lượng suy luận (0-100)
   overall_score = round(claim*0.3 + evidence*0.3 + reasoning*0.4)
 
-CHONG DON DIEM:
-  - Khong dung cung diem cho cac lap luan khac nhau ve chat luong.
-  - Khong dung toan so tron.
-  - Diem phai phan anh tung cau tra loi cu the."""
+CHỐNG DỒN ĐIỂM:
+  - Không dùng cùng điểm cho các lập luận khác nhau về chất lượng.
+  - Không dùng toàn số tròn.
+  - Điểm phải phản ánh từng câu trả lời cụ thể."""
 
 
 # ---------------------------------------------------------------------------
@@ -284,7 +284,9 @@ def _build_quick_rebuttal_system_prompt_v2(output_language: str, age_group: str,
 Ban la huan luyen vien che do PHAN BIEN NHANH bang {output_language}. Khong dung tieng Anh trong noi dung feedback, tru cac ten khoa rubric bat buoc.
 
 Ban chat flow:
+  - The AI has provided a weak argument.
   - Lumi da dua cho nguoi dung mot weak argument / luan diem yeu.
+  - The user's task is to identify the flaw, fallacy, unsupported assumption, or counterexample in the weak argument.
   - Nguoi dung khong viet mot bai tranh bien day du; the user is not writing a full argument and not writing a full CER argument.
   - Nhiem vu cua nguoi dung la chi ra lo hong, gia dinh sai, nguy bien, hoac phan vi du ngan.
   - Nhiem vu cua ban la cham xem nguoi dung co bat dung loi chinh khong va huan luyen ky nang phan bien nhanh.
@@ -317,6 +319,13 @@ Rubric rieng — DUNG mode_scores, KHONG dung CER truc tiep:
      - 0-39: phan hoi leech hoan toan.
 
 overall = round(flaw_detection * 0.40 + explanation * 0.25 + counter_example * 0.20 + focus * 0.15)
+
+Return mode_scores with:
+  - flaw_detection: 0-100
+  - counter_example: 0-100
+  - explanation: 0-100
+  - focus: 0-100
+  - overall: 0-100
 
 For quick_rebuttal, the CER fields are reused only for backward compatibility:
   - claim_score = mode_scores.flaw_detection
@@ -444,7 +453,13 @@ def practice_instruction_for_mode(mode: str | None) -> str:
     return "Hãy xây dựng câu trả lời tranh biện phù hợp."
 
 
-def _practice_context(mode: str, practice_prompt: str | None, practice_round: int | None) -> str:
+def _practice_context(
+    mode: str,
+    practice_prompt: str | None,
+    practice_round: int | None,
+    practice_fallacy_hint: str | None = None,
+    practice_target_flaws: list[str] | None = None,
+) -> str:
     if mode not in PRACTICE_PROMPT_TYPES or not practice_prompt:
         return ""
     labels = {
@@ -453,11 +468,24 @@ def _practice_context(mode: str, practice_prompt: str | None, practice_round: in
         "quick_rebuttal": "Luận điểm yếu do Lumi đưa ra",
         "full_argument": "Chủ đề xây dựng lập luận do Lumi đưa ra",
     }
+    hint = ""
+    if mode == "quick_rebuttal":
+        clean_hint = str(practice_fallacy_hint or "").strip()
+        clean_flaws = [
+            str(item).strip()
+            for item in (practice_target_flaws or [])
+            if str(item).strip()
+        ]
+        hint = (
+            f"Fallacy hint: {clean_hint or 'không cung cấp'}\n"
+            f"Target flaws: {', '.join(clean_flaws) or 'không cung cấp'}\n"
+        )
     return (
         f"=== ĐỀ BÀI LUYỆN TẬP ===\n"
         f"Mode: {mode}\n"
         f"Lượt: {practice_round or 1}\n"
         f"{labels[mode]}: {practice_prompt}\n"
+        f"{hint}"
         f"Nhiệm vụ của người dùng: {practice_instruction_for_mode(mode)}\n"
         f"Chấm câu trả lời của người dùng theo đúng đề bài này. Không tự coi đề bài là câu trả lời của người dùng.\n\n"
     )
@@ -516,6 +544,8 @@ def build_cer_messages(
     mode: str = "free_debate",
     practice_mode: str | None = None,
     practice_prompt: str | None = None,
+    practice_fallacy_hint: str | None = None,
+    practice_target_flaws: list[str] | None = None,
     practice_round: int | None = None,
     memory_context: dict | None = None,
 ) -> list[dict[str, str]]:
@@ -536,7 +566,13 @@ def build_cer_messages(
 
     history_block = _format_turn_history(turn_history)
     history_section = f"\n{history_block}\n" if history_block else ""
-    practice_section = _practice_context(mode, practice_prompt, practice_round)
+    practice_section = _practice_context(
+        mode,
+        practice_prompt,
+        practice_round,
+        practice_fallacy_hint,
+        practice_target_flaws,
+    )
     memory_section = _memory_context(memory_context)
 
     user_prompt = (
@@ -711,6 +747,8 @@ def build_groq_messages(
     mode: str = "free_debate",
     practice_mode: str | None = None,
     practice_prompt: str | None = None,
+    practice_fallacy_hint: str | None = None,
+    practice_target_flaws: list[str] | None = None,
     practice_round: int | None = None,
     memory_context: dict | None = None,
 ) -> list[dict[str, str]]:
@@ -723,6 +761,8 @@ def build_groq_messages(
         mode=mode,
         practice_mode=practice_mode,
         practice_prompt=practice_prompt,
+        practice_fallacy_hint=practice_fallacy_hint,
+        practice_target_flaws=practice_target_flaws,
         practice_round=practice_round,
         memory_context=memory_context,
     )

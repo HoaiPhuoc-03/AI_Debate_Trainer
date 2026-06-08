@@ -1,6 +1,7 @@
 import sqlite3
 import sys
 import tempfile
+import re
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -199,6 +200,12 @@ class Week6BackendTests(unittest.TestCase):
         self.assertEqual(data["prompt_type"], "weak_argument")
         self.assertEqual(data["prompt"], data["weak_argument"])
         self.assertIn("Hãy chỉ ra", data["instruction"])
+        self.assertTrue(data["fallacy_hint"])
+        self.assertTrue(data["target_flaws"])
+        self.assertGreaterEqual(
+            len([part for part in re.split(r"[.!?]+", data["weak_argument"]) if part.strip()]),
+            4,
+        )
         self.assertNotIn("? chắc chắn", data["weak_argument"])
         self.assertNotIn("Hãy chỉ ra", data["weak_argument"])
         mocked_ai_prompt.assert_not_called()

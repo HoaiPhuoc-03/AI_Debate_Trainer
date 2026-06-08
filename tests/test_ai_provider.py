@@ -108,6 +108,8 @@ class AIGroqOnlyTests(unittest.TestCase):
             mode="free_debate",
             practice_mode="quick_rebuttal",
             practice_prompt="Dùng AI viết bài chắc chắn đúng vì ai cũng thấy lợi ích của nó.",
+            practice_fallacy_hint="thiếu bằng chứng / dựa vào số đông",
+            practice_target_flaws=["thiếu bằng chứng", "dựa vào số đông"],
             practice_round=1,
         )
 
@@ -117,6 +119,8 @@ class AIGroqOnlyTests(unittest.TestCase):
         self.assertEqual(result["cer"]["overall"], 56.0)
         self.assertIn("MODE: QUICK_REBUTTAL", combined_prompt)
         self.assertIn("flaw_detection", combined_prompt)
+        self.assertIn("Fallacy hint: thiếu bằng chứng / dựa vào số đông", combined_prompt)
+        self.assertIn("Target flaws: thiếu bằng chứng, dựa vào số đông", combined_prompt)
 
     @mock.patch("app.services.ai_service.call_groq")
     def test_groq_error_does_not_use_sample_rebuttal(self, mocked_groq):

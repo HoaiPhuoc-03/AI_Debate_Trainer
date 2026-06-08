@@ -38,11 +38,11 @@ PROMPT_BANK = {
         "Tim bang chung cu the cho claim: Day ky nang phan bien giup sinh vien ra quyet dinh tot hon.",
     ],
     "quick_rebuttal": [
-        "Không cần học đại học vì Bill Gates cũng bỏ học mà vẫn thành công.",
-        "Nên cấm xe máy vì tai nạn giao thông đường bộ xảy ra mỗi ngày.",
-        "Điện thoại hoàn toàn vô hại vì tôi đã dùng mười năm mà không bị bệnh.",
-        "Học tiếng Anh là vô ích vì công cụ AI đã có thể dịch mọi thứ.",
-        "Nên tiêu hết tiền thay vì tiết kiệm vì ngày mai có thể chúng ta không còn sống.",
+        "Luận điểm yếu: Học tiếng Anh hiện nay gần như không còn cần thiết vì các công cụ dịch thuật AI đã phát triển rất mạnh. Chỉ cần có điện thoại, học sinh có thể dịch văn bản, hội thoại và tài liệu nước ngoài trong vài giây. Điều này cho thấy việc dành nhiều năm để học từ vựng, ngữ pháp và phát âm tiếng Anh là khá lãng phí. Trong tương lai AI chắc chắn sẽ dịch chính xác mọi tình huống giao tiếp nên con người không cần tự học ngoại ngữ nữa. Vì vậy, nhà trường nên giảm mạnh thời lượng học tiếng Anh và thay bằng các tiết học sử dụng công nghệ dịch thuật.",
+        "Luận điểm yếu: Không cần học đại học vì đã có nhiều người thành công mà không cần bằng cấp. Những câu chuyện như Bill Gates hay một vài doanh nhân nổi tiếng cho thấy kinh nghiệm thực tế quan trọng hơn giảng đường. Nếu một số người có thể bỏ học mà vẫn giàu có, sinh viên bình thường cũng có thể đi theo con đường tương tự. Thay vì tốn bốn năm học lý thuyết, người trẻ nên đi làm sớm để học từ thị trường. Vì vậy, đại học không còn là lựa chọn đáng ưu tiên.",
+        "Luận điểm yếu: Nên cấm xe máy ở thành phố vì ngày nào cũng có tin về tai nạn giao thông. Khi xe máy biến mất, đường phố chắc chắn sẽ an toàn và văn minh hơn. Người dân có thể chuyển sang xe buýt hoặc các phương tiện khác mà không gặp trở ngại lớn. Nếu vẫn cho xe máy lưu thông, tình trạng ùn tắc và tai nạn sẽ không bao giờ được giải quyết. Vì vậy, cấm xe máy là cách nhanh nhất để cải thiện giao thông đô thị.",
+        "Luận điểm yếu: Mạng xã hội không gây ảnh hưởng nghiêm trọng đến khả năng tập trung vì hầu hết học sinh vẫn dùng mỗi ngày. Nếu thật sự có hại, phụ huynh và giáo viên đã cấm hoàn toàn từ lâu. Nhiều bạn vẫn đạt điểm tốt dù thường xuyên xem video ngắn, nên không thể nói mạng xã hội làm giảm hiệu quả học tập. Vấn đề chính nằm ở cách quản lý thời gian của từng người chứ không phải nền tảng. Vì vậy, không cần đặt ra giới hạn đặc biệt đối với mạng xã hội.",
+        "Luận điểm yếu: Có nên cấm túi nilon dùng một lần không còn là câu hỏi cần tranh luận nhiều vì ai cũng biết nhựa gây ô nhiễm. Chỉ cần cấm loại túi này, môi trường sẽ sạch hơn rõ rệt và người dân sẽ tự chuyển sang lựa chọn xanh. Những khó khăn của cửa hàng nhỏ hay người tiêu dùng chỉ là vấn đề thói quen ban đầu. Nếu chính sách tốt cho môi trường thì không nên trì hoãn vì vài bất tiện ngắn hạn. Vì vậy, lệnh cấm nên được áp dụng ngay trên diện rộng.",
     ],
     "full_argument": [
         "Xay dung mot lap luan C-E-R day du ve viec co nen day ky nang phan bien bat buoc o dai hoc.",
@@ -53,26 +53,116 @@ PROMPT_BANK = {
 }
 
 FALLACY_TEMPLATES = [
-    (
-        "khái quát hóa vội vàng",
-        "{subject} chắc chắn đúng vì tôi thấy nhiều người xung quanh cũng nghĩ như vậy.",
-    ),
-    (
-        "thiếu bằng chứng",
-        "Có thể khẳng định rằng {subject} vì điều này nghe có vẻ hợp lý và ai cũng có thể thấy lợi ích của nó.",
-    ),
-    (
-        "nguyên nhân giả",
-        "Chỉ cần chấp nhận rằng {subject} thì vấn đề chắc chắn sẽ được giải quyết và kết quả sẽ tự động tốt hơn.",
-    ),
-    (
-        "tuyệt đối hóa",
-        "Không thể phủ nhận rằng {subject}, vì mọi quan điểm khác đều không hợp lý.",
-    ),
-    (
-        "dựa vào số đông",
-        "{subject} chắc chắn đúng vì nhiều người hiện nay đều đồng ý và làm theo.",
-    ),
+    {
+        "fallacy_hint": "khái quát hóa vội vàng",
+        "target_flaws": ["khái quát hóa vội vàng", "dựa vào vài ví dụ", "thiếu dữ liệu đại diện"],
+        "template": (
+            "Luận điểm yếu: Gần đây tôi thấy rất nhiều ví dụ cho thấy {subject_statement} là hướng đi đúng. "
+            "Bạn bè, người thân và vài câu chuyện trên mạng đều cho kết quả khá tích cực. "
+            "Từ những trường hợp đó có thể suy ra rằng phần lớn người khác cũng sẽ nhận được lợi ích tương tự. "
+            "Vì vậy, không cần mất quá nhiều thời gian kiểm chứng bằng nghiên cứu hay số liệu rộng hơn. "
+            "Nhà trường và xã hội nên nhanh chóng ủng hộ {subject_statement} thay vì tiếp tục tranh luận."
+        ),
+    },
+    {
+        "fallacy_hint": "dựa vào số đông",
+        "target_flaws": ["dựa vào số đông", "nhầm phổ biến với đúng", "thiếu tiêu chí đánh giá"],
+        "template": (
+            "Luận điểm yếu: Rất nhiều người hiện nay đã đồng ý rằng {subject_statement} là lựa chọn hợp lý. "
+            "Khi một quan điểm được nhiều phụ huynh, học sinh và cộng đồng ủng hộ, nó thường phản ánh nhu cầu thật. "
+            "Nếu phần đông đều nghĩ như vậy thì việc tiếp tục nghi ngờ chỉ làm quá trình thay đổi chậm lại. "
+            "Những người phản đối có lẽ đang chưa bắt kịp xu hướng chung của xã hội. "
+            "Vì thế, quyết định tốt nhất là đi theo lựa chọn mà đa số đang ủng hộ."
+        ),
+    },
+    {
+        "fallacy_hint": "thiếu bằng chứng",
+        "target_flaws": ["thiếu bằng chứng", "khẳng định không có dữ liệu", "dựa vào cảm giác hợp lý"],
+        "template": (
+            "Luận điểm yếu: Có thể thấy khá rõ rằng {subject_statement} sẽ mang lại nhiều lợi ích thiết thực. "
+            "Điều này nghe hợp lý vì nó phù hợp với cách xã hội đang thay đổi và nhu cầu của nhiều người. "
+            "Dù chưa có số liệu cụ thể, ta vẫn có thể dự đoán kết quả tích cực dựa trên quan sát thông thường. "
+            "Nếu cứ chờ nghiên cứu đầy đủ thì chúng ta sẽ bỏ lỡ thời điểm hành động tốt nhất. "
+            "Vì vậy, nên chấp nhận quan điểm này trước rồi điều chỉnh sau nếu cần."
+        ),
+    },
+    {
+        "fallacy_hint": "nguyên nhân giả",
+        "target_flaws": ["nguyên nhân giả", "đơn giản hóa quan hệ nhân quả", "bỏ qua yếu tố khác"],
+        "template": (
+            "Luận điểm yếu: Nếu thực hiện {subject_statement}, vấn đề hiện nay gần như sẽ được giải quyết từ gốc. "
+            "Nguyên nhân chính của khó khăn nằm ở việc chúng ta chưa dám chọn hướng đi này một cách dứt khoát. "
+            "Một khi thay đổi được áp dụng, hành vi của mọi người sẽ tự điều chỉnh theo hướng tích cực hơn. "
+            "Các yếu tố khác như chi phí, điều kiện thực hiện hay khác biệt giữa từng nhóm không quá quan trọng. "
+            "Vì vậy, chỉ cần thông qua lựa chọn này là kết quả tốt sẽ xuất hiện."
+        ),
+    },
+    {
+        "fallacy_hint": "tuyệt đối hóa",
+        "target_flaws": ["tuyệt đối hóa", "bỏ qua ngoại lệ", "khẳng định quá mức"],
+        "template": (
+            "Luận điểm yếu: {subject_statement_cap} là lựa chọn đúng trong hầu hết mọi hoàn cảnh. "
+            "Những lo ngại thường được nêu ra chỉ là các trường hợp nhỏ và không làm thay đổi bản chất vấn đề. "
+            "Khi một giải pháp đã có lợi ích rõ ràng, ta không nên để vài ngoại lệ cản trở quyết định chung. "
+            "Nếu cứ tính đến mọi tình huống đặc biệt, xã hội sẽ không bao giờ có chính sách đủ mạnh. "
+            "Do đó, nên xem quan điểm này như hướng xử lý gần như chắc chắn đúng."
+        ),
+    },
+    {
+        "fallacy_hint": "đánh tráo vấn đề",
+        "target_flaws": ["đánh tráo vấn đề", "né câu hỏi chính", "chuyển trọng tâm sang lợi ích phụ"],
+        "template": (
+            "Luận điểm yếu: Khi bàn về {subject_statement}, điều quan trọng nhất là thái độ cởi mở với đổi mới. "
+            "Những người phản đối thường tập trung quá nhiều vào rủi ro mà quên rằng xã hội luôn cần thay đổi. "
+            "Nếu một lựa chọn giúp chúng ta trông hiện đại và linh hoạt hơn, nó đã có giá trị rất lớn. "
+            "Việc hỏi liệu nó có thật sự hiệu quả trong từng trường hợp chỉ làm cuộc tranh luận trở nên rườm rà. "
+            "Vì vậy, nên ủng hộ quan điểm này để thể hiện tinh thần tiến bộ."
+        ),
+    },
+    {
+        "fallacy_hint": "người rơm",
+        "target_flaws": ["người rơm", "bóp méo quan điểm phản đối", "tấn công phiên bản yếu hơn"],
+        "template": (
+            "Luận điểm yếu: Những người phản đối {subject_statement} thường chỉ muốn giữ nguyên cách làm cũ. "
+            "Họ dường như cho rằng mọi thay đổi đều nguy hiểm và người học không thể thích nghi với điều mới. "
+            "Cách nghĩ đó quá bảo thủ trong một xã hội đang phát triển nhanh. "
+            "Nếu cứ nghe theo họ, chúng ta sẽ bỏ lỡ nhiều cơ hội cải thiện cuộc sống và giáo dục. "
+            "Vì vậy, quan điểm phản đối không thật sự đáng cân nhắc."
+        ),
+    },
+    {
+        "fallacy_hint": "lưỡng phân giả",
+        "target_flaws": ["lưỡng phân giả", "ép chỉ còn hai lựa chọn", "bỏ qua phương án trung gian"],
+        "template": (
+            "Luận điểm yếu: Về {subject_statement}, chúng ta chỉ có hai lựa chọn rõ ràng. "
+            "Hoặc ủng hộ hoàn toàn để xã hội tiến lên, hoặc phản đối và chấp nhận tụt lại phía sau. "
+            "Những phương án thỏa hiệp thường chỉ làm chính sách yếu đi và khiến mọi người khó thực hiện. "
+            "Trong các vấn đề quan trọng, quyết định nửa vời thường còn tệ hơn không làm gì. "
+            "Vì vậy, cần chọn hẳn một phía và ủng hộ quan điểm này một cách dứt khoát."
+        ),
+    },
+    {
+        "fallacy_hint": "trượt dốc",
+        "target_flaws": ["trượt dốc", "phóng đại hệ quả", "thiếu liên kết nhân quả"],
+        "template": (
+            "Luận điểm yếu: Nếu không chấp nhận {subject_statement} ngay từ bây giờ, hậu quả sẽ ngày càng nghiêm trọng. "
+            "Ban đầu có thể chỉ là vài bất tiện nhỏ, nhưng dần dần xã hội sẽ mất khả năng thích nghi với thay đổi. "
+            "Khi đã chậm một bước, chúng ta sẽ tiếp tục chậm trong nhiều quyết định khác. "
+            "Cuối cùng, cả hệ thống có thể trở nên lạc hậu so với nhu cầu thực tế. "
+            "Vì vậy, lựa chọn này cần được áp dụng sớm để tránh chuỗi hậu quả xấu."
+        ),
+    },
+    {
+        "fallacy_hint": "chọn lọc bằng chứng",
+        "target_flaws": ["chọn lọc bằng chứng", "bỏ qua phản ví dụ", "thiếu so sánh cân bằng"],
+        "template": (
+            "Luận điểm yếu: Có nhiều ví dụ cho thấy {subject_statement} đem lại kết quả tốt. "
+            "Một số trường hợp được chia sẻ trên báo chí và mạng xã hội cho thấy người tham gia cảm thấy hài lòng hơn. "
+            "Những trường hợp chưa thành công có thể chỉ là do cách triển khai chưa đúng hoặc do người dùng chưa quen. "
+            "Vì các ví dụ tích cực đã đủ thuyết phục, ta không cần đặt nặng những dữ liệu trái chiều. "
+            "Do đó, nên xem đây là hướng đi có lợi và mở rộng nhanh hơn."
+        ),
+    },
 ]
 
 QUICK_REBUTTAL_INSTRUCTION = "Hãy chỉ ra lỗ hổng, giả định sai hoặc phản ví dụ."
@@ -136,26 +226,48 @@ def _clean_sentence(text: str) -> str:
     return clean
 
 
-def _topic_to_claim_subject(topic_title: str) -> str:
-    clean = " ".join(str(topic_title or "").strip().split()).rstrip(" ?.!").strip()
+def _lower_first(text: str) -> str:
+    clean = str(text or "").strip()
+    return clean[:1].lower() + clean[1:] if clean else ""
+
+
+def _strip_final_question_particle(text: str) -> str:
+    return re.sub(r"\s+không$", "", str(text or "").strip(), flags=re.IGNORECASE).strip()
+
+
+def topic_to_subject_statement(title: str) -> str:
+    clean = " ".join(str(title or "").strip().split()).rstrip(" ?.!").strip()
     if not clean:
         return "chủ đề này"
 
     should_prefix = re.match(r"^có nên\s+(.+?)(?:\s+không)?$", clean, flags=re.IGNORECASE)
     if should_prefix:
-        subject = should_prefix.group(1).strip()
-        return f"việc {subject[0].lower() + subject[1:] if subject else 'thực hiện lựa chọn này'}"
+        action = _strip_final_question_particle(should_prefix.group(1))
+        return f"việc {_lower_first(action) if action else 'thực hiện lựa chọn này'}"
 
     embedded_should = re.match(
-        r"^(.+?)\s+có nên\s+(?:được\s+)?(.+?)(?:\s+không)?$",
+        r"^(.+?)\s+có nên\s+(.+?)(?:\s+không)?$",
         clean,
         flags=re.IGNORECASE,
     )
     if embedded_should:
         actor = embedded_should.group(1).strip()
-        action = embedded_should.group(2).strip()
+        action = _strip_final_question_particle(embedded_should.group(2))
         subject = f"{actor} {action}".strip()
-        return f"việc {subject[0].lower() + subject[1:]}"
+        return f"việc {_lower_first(subject)}"
+
+    effect_question = re.match(
+        r"^(.+?)\s+có\s+(làm|gây|ảnh hưởng|giúp|tạo|mang lại|dẫn đến)\s+(.+)$",
+        clean,
+        flags=re.IGNORECASE,
+    )
+    if effect_question:
+        subject = (
+            f"{effect_question.group(1).strip()} "
+            f"{effect_question.group(2).strip()} "
+            f"{_strip_final_question_particle(effect_question.group(3))}"
+        )
+        return f"việc {_lower_first(subject)}"
 
     still_measure = re.match(
         r"^(.+?)\s+có còn là\s+(.+)$",
@@ -163,8 +275,8 @@ def _topic_to_claim_subject(topic_title: str) -> str:
         flags=re.IGNORECASE,
     )
     if still_measure:
-        subject = f"{still_measure.group(1).strip()} là {still_measure.group(2).strip()}"
-        return subject[0].lower() + subject[1:]
+        subject = f"{still_measure.group(1).strip()} là {_strip_final_question_particle(still_measure.group(2))}"
+        return f"việc {_lower_first(subject)}"
 
     is_question = re.match(
         r"^(.+?)\s+có phải là\s+(.+)$",
@@ -172,10 +284,14 @@ def _topic_to_claim_subject(topic_title: str) -> str:
         flags=re.IGNORECASE,
     )
     if is_question:
-        subject = f"{is_question.group(1).strip()} là {is_question.group(2).strip()}"
-        return subject[0].lower() + subject[1:]
+        subject = f"{is_question.group(1).strip()} là {_strip_final_question_particle(is_question.group(2))}"
+        return f"việc {_lower_first(subject)}"
 
-    return clean
+    return _lower_first(clean)
+
+
+def _topic_to_claim_subject(topic_title: str) -> str:
+    return topic_to_subject_statement(topic_title)
 
 
 def _sanitize_weak_argument(text: str) -> str:
@@ -282,19 +398,27 @@ def _build_quick_rebuttal_prompt_from_topic(
     round_number: int | None = None,
 ) -> dict:
     title = str(topic.get("title") or "").strip()
-    subject = _topic_to_claim_subject(title)
+    subject_statement = topic_to_subject_statement(title)
     template_index = _stable_index(
         f"{topic.get('id') or title}:{round_number or 0}",
         len(FALLACY_TEMPLATES),
     )
-    fallacy_hint, template = FALLACY_TEMPLATES[template_index]
-    weak_argument = _sanitize_weak_argument(template.format(subject=subject))
+    template_data = FALLACY_TEMPLATES[template_index]
+    fallacy_hint = str(template_data["fallacy_hint"])
+    target_flaws = list(template_data.get("target_flaws") or [fallacy_hint])
+    weak_argument = _sanitize_weak_argument(
+        template_data["template"].format(
+            subject_statement=subject_statement,
+            subject_statement_cap=_clean_sentence(subject_statement).rstrip("."),
+        )
+    )
     return {
         "mode": "quick_rebuttal",
         "prompt_type": "weak_argument",
         "prompt": weak_argument,
         "weak_argument": weak_argument,
         "fallacy_hint": fallacy_hint,
+        "target_flaws": target_flaws,
         "instruction": QUICK_REBUTTAL_INSTRUCTION,
         "source": "topic_bank",
         **_topic_metadata(topic),
@@ -313,6 +437,7 @@ def _finalize_prompt_result(result: dict) -> dict:
     finalized.setdefault("scenario", None)
     finalized.setdefault("claim", None)
     finalized.setdefault("weak_argument", None)
+    finalized.setdefault("target_flaws", None)
 
     if mode == "quick_rebuttal":
         weak_argument = _sanitize_weak_argument(
@@ -321,6 +446,11 @@ def _finalize_prompt_result(result: dict) -> dict:
         finalized["prompt_type"] = "weak_argument"
         finalized["weak_argument"] = weak_argument
         finalized["prompt"] = weak_argument
+        finalized["fallacy_hint"] = finalized.get("fallacy_hint") or "thiếu bằng chứng / giả định chưa chứng minh"
+        target_flaws = finalized.get("target_flaws") or []
+        if isinstance(target_flaws, str):
+            target_flaws = [item.strip() for item in target_flaws.split(",") if item.strip()]
+        finalized["target_flaws"] = list(target_flaws) or [finalized["fallacy_hint"]]
         finalized["instruction"] = QUICK_REBUTTAL_INSTRUCTION
     else:
         default_instructions = {

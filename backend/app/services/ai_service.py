@@ -77,6 +77,8 @@ def build_messages(
     mode: str = "free_debate",
     practice_mode: str | None = None,
     practice_prompt: str | None = None,
+    practice_fallacy_hint: str | None = None,
+    practice_target_flaws: list[str] | None = None,
     practice_round: int | None = None,
     memory_context: dict | None = None,
 ) -> list[dict[str, str]]:
@@ -97,6 +99,8 @@ def build_messages(
         mode=mode,
         practice_mode=practice_mode,
         practice_prompt=practice_prompt,
+        practice_fallacy_hint=practice_fallacy_hint,
+        practice_target_flaws=practice_target_flaws,
         practice_round=practice_round,
         memory_context=memory_context,
     )
@@ -140,9 +144,16 @@ def _error_analysis(message: str, *, provider: str = "groq", model: str = "") ->
     }
 
 
-def _rubric_to_analysis(rubric: dict, *, provider: str = "groq", model: str = "", llm_error: str = "") -> dict:
+def _rubric_to_analysis(
+    rubric: dict,
+    *,
+    provider: str = "groq",
+    model: str = "",
+    llm_error: str = "",
+    mode: str | None = None,
+) -> dict:
     rebuttal = rubric.get("rebuttal") or ""
-    if _needs_rebuttal_repair(rebuttal):
+    if normalize_practice_mode(mode) != "quick_rebuttal" and _needs_rebuttal_repair(rebuttal):
         return _error_analysis(GROQ_FORMAT_ERROR, provider=provider, model=model)
 
     return {
@@ -244,11 +255,13 @@ def _fallback_practice_prompt(
     scenario = description or f"Hãy xem xét một tình huống cụ thể liên quan đến: {title}."
     claim = ""
     weak_argument = ""
+    fallacy_hint = ""
     if normalized == "find_evidence":
         claim = f"{title} sẽ mang lại lợi ích rõ rệt nếu được triển khai minh bạch và có hướng dẫn phù hợp."
         prompt = claim
     elif normalized == "quick_rebuttal":
         weak_argument = f"{title} chắc chắn đúng vì nhiều người hiện nay đều đồng ý và làm theo."
+        fallacy_hint = "dựa vào số đông / thiếu bằng chứng"
         prompt = weak_argument
     else:
         prompt = f"Tình huống: {title}. {scenario}"
@@ -260,6 +273,7 @@ def _fallback_practice_prompt(
         "scenario": scenario if normalized == "claim_writing" else None,
         "claim": claim if normalized == "find_evidence" else None,
         "weak_argument": weak_argument if normalized == "quick_rebuttal" else None,
+        "fallacy_hint": fallacy_hint if normalized == "quick_rebuttal" else None,
         "prompt": prompt,
         "instruction": practice_instruction_for_mode(normalized),
         "warning": warning,
@@ -362,6 +376,8 @@ def generate_debate_analysis(
     mode: str = "free_debate",
     practice_mode: str | None = None,
     practice_prompt: str | None = None,
+    practice_fallacy_hint: str | None = None,
+    practice_target_flaws: list[str] | None = None,
     practice_round: int | None = None,
     memory_context: dict | None = None,
 ) -> dict:
@@ -407,6 +423,8 @@ def generate_debate_analysis(
             mode=mode,
             practice_mode=practice_mode,
             practice_prompt=practice_prompt,
+            practice_fallacy_hint=practice_fallacy_hint,
+            practice_target_flaws=practice_target_flaws,
             practice_round=practice_round,
             memory_context=memory_context,
         )
@@ -442,6 +460,7 @@ def generate_debate_analysis(
             provider=llm_result.get("provider", "groq"),
             model=llm_result.get("model", ""),
             llm_error=llm_result.get("error", ""),
+            mode=active_mode,
         )
         analysis["timings"] = {
             "build_prompt_ms": build_prompt_ms,
@@ -470,6 +489,8 @@ def generate_debate_turn_analysis(
     mode: str = "free_debate",
     practice_mode: str | None = None,
     practice_prompt: str | None = None,
+    practice_fallacy_hint: str | None = None,
+    practice_target_flaws: list[str] | None = None,
     practice_round: int | None = None,
 ) -> dict:
     return generate_debate_analysis(
@@ -486,6 +507,8 @@ def generate_debate_turn_analysis(
         mode=mode,
         practice_mode=practice_mode,
         practice_prompt=practice_prompt,
+        practice_fallacy_hint=practice_fallacy_hint,
+        practice_target_flaws=practice_target_flaws,
         practice_round=practice_round,
     )
 

@@ -101,6 +101,64 @@ class CERRubricTests(unittest.TestCase):
         self.assertTrue(result["feedback"]["weaknesses"])
         self.assertTrue(result["feedback"]["suggestions"])
 
+    def test_quick_rebuttal_mode_scores_parse_to_compat_cer(self):
+        raw = """
+{
+  "is_valid": true,
+  "ai_rebuttal": "Bạn đã phát hiện đúng điểm yếu trong cụm ai cũng thấy lợi ích.",
+  "mode_scores": {
+    "flaw_detection": 80,
+    "counter_example": 20,
+    "explanation": 60,
+    "focus": 75,
+    "overall": 59
+  },
+  "feedback": {
+    "strengths": ["Bắt đúng lỗi mơ hồ."],
+    "weaknesses": ["Chưa có phản ví dụ cụ thể."],
+    "suggestions": ["Hãy hỏi lợi ích cho ai và bằng chứng ở đâu."]
+  }
+}
+""".strip()
+
+        result = parse_cer_rubric_output(raw, mode="quick_rebuttal")
+
+        self.assertEqual(result["mode_scores"]["flaw_detection"], 80.0)
+        self.assertEqual(result["mode_scores"]["counter_example"], 20.0)
+        self.assertEqual(result["mode_scores"]["explanation"], 60.0)
+        self.assertEqual(result["mode_scores"]["focus"], 75.0)
+        self.assertEqual(result["mode_scores"]["overall"], 59.0)
+        self.assertEqual(result["cer"]["claim"], 80.0)
+        self.assertEqual(result["cer"]["evidence"], 20.0)
+        self.assertEqual(result["cer"]["reasoning"], 60.0)
+        self.assertEqual(result["cer"]["overall"], 59.0)
+
+    def test_quick_rebuttal_legacy_cer_falls_back_to_mode_scores(self):
+        raw = """
+{
+  "is_valid": true,
+  "ai_rebuttal": "Bạn đã nhận ra luận điểm còn thiếu chứng minh.",
+  "cer": {
+    "claim": 80,
+    "evidence": 20,
+    "reasoning": 60,
+    "overall": 59
+  },
+  "feedback": {
+    "strengths": ["Có nhận diện lỗi."],
+    "weaknesses": ["Phản ví dụ còn thiếu."],
+    "suggestions": ["Thêm một tình huống ngược."]
+  }
+}
+""".strip()
+
+        result = parse_cer_rubric_output(raw, mode="quick_rebuttal")
+
+        self.assertEqual(result["mode_scores"]["flaw_detection"], 80.0)
+        self.assertEqual(result["mode_scores"]["counter_example"], 20.0)
+        self.assertEqual(result["mode_scores"]["explanation"], 60.0)
+        self.assertEqual(result["cer"]["claim"], 80.0)
+
     def test_parse_groq_marker_rubric_output(self):
         raw = """
 [REBUTTAL]

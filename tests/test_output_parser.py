@@ -111,6 +111,55 @@ Suggestions:
         self.assertEqual(parsed["cer"]["total"], 0.0)
         self.assertTrue(parsed["feedback"]["weaknesses"])
 
+    def test_quick_rebuttal_json_mode_scores_maps_to_compat_cer(self):
+        raw = """
+{
+  "ai_rebuttal": "Bạn đã phát hiện đúng lỗi thiếu chứng minh trong luận điểm yếu.",
+  "mode_scores": {
+    "flaw_detection": 80,
+    "counter_example": 20,
+    "explanation": 60,
+    "focus": 75,
+    "overall": 59
+  },
+  "feedback": {
+    "strengths": ["Bắt đúng lỗi chính."],
+    "weaknesses": ["Chưa có phản ví dụ rõ."],
+    "suggestions": ["Thêm một câu hỏi phản biện ngắn."]
+  }
+}
+""".strip()
+
+        parsed = parse_debate_output(raw, mode="quick_rebuttal")
+
+        self.assertTrue(parsed["ok"])
+        self.assertEqual(parsed["mode_scores"]["flaw_detection"], 80.0)
+        self.assertEqual(parsed["cer"]["claim"], 80.0)
+        self.assertEqual(parsed["cer"]["evidence"], 20.0)
+        self.assertEqual(parsed["cer"]["reasoning"], 60.0)
+        self.assertEqual(parsed["cer"]["overall"], 59.0)
+
+    def test_quick_rebuttal_legacy_cer_json_maps_to_mode_scores(self):
+        raw = """
+{
+  "ai_rebuttal": "Bạn đã chỉ ra luận điểm còn mơ hồ.",
+  "cer": {
+    "claim": 80,
+    "evidence": 20,
+    "reasoning": 60,
+    "overall": 59
+  }
+}
+""".strip()
+
+        parsed = parse_debate_output(raw, mode="quick_rebuttal")
+
+        self.assertTrue(parsed["ok"])
+        self.assertEqual(parsed["mode_scores"]["flaw_detection"], 80.0)
+        self.assertEqual(parsed["mode_scores"]["counter_example"], 20.0)
+        self.assertEqual(parsed["mode_scores"]["explanation"], 60.0)
+        self.assertEqual(parsed["cer"]["claim"], 80.0)
+
     def test_parses_vietnamese_bullet_lists(self):
         raw = """
 [REBUTTAL]

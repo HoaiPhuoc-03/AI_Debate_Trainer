@@ -1,3 +1,4 @@
+import json
 import re
 
 
@@ -19,6 +20,11 @@ DEFAULT_MODE_SCORES = {
     "explanation": 0.0,
     "focus": 0.0,
     "overall": 0.0,
+}
+QUICK_REBUTTAL_FALLBACK_FEEDBACK = {
+    "strengths": ["Bạn đã có nỗ lực phản biện lại luận điểm yếu."],
+    "weaknesses": ["Cần chỉ rõ lỗi chính trong luận điểm yếu và giải thích vì sao lỗi đó làm lập luận kém thuyết phục."],
+    "suggestions": ["Hãy gọi tên lỗi/ngụy biện, trích cụm yếu trong luận điểm và thêm một phản ví dụ ngắn."],
 }
 
 
@@ -92,6 +98,57 @@ def _quick_rebuttal_mode_scores_from_cer(cer: dict) -> dict:
     }
 
 
+def _quick_rebuttal_overall(
+    flaw_detection: float,
+    counter_example: float,
+    explanation: float,
+    focus: float,
+) -> float:
+    return round(
+        flaw_detection * 0.40
+        + explanation * 0.25
+        + counter_example * 0.20
+        + focus * 0.15,
+        1,
+    )
+
+
+def _quick_rebuttal_mode_scores_from_payload(payload: dict) -> dict:
+    payload = payload or {}
+    raw_scores = payload.get("mode_scores") or {}
+    raw_cer = payload.get("cer") or {}
+
+    flaw = clamp_score(raw_scores.get("flaw_detection"))
+    counter = clamp_score(raw_scores.get("counter_example"))
+    explanation = clamp_score(raw_scores.get("explanation"))
+    focus = clamp_score(raw_scores.get("focus"))
+
+    if not raw_scores or raw_scores.get("flaw_detection") is None:
+        flaw = clamp_score(raw_cer.get("claim"))
+    if not raw_scores or raw_scores.get("counter_example") is None:
+        counter = clamp_score(raw_cer.get("evidence"))
+    if not raw_scores or raw_scores.get("explanation") is None:
+        explanation = clamp_score(raw_cer.get("reasoning"))
+    if not raw_scores or raw_scores.get("focus") is None:
+        focus = clamp_score(raw_cer.get("focus", raw_cer.get("overall") or raw_cer.get("total")))
+
+    raw_overall = raw_scores.get("overall")
+    if raw_overall is not None:
+        overall = clamp_score(raw_overall)
+    elif not raw_scores and (raw_cer.get("overall") is not None or raw_cer.get("total") is not None):
+        overall = clamp_score(raw_cer.get("overall", raw_cer.get("total")))
+    else:
+        overall = _quick_rebuttal_overall(flaw, counter, explanation, focus)
+
+    return {
+        "flaw_detection": flaw,
+        "counter_example": counter,
+        "explanation": explanation,
+        "focus": focus,
+        "overall": overall,
+    }
+
+
 def _quick_rebuttal_compat_cer(mode_scores: dict) -> dict:
     # Quick Rebuttal compatibility mapping:
     # claim = flaw_detection
@@ -105,6 +162,51 @@ def _quick_rebuttal_compat_cer(mode_scores: dict) -> dict:
         "reasoning": clamp_score(mode_scores.get("explanation")),
         "overall": overall,
         "total": overall,
+    }
+
+
+def _coerce_feedback_list(value) -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()][:3]
+    if isinstance(value, str) and value.strip():
+        return [value.strip()]
+    return []
+
+
+def _strip_json_code_block(raw_text: str) -> str:
+    text = (raw_text or "").strip()
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
+        text = re.sub(r"\s*```$", "", text)
+    start = text.find("{")
+    end = text.rfind("}")
+    if start >= 0 and end > start:
+        return text[start : end + 1]
+    return text
+
+
+def _quick_rebuttal_feedback(payload: dict) -> dict:
+    raw_feedback = payload.get("feedback") or {}
+    feedback = {
+        "strengths": _coerce_feedback_list(payload.get("strengths", raw_feedback.get("strengths"))),
+        "weaknesses": _coerce_feedback_list(payload.get("weaknesses", raw_feedback.get("weaknesses"))),
+        "suggestions": _coerce_feedback_list(payload.get("suggestions", raw_feedback.get("suggestions"))),
+    }
+    if not any(feedback.values()):
+        return {key: list(value) for key, value in QUICK_REBUTTAL_FALLBACK_FEEDBACK.items()}
+    return feedback
+
+
+def _quick_rebuttal_json_result(raw_text: str, payload: dict) -> dict:
+    mode_scores = _quick_rebuttal_mode_scores_from_payload(payload)
+    rebuttal = str(payload.get("ai_rebuttal") or payload.get("rebuttal") or "").strip()
+    return {
+        "ok": bool(rebuttal),
+        "rebuttal": rebuttal or "Lumi chưa tạo được nhận xét quick rebuttal.",
+        "cer": _quick_rebuttal_compat_cer(mode_scores),
+        "mode_scores": mode_scores,
+        "feedback": _quick_rebuttal_feedback(payload),
+        "raw_text": raw_text,
     }
 
 
@@ -129,8 +231,18 @@ def _short_text(text: str, limit: int = 500) -> str:
     return compact[: limit - 3].rstrip() + "..."
 
 
-def parse_debate_output(raw_text: str) -> dict:
+def parse_debate_output(raw_text: str, mode: str | None = None) -> dict:
     raw_text = raw_text or ""
+    quick_rebuttal = _is_quick_rebuttal_mode(mode)
+    if quick_rebuttal and not raw_text.strip():
+        return {
+            "ok": False,
+            "rebuttal": "AI không trả về nội dung hợp lệ.",
+            "cer": _quick_rebuttal_compat_cer(DEFAULT_MODE_SCORES),
+            "mode_scores": DEFAULT_MODE_SCORES.copy(),
+            "feedback": {key: list(value) for key, value in QUICK_REBUTTAL_FALLBACK_FEEDBACK.items()},
+            "raw_text": raw_text,
+        }
     if not raw_text.strip():
         return {
             "ok": False,
@@ -144,9 +256,27 @@ def parse_debate_output(raw_text: str) -> dict:
             "raw_text": raw_text,
         }
 
+    if quick_rebuttal:
+        try:
+            payload = json.loads(_strip_json_code_block(raw_text))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            payload = None
+        if isinstance(payload, dict):
+            return _quick_rebuttal_json_result(raw_text, payload)
+
     rebuttal = extract_section(raw_text, "REBUTTAL")
     cer_text = extract_section(raw_text, "CER")
     feedback_text = extract_section(raw_text, "FEEDBACK")
+
+    if quick_rebuttal and not rebuttal:
+        return {
+            "ok": False,
+            "rebuttal": _short_text(raw_text),
+            "cer": _quick_rebuttal_compat_cer(DEFAULT_MODE_SCORES),
+            "mode_scores": DEFAULT_MODE_SCORES.copy(),
+            "feedback": {key: list(value) for key, value in QUICK_REBUTTAL_FALLBACK_FEEDBACK.items()},
+            "raw_text": raw_text,
+        }
 
     if not rebuttal:
         return {
@@ -158,9 +288,22 @@ def parse_debate_output(raw_text: str) -> dict:
         }
 
     cer = _build_cer(cer_text) if cer_text else DEFAULT_CER.copy()
+    mode_scores = None
+    if quick_rebuttal:
+        mode_scores = _quick_rebuttal_mode_scores_from_cer(cer)
+        cer = _quick_rebuttal_compat_cer(mode_scores)
     feedback = _build_feedback(feedback_text)
 
     ok = bool(cer_text and feedback_text)
+    if quick_rebuttal:
+        return {
+            "ok": ok,
+            "rebuttal": rebuttal,
+            "cer": cer,
+            "mode_scores": mode_scores,
+            "feedback": feedback,
+            "raw_text": raw_text,
+        }
     return {
         "ok": ok,
         "rebuttal": rebuttal,

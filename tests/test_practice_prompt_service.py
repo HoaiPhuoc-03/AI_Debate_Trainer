@@ -1,4 +1,5 @@
 import sys
+import re
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -8,6 +9,7 @@ BACKEND_DIR = ROOT_DIR / "backend"
 sys.path.insert(0, str(BACKEND_DIR))
 
 from app.services.practice_prompt_service import (  # noqa: E402
+    FALLACY_TEMPLATES,
     QUICK_REBUTTAL_INSTRUCTION,
     _build_quick_rebuttal_prompt_from_topic,
     _clean_sentence,
@@ -15,12 +17,17 @@ from app.services.practice_prompt_service import (  # noqa: E402
     _topic_to_claim_subject,
     build_practice_prompt,
     canonical_mode,
+    topic_to_subject_statement,
 )
 from app.services.prompt_builder import (  # noqa: E402
     build_cer_messages,
     normalize_practice_mode,
     practice_prompt_type_for_mode,
 )
+
+
+def sentence_count(text: str) -> int:
+    return len([part for part in re.split(r"[.!?]+", text) if part.strip()])
 
 
 class PracticePromptServiceTests(unittest.TestCase):
@@ -88,11 +95,43 @@ class PracticePromptServiceTests(unittest.TestCase):
         self.assertEqual(result["prompt_type"], "weak_argument")
         self.assertTrue(result["weak_argument"])
         self.assertTrue(result["fallacy_hint"])
+        self.assertTrue(result["target_flaws"])
+        self.assertGreaterEqual(sentence_count(result["weak_argument"]), 4)
+        self.assertLessEqual(sentence_count(result["weak_argument"]), 6)
         self.assertEqual(result["prompt"], result["weak_argument"])
         self.assertEqual(result["instruction"], QUICK_REBUTTAL_INSTRUCTION)
+        self.assertNotIn("Luận điểm yếu:", result["prompt"])
         self.assertNotIn("Lập luận yếu:", result["prompt"])
         self.assertNotIn("Lập luận yếu Lập luận yếu", result["prompt"])
         self.assertNotIn("Hãy chỉ ra", result["prompt"])
+        self.assertNotRegex(result["prompt"], r"\?\s*(chắc chắn|rõ ràng|đương nhiên|vì)\b")
+
+    def test_quick_rebuttal_has_at_least_eight_fallacy_templates(self):
+        hints = {item["fallacy_hint"] for item in FALLACY_TEMPLATES}
+
+        self.assertGreaterEqual(len(FALLACY_TEMPLATES), 8)
+        self.assertTrue(
+            {
+                "khái quát hóa vội vàng",
+                "dựa vào số đông",
+                "thiếu bằng chứng",
+                "nguyên nhân giả",
+                "tuyệt đối hóa",
+                "đánh tráo vấn đề",
+                "người rơm",
+                "lưỡng phân giả",
+            }.issubset(hints)
+        )
+        for item in FALLACY_TEMPLATES:
+            self.assertTrue(item["target_flaws"])
+            rendered = _sanitize_weak_argument(
+                item["template"].format(
+                    subject_statement="việc học sinh được dùng AI để làm bài tập",
+                    subject_statement_cap="Việc học sinh được dùng AI để làm bài tập",
+                )
+            )
+            self.assertGreaterEqual(sentence_count(rendered), 4)
+            self.assertLessEqual(sentence_count(rendered), 6)
 
     def test_clean_sentence_normalizes_spacing_and_terminal_punctuation(self):
         self.assertEqual(
@@ -102,10 +141,22 @@ class PracticePromptServiceTests(unittest.TestCase):
 
     def test_topic_to_claim_subject_converts_common_question_forms(self):
         self.assertEqual(
+            topic_to_subject_statement(
+                "Học sinh có nên được dùng AI để làm bài tập?"
+            ),
+            "việc học sinh được dùng AI để làm bài tập",
+        )
+        self.assertEqual(
+            topic_to_subject_statement(
+                "Robot có nên được dùng để chăm sóc người cao tuổi?"
+            ),
+            "việc robot được dùng để chăm sóc người cao tuổi",
+        )
+        self.assertEqual(
             _topic_to_claim_subject(
                 "Điểm số có còn là thước đo tốt cho năng lực học sinh?"
             ),
-            "điểm số là thước đo tốt cho năng lực học sinh",
+            "việc điểm số là thước đo tốt cho năng lực học sinh",
         )
         self.assertEqual(
             _topic_to_claim_subject(
@@ -115,7 +166,7 @@ class PracticePromptServiceTests(unittest.TestCase):
         )
         self.assertEqual(
             _topic_to_claim_subject("Trẻ em có nên được dùng smartphone từ sớm?"),
-            "việc trẻ em dùng smartphone từ sớm",
+            "việc trẻ em được dùng smartphone từ sớm",
         )
 
     def test_sanitize_weak_argument_removes_labels_instruction_and_broken_question(self):
@@ -147,7 +198,11 @@ class PracticePromptServiceTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertEqual(first["prompt"], first["weak_argument"])
         self.assertEqual(first["instruction"], QUICK_REBUTTAL_INSTRUCTION)
+        self.assertTrue(first["fallacy_hint"])
+        self.assertTrue(first["target_flaws"])
+        self.assertGreaterEqual(sentence_count(first["weak_argument"]), 4)
         self.assertNotIn("Lập luận yếu:", first["weak_argument"])
+        self.assertNotIn("Luận điểm yếu:", first["weak_argument"])
         self.assertNotIn("? chắc chắn", first["weak_argument"])
         self.assertTrue(first["weak_argument"].endswith("."))
 
@@ -207,6 +262,10 @@ class PracticePromptServiceTests(unittest.TestCase):
         self.assertEqual(result["mode"], "quick_rebuttal")
         self.assertEqual(result["source"], "prompt_bank_fallback")
         self.assertIn("prompt", result)
+        self.assertTrue(result["weak_argument"])
+        self.assertTrue(result["fallacy_hint"])
+        self.assertTrue(result["target_flaws"])
+        self.assertGreaterEqual(sentence_count(result["weak_argument"]), 4)
 
 
 if __name__ == "__main__":

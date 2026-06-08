@@ -80,6 +80,8 @@ class PromptBuilderTests(unittest.TestCase):
             mode="quick_rebuttal",
             practice_mode="quick_rebuttal",
             practice_prompt="Dùng AI viết bài chắc chắn đúng vì ai cũng thấy lợi ích của nó.",
+            practice_fallacy_hint="thiếu bằng chứng / dựa vào số đông",
+            practice_target_flaws=["thiếu bằng chứng", "dựa vào số đông"],
             practice_round=1,
             language="vi",
         )
@@ -89,7 +91,11 @@ class PromptBuilderTests(unittest.TestCase):
         self.assertIn("MODE: QUICK_REBUTTAL", combined)
         self.assertIn("flaw_detection", combined)
         self.assertIn("counter_example", combined)
+        self.assertIn("Return mode_scores", combined)
+        self.assertIn("Fallacy hint: thiếu bằng chứng / dựa vào số đông", combined)
+        self.assertIn("Target flaws: thiếu bằng chứng, dựa vào số đông", combined)
         self.assertIn("not writing a full argument", combined)
+        self.assertIn("not writing a full CER argument", combined)
         self.assertIn("claim = quality of flaw detection", combined)
         self.assertIn("evidence = quality of counterexample or targeted rebuttal", combined)
         self.assertNotIn("TRỌNG TÂM: Chấm ĐẦY ĐỦ", combined)

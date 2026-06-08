@@ -183,6 +183,8 @@ def create_practice_prompt(
         metadata={
             "source": result.get("source"),
             "warning": result.get("warning"),
+            "fallacy_hint": result.get("fallacy_hint"),
+            "target_flaws": result.get("target_flaws"),
         },
     )
     result["practice_prompt_id"] = saved["practice_prompt_id"]
@@ -195,6 +197,7 @@ def create_practice_prompt(
                 "mode": result["mode"],
                 "topic": result.get("topic") or payload.topic,
                 "prompt": result.get("prompt"),
+                "target_flaws": result.get("target_flaws"),
                 "round": payload.round,
             }
         )
@@ -249,11 +252,13 @@ def debate_turn(
         language=session.get("language"),
         input_mode=session.get("input_mode"),
         turn_history=turn_history,
-        mode=session.get("mode", "free_debate"),
-        practice_mode=payload.practice_mode,
-        practice_prompt=payload.practice_prompt,
-        practice_round=payload.practice_round,
-        memory_context={
+            mode=session.get("mode", "free_debate"),
+            practice_mode=active_mode,
+            practice_prompt=payload.practice_prompt,
+            practice_fallacy_hint=payload.practice_fallacy_hint,
+            practice_target_flaws=payload.practice_target_flaws,
+            practice_round=payload.practice_round,
+            memory_context={
             "user_memory": user_memory,
             "mode_state": mode_state,
         },

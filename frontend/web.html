@@ -2051,6 +2051,13 @@
       margin-top: 22px;
     }
 
+    .score-tiles--quick {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
     .score-tile {
       padding: 18px;
       text-align: center;
@@ -5535,6 +5542,10 @@
       background: linear-gradient(90deg, var(--arena-violet), var(--arena-cyan));
     }
 
+    .stage-meter:nth-child(4) .stage-meter-fill {
+      background: linear-gradient(90deg, #4f8bea, var(--arena-violet));
+    }
+
     #view-arena.arena-thinking .stage-orb {
       animation-duration: 2.2s;
       filter: saturate(1.18);
@@ -7413,6 +7424,12 @@
                   <div class="stage-meter-fill" id="arena-reasoning-bar"></div>
                 </div>
               </div>
+              <div class="stage-meter">
+                <header><span>Đúng trọng tâm</span><strong id="arena-focus-metric">0</strong></header>
+                <div class="stage-meter-track">
+                  <div class="stage-meter-fill" id="arena-focus-bar"></div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -7835,6 +7852,8 @@
         currentPromptId: null,
         currentTopic: "",
         currentPromptType: null,
+        currentFallacyHint: "",
+        currentTargetFlaws: [],
         instruction: "",
         isAwaitingUserAnswer: true,
         hasEvaluation: false,
@@ -7957,7 +7976,7 @@
       free_debate: ["claim", "evidence", "reasoning"],
       claim_writing: ["claim"],
       find_evidence: ["evidence"],
-      quick_rebuttal: ["claim", "evidence", "reasoning"],
+      quick_rebuttal: ["claim", "evidence", "reasoning", "focus"],
       full_argument: ["claim", "evidence", "reasoning"],
     };
     const AUTO_TOPIC_MODES = ["claim_writing", "find_evidence", "quick_rebuttal", "full_argument"];
@@ -7981,8 +8000,8 @@
         icon: "⚡",
         heading: "LUẬN ĐIỂM YẾU CẦN PHẢN BIỆN",
         label: "Lập luận yếu",
-        task: "Chỉ ra lỗ hổng và phản biện nhanh một lập trường yếu, trực diện.",
-        placeholder: "Hãy phản biện lập luận yếu trên...",
+        task: "Hãy chỉ ra lỗ hổng, giả định sai hoặc phản ví dụ.",
+        placeholder: "Hãy chỉ ra lỗ hổng, giả định sai hoặc phản ví dụ...",
       },
       full_argument: {
         icon: "🧱",
@@ -8436,14 +8455,11 @@
         "Ăn chay hoàn toàn giúp kéo dài tuổi thọ trung bình."
       ],
       quick_rebuttal: [
-        "Nên cấm xe máy vì tai nạn giao thông đường bộ xảy ra mỗi ngày.",
-        "Không cần học đại học vì tỷ phú Bill Gates cũng bỏ học giữa chừng.",
-        "Nên cấm ăn thịt động vật vì loài hổ cũng ăn thịt các con vật khác.",
-        "Xem tivi giúp trẻ em thông minh hơn vì có nhiều kênh khoa học.",
-        "Điện thoại vô hại vì tôi dùng 10 năm nay không hề bị bệnh gì.",
-        "Không cần bảo vệ rừng vì lượng oxy chủ yếu đến từ tảo đại dương.",
-        "Học tiếng Anh là vô ích vì các công cụ dịch thuật AI đã rất phát triển.",
-        "Nên tiêu tiền thay vì tiết kiệm vì ngày mai chúng ta có thể sẽ chết."
+        "Có nên giảm thời lượng học tiếng Anh vì đã có AI dịch thuật?",
+        "Có nên đi làm sớm thay vì học đại học?",
+        "Có nên cấm xe máy ở thành phố?",
+        "Mạng xã hội có làm giảm khả năng tập trung?",
+        "Có nên cấm túi nilon dùng một lần?"
       ],
       full_argument: [
         "Có nên giới hạn thời gian sử dụng TikTok của thanh thiếu niên?",
@@ -8904,6 +8920,9 @@
     }
 
     function getLumiMessage(lumiState) {
+      if (lumiState === "thinking" && getActivePracticeMode() === "quick_rebuttal") {
+        return "Lumi đang phân tích Bắt lỗi, Phản ví dụ, Giải thích, Đúng trọng tâm...";
+      }
       if (LUMI_STATE_MESSAGES[lumiState]) return LUMI_STATE_MESSAGES[lumiState];
       if (state.view === "session" && getTopic()) {
         return "Topic đã ổn. Bước tiếp theo là chọn nhịp phản biện.";
@@ -9181,6 +9200,18 @@
     }
 
     function renderArenaStanceBadges() {
+      const isQuickRebuttalMode = getActivePracticeMode() === "quick_rebuttal";
+      const userBadge = document.getElementById("user-stance-badge");
+      const lumiBadge = document.getElementById("lumi-stance-badge");
+      if (isQuickRebuttalMode) {
+        if (userBadge) userBadge.classList.add("hidden");
+        if (lumiBadge) lumiBadge.classList.add("hidden");
+        updateDebateCardStance("user-argument-panel", "unknown");
+        updateDebateCardStance("lumi-rebuttal-panel", "unknown");
+        return;
+      }
+      if (userBadge) userBadge.classList.remove("hidden");
+      if (lumiBadge) lumiBadge.classList.remove("hidden");
       const userStance = normalizeStance(state.stance);
       const lumiStance = getOppositeStance(userStance);
       updateStanceBadge("user-stance-badge", "Bạn", userStance);
@@ -9267,6 +9298,8 @@
       state.practice.currentPromptId = null;
       state.practice.currentTopic = "";
       state.practice.currentPromptType = null;
+      state.practice.currentFallacyHint = "";
+      state.practice.currentTargetFlaws = [];
       state.practice.instruction = "";
       state.practice.isAwaitingUserAnswer = true;
       state.practice.hasEvaluation = false;
@@ -9291,9 +9324,13 @@
       const index = Math.floor(Math.random() * Math.max(list.length, 1));
       const prompt = list[index] || getTopic() || "Hãy luyện một lập luận ngắn theo kỹ năng đã chọn.";
       return {
+        mode: normalizedMode,
         prompt,
         topic: prompt,
-        prompt_type: normalizedMode,
+        weak_argument: normalizedMode === "quick_rebuttal" ? prompt : null,
+        fallacy_hint: normalizedMode === "quick_rebuttal" ? "thiếu bằng chứng / giả định chưa chứng minh" : null,
+        target_flaws: normalizedMode === "quick_rebuttal" ? ["thiếu bằng chứng", "giả định chưa chứng minh"] : [],
+        prompt_type: normalizedMode === "quick_rebuttal" ? "weak_argument" : normalizedMode,
         instruction: getPracticePromptUi(normalizedMode)?.task || "",
         warning: "Không tải được đề bài mới, đang dùng đề dự phòng.",
       };
@@ -9372,6 +9409,8 @@
           title: promptData.group_title || makePracticeGroupTitle({ ...promptData, prompt, topic }, round),
           colorIndex: (Math.max(round, 1) - 1) % 5,
           instruction: promptData.instruction || state.practice.instruction || "",
+          fallacyHint: promptData.fallacy_hint || state.practice.currentFallacyHint || "",
+          targetFlaws: Array.isArray(promptData.target_flaws) ? promptData.target_flaws : state.practice.currentTargetFlaws,
           failedAttempts: [],
           createdAt: Date.now(),
         };
@@ -9544,6 +9583,8 @@
       state.practice.currentPromptId = promptData.practice_prompt_id || promptData.id || null;
       state.practice.currentTopic = promptData.topic || promptData.prompt || "";
       state.practice.currentPromptType = promptData.prompt_type || state.practice.mode;
+      state.practice.currentFallacyHint = promptData.fallacy_hint || "";
+      state.practice.currentTargetFlaws = Array.isArray(promptData.target_flaws) ? promptData.target_flaws : [];
       state.practice.instruction = promptData.instruction || getPracticePromptUi()?.task || "";
       state.practice.warning = promptData.warning || "";
       rememberPracticePrompt(promptData);
@@ -9600,8 +9641,10 @@
       setText("arena-topic-line", topic);
 
       const activeMetrics = MODE_METRICS[state.mode] || MODE_METRICS.free_debate;
-      ["claim", "evidence", "reasoning"].forEach(key => {
+      ["claim", "evidence", "reasoning", "focus"].forEach(key => {
         const meter = document.getElementById(`arena-${key}-metric`)?.closest(".stage-meter");
+        const label = meter?.querySelector("header span");
+        if (label) label.textContent = metricLabelFor(key);
         if (meter) meter.style.display = activeMetrics.includes(key) ? "" : "none";
         updateStageMetric(key, activeMetrics.includes(key) ? scores[key] : 0);
       });
@@ -10141,6 +10184,8 @@
           body.practice_mode = state.practice.mode;
           body.practice_topic = state.practice.currentTopic;
           body.practice_prompt = state.practice.currentPrompt;
+          body.practice_fallacy_hint = state.practice.currentFallacyHint;
+          body.practice_target_flaws = state.practice.currentTargetFlaws;
           body.practice_prompt_id = state.practice.currentPromptId;
           body.practice_round = state.practice.round;
         }
@@ -10153,6 +10198,8 @@
           turn.practice_mode = state.practice.mode;
           turn.practice_prompt = state.practice.currentPrompt;
           turn.practice_prompt_type = state.practice.currentPromptType;
+          turn.practice_fallacy_hint = state.practice.currentFallacyHint;
+          turn.practice_target_flaws = state.practice.currentTargetFlaws;
           turn.practice_instruction = state.practice.instruction;
           turn.practice_round = state.practice.round;
           state.practice.hasEvaluation = true;
@@ -10216,10 +10263,13 @@
       syncLumiState("thinking");
       setArenaPulse("thinking");
       renderArenaStage();
+      const isQuickRebuttalMode = getActivePracticeMode() === "quick_rebuttal";
       document.getElementById("ai-output").className = "";
-      document.getElementById("ai-output").innerHTML = `<div class="loading-dots">Huấn luyện viên AI đang phản biện <span></span><span></span><span></span></div>`;
+      document.getElementById("ai-output").innerHTML = `<div class="loading-dots">${isQuickRebuttalMode ? "Lumi đang chấm phản biện nhanh" : "Huấn luyện viên AI đang phản biện"} <span></span><span></span><span></span></div>`;
       document.getElementById("cer-output").className = "empty-message";
-      document.getElementById("cer-output").textContent = "Đang chấm Luận điểm, Bằng chứng, Lập luận...";
+      document.getElementById("cer-output").textContent = isQuickRebuttalMode
+        ? "Đang chấm Bắt lỗi, Phản ví dụ, Giải thích, Đúng trọng tâm..."
+        : "Đang chấm Luận điểm, Bằng chứng, Lập luận...";
       document.getElementById("feedback-output").className = "empty-message";
       document.getElementById("feedback-output").textContent = "Đang tạo nhận xét huấn luyện...";
     }
@@ -10327,6 +10377,7 @@
           claim: modeScores.flaw_detection,
           evidence: modeScores.counter_example,
           reasoning: modeScores.explanation,
+          focus: modeScores.focus,
           overall: modeScores.overall,
           total: modeScores.overall,
         }
@@ -10342,6 +10393,7 @@
             claim: toScore(displayCer.claim),
             evidence: toScore(displayCer.evidence),
             reasoning: toScore(displayCer.reasoning),
+            focus: toScore(displayCer.focus),
             overall: total,
             total,
           };
@@ -10447,7 +10499,7 @@
       }
       const totalContainer = document.getElementById("cer-total-container");
       if (totalContainer) {
-        const showTotal = ["free_debate", "full_argument"].includes(state.mode);
+        const showTotal = ["free_debate", "quick_rebuttal", "full_argument"].includes(state.mode);
         totalContainer.style.display = showTotal ? "" : "none";
       }
 
@@ -10465,6 +10517,7 @@
         ["claim", metricLabelFor("claim"), cer.claim, ""],
         ["evidence", metricLabelFor("evidence"), cer.evidence, "evidence"],
         ["reasoning", metricLabelFor("reasoning"), cer.reasoning, "reasoning"],
+        ["focus", metricLabelFor("focus"), cer.focus, "focus"],
       ];
       const rows = allRows.filter(([key]) => activeMetrics.includes(key));
       output.className = "";
@@ -10478,7 +10531,7 @@
           </div>
         `;
       }).join("")}
-      <div class="score-tiles">
+      <div class="score-tiles ${state.mode === "quick_rebuttal" ? "score-tiles--quick" : ""}">
         ${rows.map(([, label, score]) => `<div class="score-tile"><small>${label}</small><strong>${Math.round(score)}</strong><span>${score >= 70 ? "Vững" : "Cần luyện"}</span></div>`).join("")}
       </div>
     `;
@@ -10631,7 +10684,7 @@
       }
 
       document.getElementById("summary-average").textContent = average;
-      const cer = state.latest?.cer || { claim: 0, evidence: 0, reasoning: 0, total: 0 };
+      const cer = state.latest?.cer || { claim: 0, evidence: 0, reasoning: 0, focus: 0, total: 0 };
       const activeMetrics = MODE_METRICS[state.mode] || MODE_METRICS.free_debate;
       const focusMetrics = activeMetrics.filter(k => (cer[k] || 0) < 70);
       document.getElementById("summary-focus").textContent = focusMetrics.length
@@ -11222,6 +11275,7 @@
           claim: "Bắt lỗi",
           evidence: "Phản ví dụ",
           reasoning: "Giải thích",
+          focus: "Đúng trọng tâm",
         };
         return quickLabels[normalized] || labelFor(key);
       }

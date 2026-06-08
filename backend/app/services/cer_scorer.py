@@ -123,11 +123,9 @@ def build_quick_rebuttal_mode_scores(payload: dict) -> dict:
             focus = _score_to_100(raw_cer.get("focus", raw_cer.get("overall") or payload.get("overall_score")))
 
     # Overall: prefer LLM value, fallback to weighted formula
-    raw_overall = (
-        raw_ms.get("overall")
-        if raw_ms.get("overall") is not None
-        else payload.get("overall_score", raw_cer.get("overall", raw_cer.get("total")))
-    )
+    raw_overall = raw_ms.get("overall") if raw_ms.get("overall") is not None else None
+    if raw_overall is None and not raw_ms:
+        raw_overall = payload.get("overall_score", raw_cer.get("overall", raw_cer.get("total")))
     if raw_overall is not None and str(raw_overall).strip() not in ("", "null"):
         overall = _score_to_100(raw_overall)
     else:
