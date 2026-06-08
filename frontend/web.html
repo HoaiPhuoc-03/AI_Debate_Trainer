@@ -196,6 +196,24 @@
       font-size: 28px;
       box-shadow: 0 20px 40px rgba(32, 231, 209, 0.18);
     }
+    /* Chỉnh logo bo góc cho thanh Sidebar */
+    .brand-mark-img {
+      width: 40px !important;      /* Độ rộng của logo (có thể tăng giảm tùy ý) */
+      height: 40px !important;     /* Độ cao (nhớ để bằng width cho nó vuông) */
+      border-radius: 10px !important; /* Hiệu ứng bo góc (tăng số lên nếu muốn bo tròn hơn) */
+      object-fit: cover !important;   /* Giúp ảnh lấp đầy khung mà không bị móp méo */
+      
+      /* Thêm chút viền và bóng đổ để tách nền logo khỏi nền tối của sidebar */
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important; 
+    }
+
+    /* Đảm bảo khung chứa (brand) căn chỉnh logo và chữ đều nhau */
+    .brand {
+      display: flex !important;
+      align-items: center !important;
+      gap: 14px !important; /* Khoảng cách từ logo đến cụm chữ bên phải */
+    }
 
     body[data-theme="blue-pastel"] .brand-mark {
       background: linear-gradient(135deg, #7bbcf0, #5da8e8);
@@ -2323,48 +2341,85 @@
       background: linear-gradient(135deg, #08c8f6, var(--cyan));
       box-shadow: 0 18px 45px rgba(32, 231, 209, 0.24);
     }
-        /* 1. CHỈNH LOGO TO LÊN */
+ 
     .auth-logo {
-      margin-bottom: 20px !important; /* Tạo khoảng cách với chữ bên dưới */
+      margin-bottom: 25px !important;
     }
     .auth-logo img {
-      width: 75px !important;  /* Tăng kích thước logo (mày có thể tăng lên 80px hoặc 90px tùy ý) */
-      height: 75px !important;
+      width: 85px !important;   /* Tăng size nhẹ để nhìn cân đối */
+      height: 85px !important;
       object-fit: contain;
+      border-radius: 16px !important; /* Bo góc mịn cho logo hình vuông */
+      
+      /* Tạo viền và hiệu ứng đổ bóng phát sáng công nghệ AI giúp logo nổi hẳn lên */
+      border: 2px solid rgba(109, 40, 217, 0.4) !important; 
+      box-shadow: 0 0 30px rgba(109, 40, 217, 0.65) !important; 
+      background: rgba(13, 21, 38, 0.5); /* Lớp nền mờ phía sau giúp tách biệt khỏi background chính */
+      padding: 4px;
     }
 
-    /* 2. CHỮ "AI DEBATE TRAINER" ĐỔI MÀU ĐỘNG XUYÊN SUỐT (XANH DƯƠNG - TÍM ĐẬM) */
-    .auth-title {
-      font-size: 50px !important;
-      font-weight: 800 !important;
+
+    .auth-kicker {
+      color: #a78bfa !important; /* Đổi sang màu tím sáng mềm mại */
+      font-weight: 700 !important;
+      letter-spacing: 1.5px !important;
+      text-transform: uppercase;
       
-      /* Tạo dải màu gồm Xanh dương, Indigo và Tím đậm nối tiếp nhau */
-      background: linear-gradient(270deg, #1d4ed8, #3b82f6, #6d28d9, #4c1d95, #1d4ed8);
-      background-size: 400% 400% !important;
+      /* Biến dòng này thành một cái Badge (nhãn) xịn sò đổ bóng nổi lên hẳn */
+      background: rgba(24, 34, 53, 0.8) !important;
+      padding: 6px 16px !important;
+      border-radius: 30px !important;
+      border: 1px solid rgba(167, 139, 250, 0.25) !important;
+      display: inline-block !important;
+      
+      /* Tạo độ sâu bóng đổ để không bị chìm vào nền tối */
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+    }
+
+
+    .auth-title {
+      font-size: 52px !important;
+      font-weight: 900 !important;
+      margin: 15px 0 !important;
+      
+      /* Dải màu mới: Pastel (#d8b4fe) -> Đậm (#7e22ce) -> Đen (#1c053a) và ngược lại để tạo vòng lặp mượt */
+      background: linear-gradient(270deg, #d8b4fe, #7e22ce, #1c053a, #7e22ce, #d8b4fe) !important;
+      
+      /* Chỉnh size xuống 300% để các mảng màu xích lại gần nhau hơn, dễ thấy sự thay đổi */
+      background-size: 300% 300% !important;
       
       -webkit-background-clip: text !important;
       background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
       
-      /* Kích hoạt hiệu ứng chuyển màu liên tục, chạy trong 6 giây và lập lại vô hạn */
-      animation: waveGradient 6s ease infinite !important;
+      
+      animation: wavePurpleExtreme 5s ease-in-out infinite !important;
+      
+     
+      filter: drop-shadow(0px 4px 12px rgba(126, 34, 206, 0.5)) !important;
     }
 
-    /* Định nghĩa chuyển động mượt mà cho dải màu */
-    @keyframes waveGradient {
+
+    @keyframes wavePurpleExtreme {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
 
-    /* 3. LÀM DÒNG CHỮ PHỤ (LUYỆN LẬP LUẬN...) ĐẬM NÉT VÀ RÕ HƠN */
-    /* Vì app của mày nền tối (Dark mode) nên tao tăng độ sáng màu chữ và làm nét chữ dày (bold) lên cho dễ nhìn */
-    .auth-kicker, .auth-subtitle, [class*="kicker"] {
-      color: #cbd5e1 !important;   /* Đổi sang màu xám sáng/trắng sữa để nổi bật trên nền tối */
-      font-weight: 600 !important;  /* Làm nét chữ đậm lên hẳn */
-      font-size: 15px !important;   /* Tăng kích thước chữ lên một chút */
-      opacity: 1 !important;        /* Loại bỏ độ mờ (nếu có) */
-      margin-top: 10px !important;
+    
+   
+    .auth-subtitle, .auth-desc, .auth-view p {
+      color: #000000 !important; /* Đổi màu chữ thành màu đen theo đúng ý mày */
+      font-weight: 700 !important; /* Làm nét chữ dày dặn hơn */
+      
+     
+      background: rgba(248, 250, 252, 0.95) !important; 
+      padding: 8px 16px !important;
+      border-radius: 8px !important;
+      display: inline-block !important;
+      margin-top: 15px !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
     }
 
     .auth-kicker {
@@ -2381,6 +2436,56 @@
       line-height: 1.08;
       letter-spacing: -0.03em;
       margin-bottom: 18px;
+    }
+
+    .auth-logo {
+      margin-bottom: 25px !important;
+      background: transparent !important; 
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    
+    .auth-logo img {
+      width: 90px !important;  
+      height: 90px !important;
+      object-fit: cover !important; 
+      
+      
+      border-radius: 18px !important; 
+      
+      
+      border: 1px solid rgba(255, 255, 255, 0.15) !important; 
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(109, 40, 217, 0.3) !important; 
+      background: #0d1526 !important; 
+    }
+
+  
+    .auth-link-button {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important; 
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      font-size: 15px !important;
+      
+      padding: 14px 28px !important; /* Bơm cho cái nút to và mập mạp hơn */
+      border-radius: 10px !important; 
+      
+      border: 1px solid #3b82f6 !important; 
+      
+      margin-top: 20px !important;
+      display: inline-block !important;
+      text-decoration: none !important;
+      
+
+      box-shadow: 0 4px 15px rgba(30, 58, 138, 0.6) !important; 
+      transition: all 0.3s ease !important;
+    }
+
+    .auth-link-button:hover {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important; 
+      border-color: #60a5fa !important;
+      transform: translateY(-3px) !important;   
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6) !important; 
     }
 
     .auth-copy {
@@ -6956,7 +7061,7 @@
   <div class="app-shell hidden" id="app-shell">
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark">✦</div>
+        <img src="assets/lumi-logo.png" class="brand-mark-img" alt="Logo">
         <div>
           <div class="brand-title">AI Debate Trainer</div>
           <div class="brand-subtitle">Đấu trường · Huấn luyện</div>
