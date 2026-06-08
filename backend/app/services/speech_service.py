@@ -3,6 +3,7 @@ import re
 import asyncio
 import logging
 import socket
+import unicodedata
 from concurrent.futures import ThreadPoolExecutor
 
 from app.core.config import settings
@@ -65,6 +66,29 @@ def normalize_voice_provider(provider: str | None) -> str:
     return aliases.get(normalized, normalized)
 
 
+def format_stt_stance(stance: str | None) -> str:
+    clean = str(stance or "").strip()
+    key = unicodedata.normalize("NFD", clean.lower())
+    key = "".join(char for char in key if unicodedata.category(char) != "Mn")
+    key = re.sub(r"[\s_-]+", " ", key.replace("đ", "d")).strip()
+    labels = {
+        "support": "Ủng hộ",
+        "pro": "Ủng hộ",
+        "for": "Ủng hộ",
+        "agree": "Ủng hộ",
+        "ung ho": "Ủng hộ",
+        "oppose": "Phản đối",
+        "against": "Phản đối",
+        "anti": "Phản đối",
+        "disagree": "Phản đối",
+        "phan doi": "Phản đối",
+        "neutral": "Trung lập",
+        "balanced": "Trung lập",
+        "trung lap": "Trung lập",
+    }
+    return labels.get(key, clean)
+
+
 def run_async_blocking(async_fn, *args, **kwargs):
     try:
         asyncio.get_running_loop()
@@ -88,7 +112,7 @@ def validate_audio_request(audio_bytes: bytes, content_type: str) -> tuple[bool,
 def build_groq_stt_prompt(session_context: dict | None = None) -> str:
     context = session_context or {}
     topic = str(context.get("topic") or "").strip()
-    stance = str(context.get("stance") or "").strip()
+    stance = format_stt_stance(context.get("stance"))
     difficulty = str(context.get("difficulty") or "").strip()
     parts = [
         "Đây là bản ghi âm tiếng Việt trong ứng dụng luyện tranh biện.",
@@ -129,7 +153,7 @@ def cleanup_voice_transcript(raw_text: str, *, session_context: dict | None = No
 
     context = session_context or {}
     topic = str(context.get("topic") or "").strip()
-    stance = str(context.get("stance") or "").strip()
+    stance = format_stt_stance(context.get("stance"))
     difficulty = str(context.get("difficulty") or "").strip()
     context_hint = (
         f"Chủ đề tranh biện: {topic or 'không có chủ đề cụ thể'}\n"

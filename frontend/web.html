@@ -9791,9 +9791,12 @@
     async function transcribeSpeechBlob(blob) {
       const language = getSpeechLanguage();
       const sessionQuery = state.sessionId ? `&session_id=${encodeURIComponent(state.sessionId)}` : "";
+      const practiceTopic = isSingleSkillPracticeMode() ? String(state.practice.currentTopic || "").trim() : "";
+      const practiceTopicQuery = practiceTopic ? `&practice_topic=${encodeURIComponent(practiceTopic)}` : "";
+      const stanceQuery = state.stance ? `&practice_stance=${encodeURIComponent(state.stance)}` : "";
       const path = language === "vi"
-        ? `/api/v1/speech/stt?language=vi${sessionQuery}`
-        : `/api/v1/speech/stt?language=${language}${sessionQuery}`;
+        ? `/api/v1/speech/stt?language=vi${sessionQuery}${practiceTopicQuery}${stanceQuery}`
+        : `/api/v1/speech/stt?language=${language}${sessionQuery}${practiceTopicQuery}${stanceQuery}`;
       return apiRequest(path, {
         method: "POST",
         rawBody: blob,
