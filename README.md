@@ -2,7 +2,7 @@
 
 Ứng dụng luyện tranh biện tiếng Việt có AI phản biện, chấm điểm CER, và hỗ trợ nhập liệu bằng giọng nói. Backend là FastAPI, frontend là một file HTML duy nhất, chạy dưới dạng cửa sổ desktop trên Windows thông qua pywebview.
 
--## Cài đặt lần đầu
+## Cài đặt lần đầu
 
 ### Bước 1 — Clone repo
 
@@ -26,7 +26,7 @@ cd AI_Debate_Trainer
    * Publishable / anon key
    * Secret / service role key
 4. Vào **Authentication → Providers → Email** và bật Email provider nếu chưa bật.
-5. Đảm bảo database đã có các bảng chính:
+5. Chạy schema Supabase trong `docs/supabase-schema.sql` bằng Supabase SQL Editor để tạo các bảng chính:
 
    * `profiles`
    * `debate_sessions`
@@ -40,26 +40,26 @@ cd AI_Debate_Trainer
 
 ### Bước 4 — Tạo file `backend/.env`
 
-Copy file mẫu rồi điền key:
+Copy file mẫu mới rồi điền key:
 
 ```powershell
-copy backend\.env_example backend\.env
+copy backend\.env.example backend\.env
 ```
 
 Mở `backend\.env` và điền:
 
 ```env
 GROQ_API_KEY=
-GROQ_BASE_URL=
-GROQ_MODEL=
-GROQ_TIMEOUT_SECONDS=
+GROQ_BASE_URL=https://api.groq.com/openai/v1/chat/completions
+GROQ_MODEL=llama-3.3-70b-versatile
+GROQ_TIMEOUT_SECONDS=90
 
 
 # SPEECH_STT_PROVIDER=groq
 
 # Speech mode
-SPEECH_MAX_AUDIO_BYTES=
-SPEECH_TTS_MAX_CHARS=
+SPEECH_MAX_AUDIO_BYTES=8388608
+SPEECH_TTS_MAX_CHARS=1200
 
 
 # Speech-to-Text provider
@@ -106,8 +106,19 @@ Trong đó:
 * `SUPABASE_SERVICE_ROLE_KEY`: lấy trong Supabase Dashboard → **Project Settings → API → Secret keys**. Key này chỉ dùng ở backend.
 * `DATABASE_URL`: có thể để trống nếu backend dùng Supabase Python client. Chỉ cần điền nếu backend dùng SQLAlchemy/psycopg.
 * `FIREBASE_CREDENTIALS_JSON`: có thể để trống nếu hệ thống đã chuyển sang Supabase. Biến này chỉ còn dùng cho rollback Firebase nếu backend vẫn hỗ trợ.
+* `STORAGE_PROVIDER=supabase` và `AUTH_PROVIDER=supabase`: bắt buộc nếu muốn chạy theo hướng dẫn Supabase trong README này. Nếu bỏ trống, backend mặc định quay về Firebase.
 
 > Lưu ý: Không commit file `backend/.env` lên GitHub. Đặc biệt không public `GROQ_API_KEY`, `ELEVENLABS_API_KEY` và `SUPABASE_SERVICE_ROLE_KEY`.
+
+### Bước 5 — Cài dependency và chạy app
+
+Từ thư mục gốc repo, chạy:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\run_windows_app.ps1
+```
+
+Script này sẽ tạo `.venv` nếu chưa có, cài `backend\requirements.txt` và `requirements-desktop.txt`, khởi động FastAPI ở `127.0.0.1:8000`, rồi mở cửa sổ desktop pywebview.
 
 ---
 
@@ -147,6 +158,14 @@ Authorization: Bearer <access_token>
 ### Supabase Database
 
 Hệ thống sử dụng Supabase Postgres để lưu dữ liệu luyện tập.
+
+Schema tối thiểu nằm ở:
+
+```text
+docs/supabase-schema.sql
+```
+
+Chạy file này trong Supabase SQL Editor trước khi đăng ký tài khoản hoặc tạo phiên luyện tập đầu tiên.
 
 Các bảng chính:
 
