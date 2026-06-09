@@ -101,6 +101,7 @@ class PracticePromptResponse(BaseModel):
     prompt_type: str
     prompt: str
     instruction: str
+    source: str | None = None
     warning: str | None = None
     topic: str | None = None
     scenario: str | None = None
@@ -111,6 +112,7 @@ class PracticePromptResponse(BaseModel):
     difficulty: str | None = None
     fallacy_hint: str | None = None
     target_flaws: list[str] | None = None
+    expected_rebuttal_points: list[str] | None = None
     practice_prompt_id: str | None = None
 
 

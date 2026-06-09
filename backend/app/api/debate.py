@@ -185,6 +185,7 @@ def create_practice_prompt(
             "warning": result.get("warning"),
             "fallacy_hint": result.get("fallacy_hint"),
             "target_flaws": result.get("target_flaws"),
+            "expected_rebuttal_points": result.get("expected_rebuttal_points"),
         },
     )
     result["practice_prompt_id"] = saved["practice_prompt_id"]

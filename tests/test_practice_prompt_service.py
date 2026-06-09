@@ -12,13 +12,16 @@ from app.services.practice_prompt_service import (  # noqa: E402
     FALLACY_TEMPLATES,
     QUICK_REBUTTAL_INSTRUCTION,
     _build_quick_rebuttal_prompt_from_topic,
+    _build_topic_prompt,
     _clean_sentence,
     _sanitize_weak_argument,
     _topic_to_claim_subject,
     build_practice_prompt,
     canonical_mode,
+    get_quick_rebuttal_prompt_from_bank,
     topic_to_subject_statement,
 )
+from app.data.quick_rebuttal_prompts import QUICK_REBUTTAL_PROMPTS  # noqa: E402
 from app.services.prompt_builder import (  # noqa: E402
     build_cer_messages,
     normalize_practice_mode,
@@ -65,7 +68,10 @@ class PracticePromptServiceTests(unittest.TestCase):
 
         self.assertEqual(second["mode"], "quick_rebuttal")
         self.assertNotEqual(second["prompt"], first["prompt"])
-        self.assertIn(second["source"], {"topic_bank", "topic_bank_variant", "fallback_variant"})
+        self.assertIn(
+            second["source"],
+            {"local_prompt_bank", "topic_bank", "topic_bank_variant", "fallback_variant"},
+        )
 
     def test_claim_writing_uses_topic_bank(self):
         result = build_practice_prompt("claim_writing", session_id="s1", round_number=1)
@@ -91,11 +97,12 @@ class PracticePromptServiceTests(unittest.TestCase):
         result = build_practice_prompt("quick_rebuttal", session_id="s1", round_number=3)
 
         self.assertEqual(result["mode"], "quick_rebuttal")
-        self.assertEqual(result["source"], "topic_bank")
+        self.assertEqual(result["source"], "local_prompt_bank")
         self.assertEqual(result["prompt_type"], "weak_argument")
         self.assertTrue(result["weak_argument"])
         self.assertTrue(result["fallacy_hint"])
         self.assertTrue(result["target_flaws"])
+        self.assertTrue(result["expected_rebuttal_points"])
         self.assertGreaterEqual(sentence_count(result["weak_argument"]), 4)
         self.assertLessEqual(sentence_count(result["weak_argument"]), 6)
         self.assertEqual(result["prompt"], result["weak_argument"])
@@ -105,6 +112,61 @@ class PracticePromptServiceTests(unittest.TestCase):
         self.assertNotIn("Lập luận yếu Lập luận yếu", result["prompt"])
         self.assertNotIn("Hãy chỉ ra", result["prompt"])
         self.assertNotRegex(result["prompt"], r"\?\s*(chắc chắn|rõ ràng|đương nhiên|vì)\b")
+
+    def test_quick_rebuttal_local_bank_has_fifty_six_sentence_prompts(self):
+        self.assertEqual(len(QUICK_REBUTTAL_PROMPTS), 50)
+        self.assertEqual(
+            [item["id"] for item in QUICK_REBUTTAL_PROMPTS],
+            [f"qr_{index:03d}" for index in range(1, 51)],
+        )
+        for item in QUICK_REBUTTAL_PROMPTS:
+            self.assertEqual(sentence_count(item["weak_argument"]), 6)
+            self.assertTrue(item["topic_id"])
+            self.assertTrue(item["topic"])
+            self.assertTrue(item["fallacy_hint"])
+            self.assertGreaterEqual(len(item["target_flaws"]), 2)
+            self.assertGreaterEqual(len(item["expected_rebuttal_points"]), 2)
+
+    def test_quick_rebuttal_local_bank_matches_by_topic_id_or_title(self):
+        bank_item = QUICK_REBUTTAL_PROMPTS[0]
+        by_id = get_quick_rebuttal_prompt_from_bank(
+            {"id": bank_item["topic_id"], "title": "Tiêu đề khác"},
+            round_number=1,
+        )
+        by_title = get_quick_rebuttal_prompt_from_bank(
+            {"id": "unknown", "title": bank_item["topic"]},
+            round_number=2,
+        )
+
+        self.assertEqual(by_id["weak_argument"], bank_item["weak_argument"])
+        self.assertEqual(by_title["weak_argument"], bank_item["weak_argument"])
+        self.assertEqual(by_id["source"], "local_prompt_bank")
+        self.assertEqual(by_id["instruction"], QUICK_REBUTTAL_INSTRUCTION)
+        self.assertEqual(
+            by_id["expected_rebuttal_points"],
+            bank_item["expected_rebuttal_points"],
+        )
+
+    def test_quick_rebuttal_local_bank_returns_none_for_unknown_topic(self):
+        self.assertIsNone(
+            get_quick_rebuttal_prompt_from_bank(
+                {"id": "unknown", "title": "Chủ đề chưa có trong bank"},
+                round_number=1,
+            )
+        )
+
+        fallback = _build_topic_prompt(
+            "quick_rebuttal",
+            {
+                "id": "unknown",
+                "title": "Chủ đề chưa có trong bank",
+                "category": "Test",
+                "difficulty": "Cơ bản",
+            },
+            round_number=1,
+        )
+        self.assertEqual(fallback["source"], "topic_bank")
+        self.assertTrue(fallback["weak_argument"])
 
     def test_quick_rebuttal_has_at_least_eight_fallacy_templates(self):
         hints = {item["fallacy_hint"] for item in FALLACY_TEMPLATES}

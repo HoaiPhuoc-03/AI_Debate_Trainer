@@ -4,6 +4,7 @@ import hashlib
 import re
 import unicodedata
 
+from app.data.quick_rebuttal_prompts import QUICK_REBUTTAL_PROMPTS
 from app.data.topics import list_topics, recommended_topics
 
 
@@ -393,6 +394,41 @@ def _topic_metadata(topic: dict) -> dict:
     }
 
 
+def get_quick_rebuttal_prompt_from_bank(
+    topic: dict,
+    round_number: int = 1,
+) -> dict | None:
+    topic_title = (topic.get("title") or topic.get("topic") or topic.get("name") or "").strip()
+    topic_id = topic.get("id") or topic.get("topic_id") or ""
+
+    candidates = [
+        item
+        for item in QUICK_REBUTTAL_PROMPTS
+        if item.get("topic_id") == topic_id or item.get("topic") == topic_title
+    ]
+
+    if not candidates:
+        return None
+
+    safe_round = max(int(round_number or 1), 1)
+    selected = candidates[(safe_round - 1) % len(candidates)]
+
+    return {
+        "mode": "quick_rebuttal",
+        "prompt_type": "weak_argument",
+        "topic": selected.get("topic") or topic_title,
+        "topic_id": selected.get("topic_id") or topic_id,
+        "category": selected.get("category") or topic.get("category"),
+        "difficulty": selected.get("difficulty") or topic.get("difficulty"),
+        "weak_argument": selected["weak_argument"],
+        "fallacy_hint": selected.get("fallacy_hint"),
+        "target_flaws": selected.get("target_flaws", []),
+        "expected_rebuttal_points": selected.get("expected_rebuttal_points", []),
+        "instruction": "Hãy chỉ ra lỗ hổng, giả định sai hoặc phản ví dụ.",
+        "source": "local_prompt_bank",
+    }
+
+
 def _build_quick_rebuttal_prompt_from_topic(
     topic: dict,
     round_number: int | None = None,
@@ -438,6 +474,7 @@ def _finalize_prompt_result(result: dict) -> dict:
     finalized.setdefault("claim", None)
     finalized.setdefault("weak_argument", None)
     finalized.setdefault("target_flaws", None)
+    finalized.setdefault("expected_rebuttal_points", None)
 
     if mode == "quick_rebuttal":
         weak_argument = _sanitize_weak_argument(
@@ -451,6 +488,14 @@ def _finalize_prompt_result(result: dict) -> dict:
         if isinstance(target_flaws, str):
             target_flaws = [item.strip() for item in target_flaws.split(",") if item.strip()]
         finalized["target_flaws"] = list(target_flaws) or [finalized["fallacy_hint"]]
+        expected_rebuttal_points = finalized.get("expected_rebuttal_points") or []
+        if isinstance(expected_rebuttal_points, str):
+            expected_rebuttal_points = [
+                item.strip()
+                for item in expected_rebuttal_points.split(",")
+                if item.strip()
+            ]
+        finalized["expected_rebuttal_points"] = list(expected_rebuttal_points)
         finalized["instruction"] = QUICK_REBUTTAL_INSTRUCTION
     else:
         default_instructions = {
@@ -493,6 +538,11 @@ def _build_topic_prompt(mode: str, topic: dict, *, round_number: int | None = No
         }
 
     if mode == "quick_rebuttal":
+        prompt_from_bank = get_quick_rebuttal_prompt_from_bank(topic, round_number or 1)
+        if prompt_from_bank:
+            prompt_from_bank["prompt"] = prompt_from_bank["weak_argument"]
+            return prompt_from_bank
+
         return _build_quick_rebuttal_prompt_from_topic(topic, round_number)
 
     instruction = "Hãy xây dựng một lập luận đầy đủ gồm Claim, Evidence và Reasoning theo lập trường ủng hộ hoặc phản đối."
