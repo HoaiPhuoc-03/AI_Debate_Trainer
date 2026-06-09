@@ -1973,6 +1973,154 @@
       line-height: 1.7;
     }
 
+    /* ── CER-structured rebuttal sections ── */
+    .cer-section {
+      margin: 10px 0;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border-left: 4px solid rgba(139, 124, 255, 0.4);
+      background: rgba(139, 124, 255, 0.06);
+    }
+    .cer-section-label {
+      display: inline-block;
+      font-weight: 800;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+    .cer-section-content {
+      display: block;
+      margin-top: 4px;
+      line-height: 1.7;
+    }
+    .cer-section-claim {
+      border-left-color: #8b7cff;
+      background: rgba(139, 124, 255, 0.08);
+    }
+    .cer-section-claim .cer-section-label {
+      color: #c4b5fd;
+      background: rgba(139, 124, 255, 0.15);
+    }
+    .cer-section-evidence {
+      border-left-color: #20e7d1;
+      background: rgba(32, 231, 209, 0.06);
+    }
+    .cer-section-evidence .cer-section-label {
+      color: #7fffe8;
+      background: rgba(32, 231, 209, 0.12);
+    }
+    .cer-section-reasoning {
+      border-left-color: #60a5fa;
+      background: rgba(96, 165, 250, 0.06);
+    }
+    .cer-section-reasoning .cer-section-label {
+      color: #93c5fd;
+      background: rgba(96, 165, 250, 0.12);
+    }
+
+    /* ── Evidence links ── */
+    .evidence-link {
+      color: #60a5fa;
+      text-decoration: underline;
+      text-decoration-color: rgba(96, 165, 250, 0.4);
+      word-break: break-all;
+      transition: color 0.15s, text-decoration-color 0.15s;
+    }
+    .evidence-link:hover {
+      color: #93c5fd;
+      text-decoration-color: #93c5fd;
+    }
+
+    /* ── Fact-check panel ── */
+    .fact-check-panel {
+      background: rgba(30, 58, 95, 0.25);
+      border: 1px solid rgba(96, 165, 250, 0.2);
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin-top: 12px;
+    }
+    .fact-check-title {
+      font-weight: 800;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      color: var(--text);
+    }
+    .fact-check-item {
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      border-left: 4px solid rgba(148, 163, 184, 0.3);
+      background: rgba(15, 23, 42, 0.4);
+    }
+    .fact-check-item:last-child { margin-bottom: 0; }
+    .fact-check-verdict {
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .fact-check-claim {
+      font-style: italic;
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    .fact-check-explanation {
+      color: #cbd5e1;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .verdict-verified { border-left-color: #34d399; }
+    .verdict-verified .fact-check-verdict { color: #34d399; }
+    .verdict-inaccurate { border-left-color: #f87171; }
+    .verdict-inaccurate .fact-check-verdict { color: #f87171; }
+    .verdict-unverifiable { border-left-color: #fbbf24; }
+    .verdict-unverifiable .fact-check-verdict { color: #fbbf24; }
+    .verdict-outdated { border-left-color: #fb923c; }
+    .verdict-outdated .fact-check-verdict { color: #fb923c; }
+
+    /* ── Source links / suggestions ── */
+    .source-links-section {
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-top: 12px;
+    }
+    .source-links-title {
+      font-weight: 800;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+    .source-links-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .source-links-list li {
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(30, 58, 95, 0.2);
+      margin-bottom: 6px;
+      font-size: 14px;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+    .source-links-list li:last-child { margin-bottom: 0; }
+    .suggestion-list li {
+      background: rgba(59, 31, 13, 0.2);
+      border-left: 3px solid rgba(251, 191, 36, 0.3);
+    }
+
     .transcript-item {
       display: grid;
       grid-template-columns: 58px 1fr;
@@ -7023,6 +7171,10 @@
                 <div id="feedback-output" class="empty-message">Điểm mạnh, điểm yếu và gợi ý cải thiện sẽ xuất hiện ở
                   đây.</div>
               </div>
+
+              <div id="fact-check-output" style="display:none"></div>
+
+              <div id="source-links-output" style="display:none"></div>
             </div>
           </div>
         </section>
@@ -8550,6 +8702,8 @@
       renderRebuttal(null);
       renderCER(null);
       renderFeedback(null);
+      renderFactCheck([]);
+      renderSourceLinks([], []);
     }
 
     function isTextInputMode() {
@@ -9673,8 +9827,10 @@
         renderArenaShell();
         renderCER(turn.cer);
         renderFeedback(turn.feedback);
+        renderFactCheck(turn.fact_check);
+        renderSourceLinks(turn.evidence_source_links, turn.better_source_suggestions);
         setLoading(button, true, "AI đang trả lời...");
-        await renderRebuttal(turn.ai_rebuttal, { animate: true });
+        await renderRebuttal(turn.ai_rebuttal, { animate: true, turn });
         await generateRebuttalAudio(turn.ai_rebuttal);
         state.history.push(turn);
         renderTranscript();
@@ -9716,6 +9872,8 @@
       document.getElementById("cer-output").textContent = "Đang chấm Luận điểm, Bằng chứng, Lập luận...";
       document.getElementById("feedback-output").className = "empty-message";
       document.getElementById("feedback-output").textContent = "Đang tạo nhận xét huấn luyện...";
+      renderFactCheck([]);
+      renderSourceLinks([], []);
     }
 
     function renderErrorState(message) {
@@ -9834,6 +9992,9 @@
           weaknesses: toList(feedback.weaknesses),
           suggestions: toList(feedback.suggestions),
         },
+        fact_check: Array.isArray(data.fact_check) ? data.fact_check : [],
+        evidence_source_links: Array.isArray(data.evidence_source_links) ? data.evidence_source_links : [],
+        better_source_suggestions: Array.isArray(data.better_source_suggestions) ? data.better_source_suggestions : [],
         status: normalizeStatus(data.status),
       };
     }
@@ -9880,8 +10041,11 @@
       output.className = options.animate ? "rebuttal-text is-typing" : "rebuttal-text";
       output.setAttribute("aria-live", "polite");
 
+      // Format rebuttal text — detect CER sections and make URLs clickable.
+      const formattedHtml = formatRebuttalHtml(text);
+
       if (!options.animate) {
-        output.textContent = text;
+        output.innerHTML = formattedHtml;
         setArenaPulse("rebuttal");
         syncLumiState(getLumiStateForContext());
         renderArenaStage();
@@ -9898,11 +10062,163 @@
       }
 
       if (animationId === activeRebuttalAnimation) {
+        // After typewriter animation, replace with the formatted HTML version
+        output.innerHTML = formattedHtml;
         output.className = "rebuttal-text";
         setArenaPulse("rebuttal");
         syncLumiState(getLumiStateForContext());
         renderArenaStage();
       }
+    }
+
+    function formatRebuttalHtml(text) {
+      if (!text) return "";
+      let html = escapeHtml(text);
+
+      // Detect and format CER sections: [Luận điểm], [Bằng chứng], [Lập luận]
+      // Use non-global regex for detection, then global for replacement
+      const cerSections = [
+        { detect: /\[Lu\u1eadn \u0111i\u1ec3m\]/, pattern: /(?:<br>)*\s*\[Lu\u1eadn \u0111i\u1ec3m\]\s*:?\s*/g, label: "Luận điểm", icon: "🎯", cssClass: "cer-section-claim" },
+        { detect: /\[B\u1eb1ng ch\u1ee9ng\]/, pattern: /(?:<br>)*\s*\[B\u1eb1ng ch\u1ee9ng\]\s*:?\s*/g, label: "Bằng chứng", icon: "📊", cssClass: "cer-section-evidence" },
+        { detect: /\[L\u1eadp lu\u1eadn\]/, pattern: /(?:<br>)*\s*\[L\u1eadp lu\u1eadn\]\s*:?\s*/g, label: "Lập luận", icon: "🔗", cssClass: "cer-section-reasoning" },
+      ];
+      let hasCerFormat = false;
+      for (const section of cerSections) {
+        if (section.detect.test(html)) {
+          hasCerFormat = true;
+          html = html.replace(section.pattern, `<div class="cer-section ${section.cssClass}"><span class="cer-section-label">${section.icon} ${section.label}</span><span class="cer-section-content">`);
+        }
+      }
+      // Close any open cer-section divs
+      if (hasCerFormat) {
+        // Add closing tags before each new section and at the end
+        html = html.replace(/(<div class="cer-section )/g, (match, p1, offset) => {
+          return offset > 0 ? `</span></div>${p1}` : p1;
+        });
+        html += "</span></div>";
+      }
+
+      // Handle **bold** markers from the AI (asterisks survive escapeHtml)
+      html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+      // Make URLs clickable
+      html = html.replace(
+        /(https?:\/\/[^\s<>&"')\]]+)/gi,
+        '<a href="$1" target="_blank" rel="noopener noreferrer" class="evidence-link">$1</a>'
+      );
+
+      return html;
+    }
+
+    function renderFactCheck(factCheckItems) {
+      const container = document.getElementById("fact-check-output");
+      if (!container) return;
+      if (!factCheckItems || !factCheckItems.length) {
+        container.style.display = "none";
+        container.innerHTML = "";
+        return;
+      }
+      const verdictConfig = {
+        verified: { icon: "✅", label: "Đã xác minh", cssClass: "verdict-verified" },
+        inaccurate: { icon: "❌", label: "Không chính xác", cssClass: "verdict-inaccurate" },
+        unverifiable: { icon: "❓", label: "Không thể xác minh", cssClass: "verdict-unverifiable" },
+        outdated: { icon: "⏰", label: "Đã lỗi thời", cssClass: "verdict-outdated" },
+      };
+      container.style.display = "";
+      container.innerHTML = `
+        <div class="fact-check-panel">
+          <div class="fact-check-title"><span class="icon-box" style="background:#1e3a5f;color:#60a5fa">🔍</span> Kiểm chứng bằng chứng</div>
+          ${factCheckItems.map(item => {
+            const config = verdictConfig[item.verdict] || verdictConfig.unverifiable;
+            return `
+              <div class="fact-check-item ${config.cssClass}">
+                <div class="fact-check-verdict">${config.icon} ${config.label}</div>
+                <div class="fact-check-claim">"${escapeHtml(item.claim_text)}"</div>
+                <div class="fact-check-explanation">${escapeHtml(item.explanation)}</div>
+                ${item.source_url ? `
+                  <div class="fact-check-link-wrapper" style="margin-top: 8px;">
+                    <a href="${escapeHtml(item.source_url)}" target="_blank" rel="noopener noreferrer" class="evidence-link" style="font-size: 0.85em; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: rgba(96, 165, 250, 0.1); border: 1px solid rgba(96, 165, 250, 0.2); border-radius: 4px; color: #60a5fa; text-decoration: none; transition: background 0.2s;">
+                      🌐 Nguồn xác thực: ${escapeHtml(item.source_url.length > 50 ? item.source_url.substring(0, 47) + '...' : item.source_url)}
+                    </a>
+                  </div>
+                ` : ""}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function renderSourceLinks(evidenceSourceLinks, betterSourceSuggestions) {
+      const container = document.getElementById("source-links-output");
+      if (!container) return;
+      const hasLinks = evidenceSourceLinks && evidenceSourceLinks.length > 0;
+      const hasSuggestions = betterSourceSuggestions && betterSourceSuggestions.length > 0;
+      if (!hasLinks && !hasSuggestions) {
+        container.style.display = "none";
+        container.innerHTML = "";
+        return;
+      }
+      container.style.display = "";
+      let html = "";
+      if (state.mode === "find_evidence") {
+        html += `
+          <div class="source-links-section">
+            <div class="source-links-title"><span class="icon-box" style="background:#3b1f0d;color:#fbbf24">💡</span> Gợi ý nguồn tốt hơn</div>
+            <ul class="source-links-list suggestion-list">
+        `;
+        if (hasLinks) {
+          evidenceSourceLinks.forEach(link => {
+            const urlMatch = link.match(/(https?:\/\/[^\s]+)/);
+            if (urlMatch) {
+              const url = urlMatch[1];
+              const label = link.replace(url, "").replace(/[-–—]\s*$/, "").trim() || url;
+              html += `<li><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="evidence-link">${escapeHtml(label)}</a></li>`;
+            } else {
+              html += `<li>${escapeHtml(link)}</li>`;
+            }
+          });
+        }
+        if (hasSuggestions) {
+          betterSourceSuggestions.forEach(s => {
+            html += `<li>${escapeHtml(s)}</li>`;
+          });
+        }
+        html += `
+            </ul>
+          </div>
+        `;
+      } else {
+        if (hasLinks) {
+          html += `
+            <div class="source-links-section">
+              <div class="source-links-title"><span class="icon-box" style="background:#1a3520;color:#7fffe8">📚</span> Nguồn tham khảo AI</div>
+              <ul class="source-links-list">
+                ${evidenceSourceLinks.map(link => {
+                  const urlMatch = link.match(/(https?:\/\/[^\s]+)/);
+                  if (urlMatch) {
+                    const url = urlMatch[1];
+                    const label = link.replace(url, "").replace(/[-–—]\s*$/, "").trim() || url;
+                    return `<li><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="evidence-link">${escapeHtml(label)}</a></li>`;
+                  }
+                  return `<li>${escapeHtml(link)}</li>`;
+                }).join("")}
+              </ul>
+            </div>
+          `;
+        }
+        if (hasSuggestions) {
+          html += `
+            <div class="source-links-section">
+              <div class="source-links-title"><span class="icon-box" style="background:#3b1f0d;color:#fbbf24">💡</span> Gợi ý nguồn tốt hơn</div>
+              <ul class="source-links-list suggestion-list">
+                ${betterSourceSuggestions.map(s => `<li>${escapeHtml(s)}</li>`).join("")}
+              </ul>
+            </div>
+          `;
+        }
+      }
+      container.innerHTML = html;
     }
 
     function renderCER(cer) {

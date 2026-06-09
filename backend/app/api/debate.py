@@ -310,6 +310,9 @@ def debate_turn(
         status=normalize_status(response_status),
         cer=result["cer"],
         feedback=result["feedback"],
+        fact_check=result.get("fact_check", []),
+        evidence_source_links=result.get("evidence_source_links", []),
+        better_source_suggestions=result.get("better_source_suggestions", []),
     )
 
 

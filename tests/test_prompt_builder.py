@@ -26,9 +26,13 @@ class PromptBuilderTests(unittest.TestCase):
         self.assertIn("KHÔNG dùng tiếng Anh", prompt)
         self.assertIn("CỔNG BẰNG CHỨNG", prompt)
         self.assertIn("evidence_score", prompt)
-        self.assertIn("4–6 câu phản biện", prompt)
-        self.assertIn("Tuy nhiên", prompt)
-        self.assertLess(len(prompt), 7000)
+        self.assertIn("Viết dạng đoạn văn liền mạch, tự nhiên", prompt)
+        self.assertIn("KHÔNG chứa nhãn như [Luận điểm]", prompt)
+        self.assertIn("BẮT BUỘC cung cấp liên kết nguồn cụ thể", prompt)
+        self.assertIn("Tuyệt đối KHÔNG dùng link trang chủ chung chung", prompt)
+        self.assertIn("KHÔNG dùng các câu mơ hồ như", prompt)
+        self.assertIn("BẰNG CHỨNG CỦA AI", prompt)
+        self.assertLess(len(prompt), 8500)
 
     def test_groq_messages_force_vietnamese_response_contract(self):
         messages = build_groq_messages(
@@ -49,7 +53,7 @@ class PromptBuilderTests(unittest.TestCase):
         self.assertIn("ai_rebuttal", user_prompt)
         self.assertIn("CHỐNG DỒN ĐIỂM", system_prompt)
         self.assertIn("evidence_score", user_prompt)
-        self.assertLess(len(system_prompt), 5000)
+        self.assertLess(len(system_prompt), 6500)
         self.assertLess(len(user_prompt), 3000)
 
     def test_practice_mode_prompt_includes_round_prompt_context(self):

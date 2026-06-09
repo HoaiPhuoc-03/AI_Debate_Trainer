@@ -149,6 +149,13 @@ class FeedbackResponse(BaseModel):
     suggestions: list[str]
 
 
+class FactCheckItem(BaseModel):
+    claim_text: str = ""
+    verdict: str = "unverifiable"  # verified | inaccurate | unverifiable | outdated
+    explanation: str = ""
+    source_url: str | None = None
+
+
 class DebateTurnResponse(BaseModel):
     session_id: str
     user_argument: str
@@ -167,6 +174,9 @@ class DebateTurnResponseV2(DebateTurnResponse):
     feedback: FeedbackResponse
     turn_number: int
     max_turns: int
+    fact_check: list[FactCheckItem] = Field(default_factory=list)
+    evidence_source_links: list[str] = Field(default_factory=list)
+    better_source_suggestions: list[str] = Field(default_factory=list)
 
 
 class SessionInfoResponse(BaseModel):

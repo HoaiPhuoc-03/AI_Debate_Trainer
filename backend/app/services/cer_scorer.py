@@ -78,6 +78,12 @@ def _clean_list(value: Any, default: list[str] | None = None) -> list[str]:
     return list(default or [])
 
 
+def _remove_chinese_characters(text: str) -> str:
+    # Programmatic filtering disabled first to test prompt-level improvements
+    return text
+
+
+
 def _extract_section(text: str, section_name: str) -> str:
     section = re.escape(section_name)
     pattern = rf"\[{section}\]\s*(.*?)(?=\n\[[A-Z_]+\]\s*|\Z)"
@@ -284,14 +290,33 @@ def parse_cer_rubric_output(raw_text: str) -> dict:
         return result
 
     rebuttal = str(payload.get("ai_rebuttal") or payload.get("rebuttal") or "").strip()
+    rebuttal = _remove_chinese_characters(rebuttal)
+
+    # Extract fact check items to check if evidence could not be verified on the internet
+    fact_check_raw = payload.get("fact_check")
+    fact_check = []
+    has_unverified = False
+    if isinstance(fact_check_raw, list):
+        for item in fact_check_raw:
+            if isinstance(item, dict):
+                v = str(item.get("verdict") or "unverifiable").strip().lower()
+                fact_check.append({
+                    "claim_text": _remove_chinese_characters(str(item.get("claim_text") or "").strip()),
+                    "verdict": v,
+                    "explanation": _remove_chinese_characters(str(item.get("explanation") or "").strip()),
+                    "source_url": _remove_chinese_characters(str(item.get("source_url") or "").strip()) or None,
+                })
+        # If there are fact check items, and none of them are verified, it can't be verified on the internet
+        if fact_check and all(item["verdict"] != "verified" for item in fact_check):
+            has_unverified = True
 
     # Python-side evidence gate: if the model found no evidence (quote is
-    # "NONE" or absent, or checklist says has_real_evidence=False), hard-zero
-    # the entire evidence breakdown regardless of what scores the model output.
+    # "NONE" or absent, or checklist says has_real_evidence=False), or if the evidence
+    # failed verification on the internet, hard-zero the entire evidence score and breakdown.
     evidence_quote = str(payload.get("evidence_quote") or "").strip().upper()
     checklist = payload.get("checklist") or {}
     has_real_evidence = bool(checklist.get("has_real_evidence", True))
-    evidence_gate_zero = (evidence_quote == "NONE") or (not has_real_evidence)
+    evidence_gate_zero = (evidence_quote == "NONE") or (not has_real_evidence) or has_unverified
 
     claim_breakdown = payload.get("claim_breakdown") or {}
     evidence_breakdown = payload.get("evidence_breakdown") or {}
@@ -355,6 +380,10 @@ def parse_cer_rubric_output(raw_text: str) -> dict:
         )
     overall = _weighted_overall(claim, evidence, reasoning)
 
+    # Extract new mode-specific fields from the LLM response.
+    evidence_source_links = [_remove_chinese_characters(link) for link in _clean_list(payload.get("evidence_source_links"), [])]
+    better_source_suggestions = [_remove_chinese_characters(s) for s in _clean_list(payload.get("better_source_suggestions"), [])]
+
     return {
         "is_valid": True,
         "status": "success",
@@ -368,10 +397,13 @@ def parse_cer_rubric_output(raw_text: str) -> dict:
         },
         "cer_breakdown": breakdown,
         "feedback": {
-            "strengths": _clean_list(payload.get("strengths")),
-            "weaknesses": _clean_list(payload.get("weaknesses"), ["Cần làm rõ hơn bằng chứng và suy luận."]),
-            "suggestions": _clean_list(payload.get("suggestions"), ["Bổ sung ví dụ cụ thể và giải thích quan hệ nhân quả."]),
+            "strengths": [_remove_chinese_characters(item) for item in _clean_list(payload.get("strengths"))],
+            "weaknesses": [_remove_chinese_characters(item) for item in _clean_list(payload.get("weaknesses"), ["Cần làm rõ hơn bằng chứng và suy luận."])],
+            "suggestions": [_remove_chinese_characters(item) for item in _clean_list(payload.get("suggestions"), ["Bổ sung ví dụ cụ thể và giải thích quan hệ nhân quả."])],
         },
+        "fact_check": fact_check,
+        "evidence_source_links": evidence_source_links,
+        "better_source_suggestions": better_source_suggestions,
         "raw_scoring_text": raw_text or "",
         "scoring_error": "",
     }
