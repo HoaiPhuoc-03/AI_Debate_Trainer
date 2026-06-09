@@ -909,9 +909,20 @@
     }
 
     @keyframes pulseSelected {
-      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(32, 231, 209, 0.7); }
-      70% { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(32, 231, 209, 0); }
-      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(32, 231, 209, 0); }
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(32, 231, 209, 0.7);
+      }
+
+      70% {
+        transform: scale(1.06);
+        box-shadow: 0 0 0 10px rgba(32, 231, 209, 0);
+      }
+
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(32, 231, 209, 0);
+      }
     }
 
     .mode-icon {
@@ -6225,36 +6236,36 @@
       transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
       cursor: default;
     }
-    
+
     .comparison-banner:hover {
       transform: translateY(-2px) scale(1.01) !important;
       border-color: rgba(32, 231, 209, 0.6) !important;
       box-shadow: 0 14px 36px rgba(32, 231, 209, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
     }
-    
+
     body[data-theme="blue-pastel"] .comparison-banner {
       background: linear-gradient(135deg, rgba(79, 158, 232, 0.12) 0%, rgba(13, 148, 136, 0.08) 100%) !important;
       border-color: rgba(79, 158, 232, 0.3) !important;
       box-shadow: 0 10px 30px rgba(79, 158, 232, 0.08) !important;
     }
-    
+
     .comparison-banner .banner-icon {
       font-size: 28px !important;
-      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15)) !important;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.15)) !important;
       animation: floatSmooth 3s ease-in-out infinite !important;
     }
-    
+
     .comparison-banner .banner-text {
       font-size: 15px !important;
       font-weight: 800 !important;
       color: #fff !important;
       flex-grow: 1;
     }
-    
+
     body[data-theme="blue-pastel"] .comparison-banner .banner-text {
       color: #1e293b !important;
     }
-    
+
     .comparison-banner .banner-delta {
       font-size: 22px !important;
       font-weight: 900 !important;
@@ -6262,32 +6273,32 @@
       border-radius: 12px !important;
       letter-spacing: -0.02em !important;
     }
-    
+
     .comparison-banner .banner-delta.up {
       background: rgba(52, 211, 153, 0.18) !important;
       border: 1px solid rgba(52, 211, 153, 0.4) !important;
       color: #34d399 !important;
       text-shadow: 0 0 8px rgba(52, 211, 153, 0.3) !important;
     }
-    
+
     .comparison-banner .banner-delta.down {
       background: rgba(251, 113, 133, 0.18) !important;
       border: 1px solid rgba(251, 113, 133, 0.4) !important;
       color: #fb7185 !important;
       text-shadow: 0 0 8px rgba(251, 113, 133, 0.3) !important;
     }
-    
+
     .comparison-banner .banner-delta.same {
       background: rgba(148, 163, 184, 0.15) !important;
       border: 1px solid rgba(148, 163, 184, 0.3) !important;
       color: var(--muted) !important;
     }
-    
+
     /* 4 Metric Cards Title Badges */
     .metric-label-badge-wrap {
       margin-bottom: 16px !important;
     }
-    
+
     .metric-label-badge {
       display: inline-block !important;
       font-size: 12px !important;
@@ -6302,7 +6313,7 @@
       cursor: default;
       white-space: nowrap !important;
     }
-    
+
     .metric-label-badge:hover {
       transform: scale(1.06) translateY(-1px) !important;
     }
@@ -6310,75 +6321,83 @@
     #progress-total-sessions {
       font-size: 44px !important;
     }
+
     #progress-completed-sessions {
       font-size: 14px !important;
     }
-    
+
     .card-title-sessions {
       background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(96, 165, 250, 0.15) 100%) !important;
       border-color: rgba(59, 130, 246, 0.4) !important;
       color: #60a5fa !important;
     }
+
     .card-title-sessions:hover {
       background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%) !important;
       border-color: #60a5fa !important;
       color: #fff !important;
       box-shadow: 0 0 15px rgba(59, 130, 246, 0.45) !important;
     }
-    
+
     .card-title-cer {
       background: linear-gradient(135deg, rgba(32, 231, 209, 0.15) 0%, rgba(13, 148, 136, 0.15) 100%) !important;
       border-color: rgba(32, 231, 209, 0.4) !important;
       color: #20e7d1 !important;
     }
+
     .card-title-cer:hover {
       background: linear-gradient(135deg, #20e7d1 0%, #0d9488 100%) !important;
       border-color: #20e7d1 !important;
       color: #fff !important;
       box-shadow: 0 0 15px rgba(32, 231, 209, 0.45) !important;
     }
-    
+
     .card-title-rank {
       background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(167, 139, 250, 0.15) 100%) !important;
       border-color: rgba(139, 92, 246, 0.4) !important;
       color: #c084fc !important;
     }
+
     .card-title-rank:hover {
       background: linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%) !important;
       border-color: #c084fc !important;
       color: #fff !important;
       box-shadow: 0 0 15px rgba(139, 92, 246, 0.45) !important;
     }
-    
+
     .card-title-skills {
       background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(251, 113, 133, 0.15) 100%) !important;
       border-color: rgba(245, 158, 11, 0.4) !important;
       color: #fbbf24 !important;
     }
+
     .card-title-skills:hover {
       background: linear-gradient(135deg, #f59e0b 0%, #facc15 100%) !important;
       border-color: #facc15 !important;
       color: #fff !important;
       box-shadow: 0 0 15px rgba(245, 158, 11, 0.45) !important;
     }
-    
+
     body[data-theme="blue-pastel"] .card-title-sessions {
       color: #1d4ed8 !important;
       border-color: rgba(29, 78, 216, 0.3) !important;
     }
+
     body[data-theme="blue-pastel"] .card-title-cer {
       color: #0f766e !important;
       border-color: rgba(15, 118, 110, 0.3) !important;
     }
+
     body[data-theme="blue-pastel"] .card-title-rank {
       color: #6d28d9 !important;
       border-color: rgba(109, 40, 217, 0.3) !important;
     }
+
     body[data-theme="blue-pastel"] .card-title-skills {
       color: #b45309 !important;
       border-color: rgba(180, 83, 9, 0.3) !important;
     }
-    
+
     /* CER Comparative Sparkline Mini Bars */
     .compare-chart-container {
       display: grid !important;
@@ -6388,29 +6407,35 @@
       padding-top: 12px !important;
       border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
     }
+
     body[data-theme="blue-pastel"] .compare-chart-container {
       border-top-color: rgba(0, 0, 0, 0.05) !important;
     }
+
     .compare-mini-chart {
       display: flex !important;
       flex-direction: column !important;
       gap: 4px !important;
     }
+
     .compare-mini-chart .chart-label {
       font-size: 10px !important;
       font-weight: 800 !important;
       color: var(--muted-2) !important;
       text-transform: uppercase !important;
     }
+
     .mini-bar-compare {
       height: 6px !important;
       background: rgba(255, 255, 255, 0.06) !important;
       border-radius: 99px !important;
       overflow: hidden !important;
     }
+
     body[data-theme="blue-pastel"] .mini-bar-compare {
       background: rgba(0, 0, 0, 0.06) !important;
     }
+
     .mini-bar-compare span {
       display: block !important;
       height: 100% !important;
@@ -6418,9 +6443,11 @@
       background: linear-gradient(90deg, #8b7cff, #20e7d1) !important;
       transition: width 0.8s ease !important;
     }
+
     body[data-theme="blue-pastel"] .mini-bar-compare span {
       background: linear-gradient(90deg, #6d28d9, #0284c7) !important;
     }
+
     .compare-mini-chart .chart-value {
       font-size: 12px !important;
       font-weight: 900 !important;
@@ -6428,7 +6455,7 @@
       align-items: center !important;
       gap: 4px !important;
     }
-    
+
     /* Sessions Breakdown Distribution styles */
     .sessions-breakdown {
       margin-top: 10px;
@@ -6446,49 +6473,66 @@
       }
     }
 
-    .mini-chart-node, .mini-chart-node-glow {
+    .mini-chart-node,
+    .mini-chart-node-glow {
       transform-origin: center;
       animation: popMiniNode 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
 
     @keyframes popMiniNode {
-      from { transform: scale(0); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+      from {
+        transform: scale(0);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
-    
+
     /* Practiced Topics Icon Hover Movement */
     .topic-progress-row:hover .topic-row-icon {
       transform: scale(1.08) !important;
       box-shadow: 0 4px 14px rgba(139, 124, 255, 0.2) !important;
       border-color: rgba(139, 124, 255, 0.5) !important;
     }
+
     .topic-row-icon {
       transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
     }
+
     .topic-icon-bounce {
       display: inline-block !important;
       animation: floatSmooth 2.5s ease-in-out infinite !important;
     }
-    
+
     @keyframes floatSmooth {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-3px); }
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-3px);
+      }
     }
-    
+
     /* Clickable mode tag & tooltip in practiced topics */
     .topic-tag-badge.mode.clickable {
       position: relative;
       cursor: pointer !important;
       transition: all 0.2s ease !important;
     }
-    
+
     .topic-tag-badge.mode.clickable:hover {
       background: rgba(96, 165, 250, 0.35) !important;
       border-color: rgba(96, 165, 250, 0.6) !important;
       box-shadow: 0 0 10px rgba(96, 165, 250, 0.4) !important;
       transform: scale(1.05);
     }
-    
+
     .topic-tag-badge.mode.clickable::after {
       content: "Nhấn để luyện thêm Chế độ " attr(data-mode-name);
       position: absolute;
@@ -6512,12 +6556,12 @@
       text-transform: none;
       letter-spacing: normal;
     }
-    
+
     .topic-tag-badge.mode.clickable:hover::after {
       opacity: 1;
       transform: translateX(-50%) scale(1);
     }
-    
+
     .topic-tag-badge.mode.clickable::before {
       content: "";
       position: absolute;
@@ -6532,41 +6576,43 @@
       transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
       z-index: 100;
     }
-    
+
     .topic-tag-badge.mode.clickable:hover::before {
       opacity: 1;
       transform: translateX(-50%) scale(1);
     }
-    
+
     body[data-theme="blue-pastel"] .topic-tag-badge.mode.clickable::after {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(79, 158, 232, 0.98));
       border-color: rgba(79, 158, 232, 0.6);
       color: #111827;
       box-shadow: 0 4px 15px rgba(79, 158, 232, 0.15);
     }
-    
+
     body[data-theme="blue-pastel"] .topic-tag-badge.mode.clickable::before {
       border-color: rgba(79, 158, 232, 0.6) transparent transparent transparent;
     }
-    
+
     /* Goal Step Hover and Clickable polish */
     .goal-step {
       transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s ease, border-color 0.28s ease, background 0.28s ease !important;
     }
+
     .goal-step:hover {
       transform: translateY(-4px) scale(1.02) !important;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.3) !important;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3) !important;
     }
+
     .goal-step.interactive {
       cursor: default !important;
     }
-    
+
     /* Goal progress bar tooltip */
     .goal-step .mini-bar {
       position: relative;
       cursor: pointer;
     }
-    
+
     .goal-step .mini-bar::after {
       content: attr(data-pct);
       position: absolute;
@@ -6586,12 +6632,12 @@
       z-index: 10;
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    
+
     .goal-step .mini-bar:hover::after {
       opacity: 1;
       transform: translate(-50%, 0) scale(1);
     }
-    
+
     .goal-step .mini-bar::before {
       content: "";
       position: absolute;
@@ -6606,18 +6652,18 @@
       transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
       z-index: 10;
     }
-    
+
     .goal-step .mini-bar:hover::before {
       opacity: 1;
       transform: translate(-50%, 0) scale(1);
     }
-    
+
     body[data-theme="blue-pastel"] .goal-step .mini-bar::after {
       background: linear-gradient(135deg, #1c7ed6, #0ca678);
       box-shadow: 0 4px 15px rgba(28, 126, 214, 0.2);
       border-color: rgba(255, 255, 255, 0.5);
     }
-    
+
     body[data-theme="blue-pastel"] .goal-step .mini-bar::before {
       border-color: rgba(28, 126, 214, 0.8) transparent transparent transparent;
     }
@@ -6732,6 +6778,7 @@
       text-transform: none;
       transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
     }
+
     .goal-meta-pill:hover {
       transform: translateY(-2px) scale(1.05) !important;
       box-shadow: 0 4px 12px rgba(139, 124, 255, 0.25) !important;
@@ -7794,6 +7841,7 @@
     .goal-step.interactive {
       cursor: default !important;
     }
+
     .breakdown-row.interactive {
       cursor: pointer !important;
     }
@@ -7878,6 +7926,7 @@
       white-space: nowrap !important;
       transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
     }
+
     .goal-pill:hover,
     .insight-pill:hover,
     .breakdown-pill:hover {
@@ -8989,23 +9038,30 @@
               <div class="metric-value" id="progress-avg">0</div>
               <div class="metric-note" id="progress-streak">0 ngày liên tiếp</div>
               <!-- Visual Weekly/Monthly comparative sections with mini trend graphs -->
-              <div class="compare-vertical-container" style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px; width: 100%;">
+              <div class="compare-vertical-container"
+                style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px; width: 100%;">
                 <!-- Week Section -->
                 <div style="display: flex; flex-direction: column; gap: 4px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 800;">
+                  <div
+                    style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 800;">
                     <span style="color: var(--muted); text-transform: uppercase; font-size: 11px;">Tuần này</span>
-                    <span id="compare-weekly-text" style="color: var(--text); font-size: 13px; font-weight: 900;">--/100</span>
+                    <span id="compare-weekly-text"
+                      style="color: var(--text); font-size: 13px; font-weight: 900;">--/100</span>
                   </div>
-                  <div class="mini-bar-compare" style="height: 6px;"><span id="compare-weekly-bar" style="width: 0%"></span></div>
+                  <div class="mini-bar-compare" style="height: 6px;"><span id="compare-weekly-bar"
+                      style="width: 0%"></span></div>
                   <div id="compare-weekly-chart" style="height: 90px; margin-top: 8px;"></div>
                 </div>
                 <!-- Month Section -->
                 <div style="display: flex; flex-direction: column; gap: 4px;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 800;">
+                  <div
+                    style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 800;">
                     <span style="color: var(--muted); text-transform: uppercase; font-size: 11px;">Tháng này</span>
-                    <span id="compare-monthly-text" style="color: var(--text); font-size: 13px; font-weight: 900;">--/100</span>
+                    <span id="compare-monthly-text"
+                      style="color: var(--text); font-size: 13px; font-weight: 900;">--/100</span>
                   </div>
-                  <div class="mini-bar-compare" style="height: 6px;"><span id="compare-monthly-bar" style="width: 0%"></span></div>
+                  <div class="mini-bar-compare" style="height: 6px;"><span id="compare-monthly-bar"
+                      style="width: 0%"></span></div>
                   <div id="compare-monthly-chart" style="height: 90px; margin-top: 8px;"></div>
                 </div>
               </div>
@@ -12379,23 +12435,23 @@
       if (scores.length === 1) {
         scores = [scores[0], scores[0]];
       }
-      
+
       const W = el.clientWidth || 250;
       const H = 90;
       const PAD = { t: 22, r: 16, b: 18, l: 28 };
       const plotW = W - PAD.l - PAD.r;
       const plotH = H - PAD.t - PAD.b;
       const n = scores.length;
-      
+
       const xOf = i => PAD.l + (i / (n - 1)) * plotW;
       const yOf = v => PAD.t + plotH - (v / 100) * plotH;
 
       let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">`;
-      
+
       const gradId = `miniGrad-${containerId}`;
       const areaGradId = `miniAreaGrad-${containerId}`;
       const glowId = `miniGlow-${containerId}`;
-      
+
       svg += `<defs>
         <linearGradient id="${gradId}" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stop-color="${strokeColor}" stop-opacity="0.8"/>
@@ -12437,11 +12493,11 @@
       scores.forEach((s, i) => {
         const x = xOf(i).toFixed(1);
         const y = yOf(s).toFixed(1);
-        
+
         svg += `<circle cx="${x}" cy="${y}" r="5" fill="${strokeColor}" opacity="0.3" class="mini-chart-node-glow"/>`;
         svg += `<circle cx="${x}" cy="${y}" r="3" fill="white" stroke="${strokeColor}" stroke-width="1.5" class="mini-chart-node"/>`;
         svg += `<text x="${x}" y="${y - 8}" text-anchor="middle" font-size="10" fill="var(--text)" font-weight="900" style="text-shadow: 0 1px 3px rgba(0,0,0,0.8);">${s}</text>`;
-        
+
         const labelY = H - 4;
         svg += `<text x="${x}" y="${labelY}" text-anchor="middle" font-size="9" fill="var(--muted)" font-weight="800">#${i + 1}</text>`;
       });
@@ -12823,7 +12879,7 @@
             quick_rebuttal: { name: "Phản biện nhanh", color: "var(--pink, #fb7185)" },
             full_argument: { name: "Xây dựng lập luận", color: "var(--yellow, #facc15)" }
           };
-          
+
           let listHtml = "";
           Object.keys(modeCounts).forEach(m => {
             const count = modeCounts[m];
