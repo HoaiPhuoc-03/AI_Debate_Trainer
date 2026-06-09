@@ -7,7 +7,9 @@
   <title>AI Debate Trainer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="styles/tooltips.css">
   <link rel="stylesheet" href="styles/onboarding.css">
   <link rel="stylesheet" href="styles/knowledge-carousel.css">
@@ -196,23 +198,29 @@
       font-size: 28px;
       box-shadow: 0 20px 40px rgba(32, 231, 209, 0.18);
     }
+
     /* Chỉnh logo bo góc cho thanh Sidebar */
     .brand-mark-img {
-      width: 40px !important;      /* Độ rộng của logo (có thể tăng giảm tùy ý) */
-      height: 40px !important;     /* Độ cao (nhớ để bằng width cho nó vuông) */
-      border-radius: 10px !important; /* Hiệu ứng bo góc (tăng số lên nếu muốn bo tròn hơn) */
-      object-fit: cover !important;   /* Giúp ảnh lấp đầy khung mà không bị móp méo */
-      
+      width: 40px !important;
+      /* Độ rộng của logo (có thể tăng giảm tùy ý) */
+      height: 40px !important;
+      /* Độ cao (nhớ để bằng width cho nó vuông) */
+      border-radius: 10px !important;
+      /* Hiệu ứng bo góc (tăng số lên nếu muốn bo tròn hơn) */
+      object-fit: cover !important;
+      /* Giúp ảnh lấp đầy khung mà không bị móp méo */
+
       /* Thêm chút viền và bóng đổ để tách nền logo khỏi nền tối của sidebar */
       border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important; 
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
     }
 
     /* Đảm bảo khung chứa (brand) căn chỉnh logo và chữ đều nhau */
     .brand {
       display: flex !important;
       align-items: center !important;
-      gap: 14px !important; /* Khoảng cách từ logo đến cụm chữ bên phải */
+      gap: 14px !important;
+      /* Khoảng cách từ logo đến cụm chữ bên phải */
     }
 
     body[data-theme="blue-pastel"] .brand-mark {
@@ -896,6 +904,16 @@
       box-shadow: 0 0 20px rgba(32, 231, 209, 0.12);
     }
 
+    .mode-card.pulse-highlight {
+      animation: pulseSelected 1.2s ease-in-out 2 !important;
+    }
+
+    @keyframes pulseSelected {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(32, 231, 209, 0.7); }
+      70% { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(32, 231, 209, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(32, 231, 209, 0); }
+    }
+
     .mode-icon {
       font-size: 1.7rem;
       line-height: 1;
@@ -1569,8 +1587,15 @@
     }
 
     @keyframes timerPulse {
-      from { opacity: 0.85; transform: scale(1); }
-      to { opacity: 1; transform: scale(1.03); }
+      from {
+        opacity: 0.85;
+        transform: scale(1);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1.03);
+      }
     }
 
     .practice-mode-bar {
@@ -1680,7 +1705,9 @@
       pointer-events: auto;
     }
 
-    .practice-next-row.hidden { display: none; }
+    .practice-next-row.hidden {
+      display: none;
+    }
 
     .practice-next-button {
       min-height: 42px;
@@ -2342,37 +2369,42 @@
       background: linear-gradient(135deg, #08c8f6, var(--cyan));
       box-shadow: 0 18px 45px rgba(32, 231, 209, 0.24);
     }
- 
+
     .auth-logo {
       margin-bottom: 25px !important;
     }
+
     .auth-logo img {
-      width: 85px !important;   /* Tăng size nhẹ để nhìn cân đối */
+      width: 85px !important;
+      /* Tăng size nhẹ để nhìn cân đối */
       height: 85px !important;
       object-fit: contain;
-      border-radius: 16px !important; /* Bo góc mịn cho logo hình vuông */
-      
+      border-radius: 16px !important;
+      /* Bo góc mịn cho logo hình vuông */
+
       /* Tạo viền và hiệu ứng đổ bóng phát sáng công nghệ AI giúp logo nổi hẳn lên */
-      border: 2px solid rgba(109, 40, 217, 0.4) !important; 
-      box-shadow: 0 0 30px rgba(109, 40, 217, 0.65) !important; 
-      background: rgba(13, 21, 38, 0.5); /* Lớp nền mờ phía sau giúp tách biệt khỏi background chính */
+      border: 2px solid rgba(109, 40, 217, 0.4) !important;
+      box-shadow: 0 0 30px rgba(109, 40, 217, 0.65) !important;
+      background: rgba(13, 21, 38, 0.5);
+      /* Lớp nền mờ phía sau giúp tách biệt khỏi background chính */
       padding: 4px;
     }
 
 
     .auth-kicker {
-      color: #a78bfa !important; /* Đổi sang màu tím sáng mềm mại */
+      color: #a78bfa !important;
+      /* Đổi sang màu tím sáng mềm mại */
       font-weight: 700 !important;
       letter-spacing: 1.5px !important;
       text-transform: uppercase;
-      
+
       /* Biến dòng này thành một cái Badge (nhãn) xịn sò đổ bóng nổi lên hẳn */
       background: rgba(24, 34, 53, 0.8) !important;
       padding: 6px 16px !important;
       border-radius: 30px !important;
       border: 1px solid rgba(167, 139, 250, 0.25) !important;
       display: inline-block !important;
-      
+
       /* Tạo độ sâu bóng đổ để không bị chìm vào nền tối */
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
@@ -2383,39 +2415,51 @@
       font-size: 52px !important;
       font-weight: 900 !important;
       margin: 15px 0 !important;
-      
+
       /* Dải màu mới: Pastel (#d8b4fe) -> Đậm (#7e22ce) -> Đen (#1c053a) và ngược lại để tạo vòng lặp mượt */
       background: linear-gradient(270deg, #d8b4fe, #7e22ce, #1c053a, #7e22ce, #d8b4fe) !important;
-      
+
       /* Chỉnh size xuống 300% để các mảng màu xích lại gần nhau hơn, dễ thấy sự thay đổi */
       background-size: 300% 300% !important;
-      
+
       -webkit-background-clip: text !important;
       background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
-      
-      
+
+
       animation: wavePurpleExtreme 5s ease-in-out infinite !important;
-      
-     
+
+
       filter: drop-shadow(0px 4px 12px rgba(126, 34, 206, 0.5)) !important;
     }
 
 
     @keyframes wavePurpleExtreme {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
     }
 
-    
-   
-    .auth-subtitle, .auth-desc, .auth-view p {
-      color: #000000 !important; /* Đổi màu chữ thành màu đen theo đúng ý mày */
-      font-weight: 700 !important; /* Làm nét chữ dày dặn hơn */
-      
-     
-      background: rgba(248, 250, 252, 0.95) !important; 
+
+
+    .auth-subtitle,
+    .auth-desc,
+    .auth-view p {
+      color: #000000 !important;
+      /* Đổi màu chữ thành màu đen theo đúng ý mày */
+      font-weight: 700 !important;
+      /* Làm nét chữ dày dặn hơn */
+
+
+      background: rgba(248, 250, 252, 0.95) !important;
       padding: 8px 16px !important;
       border-radius: 8px !important;
       display: inline-block !important;
@@ -2441,52 +2485,53 @@
 
     .auth-logo {
       margin-bottom: 25px !important;
-      background: transparent !important; 
+      background: transparent !important;
       border: none !important;
       box-shadow: none !important;
     }
 
-    
+
     .auth-logo img {
-      width: 90px !important;  
+      width: 90px !important;
       height: 90px !important;
-      object-fit: cover !important; 
-      
-      
-      border-radius: 18px !important; 
-      
-      
-      border: 1px solid rgba(255, 255, 255, 0.15) !important; 
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(109, 40, 217, 0.3) !important; 
-      background: #0d1526 !important; 
+      object-fit: cover !important;
+
+
+      border-radius: 18px !important;
+
+
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(109, 40, 217, 0.3) !important;
+      background: #0d1526 !important;
     }
 
-  
+
     .auth-link-button {
-      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important; 
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%) !important;
       color: #ffffff !important;
       font-weight: 700 !important;
       font-size: 15px !important;
-      
-      padding: 14px 28px !important; /* Bơm cho cái nút to và mập mạp hơn */
-      border-radius: 10px !important; 
-      
-      border: 1px solid #3b82f6 !important; 
-      
+
+      padding: 14px 28px !important;
+      /* Bơm cho cái nút to và mập mạp hơn */
+      border-radius: 10px !important;
+
+      border: 1px solid #3b82f6 !important;
+
       margin-top: 20px !important;
       display: inline-block !important;
       text-decoration: none !important;
-      
 
-      box-shadow: 0 4px 15px rgba(30, 58, 138, 0.6) !important; 
+
+      box-shadow: 0 4px 15px rgba(30, 58, 138, 0.6) !important;
       transition: all 0.3s ease !important;
     }
 
     .auth-link-button:hover {
-      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important; 
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;
       border-color: #60a5fa !important;
-      transform: translateY(-3px) !important;   
-      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6) !important; 
+      transform: translateY(-3px) !important;
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6) !important;
     }
 
     .auth-copy {
@@ -2893,6 +2938,7 @@
       gap: 24px;
       margin-top: 24px;
     }
+
     @media (max-width: 900px) {
       .progress-charts-grid {
         grid-template-columns: 1fr;
@@ -3016,6 +3062,7 @@
       gap: 16px;
       margin-top: 20px;
     }
+
     @media (max-width: 768px) {
       .topic-progress {
         grid-template-columns: 1fr;
@@ -3080,28 +3127,31 @@
       color: var(--text);
       line-height: 1.45;
     }
-      /* Hiệu ứng làm nổi bật tên App ở màn hình chờ */
+
+    /* Hiệu ứng làm nổi bật tên App ở màn hình chờ */
     .title-glow {
       /* Chuyển màu chữ thành dải màu Gradient */
       background: linear-gradient(135deg, #20e7d1 0%, #3b82f6 100%);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
-      
+
       /* Làm chữ to và đậm hơn một chút */
-      font-size: 52px !important; 
+      font-size: 52px !important;
       font-weight: 900 !important;
-      
+
       /* Đổ bóng phát sáng (Glow) quanh chữ */
       text-shadow: 0px 8px 24px rgba(32, 231, 209, 0.35);
-      
+
       /* Hiệu ứng chuyển động nhẹ khi di chuột vào (thích thì để) */
       transition: transform 0.3s ease, text-shadow 0.3s ease;
     }
 
     .title-glow:hover {
-      transform: scale(1.02); /* Phóng to lên xíu khi lướt chuột */
-      text-shadow: 0px 12px 30px rgba(59, 130, 246, 0.5); /* Sáng mạnh hơn */
+      transform: scale(1.02);
+      /* Phóng to lên xíu khi lướt chuột */
+      text-shadow: 0px 12px 30px rgba(59, 130, 246, 0.5);
+      /* Sáng mạnh hơn */
     }
 
     .insight-text,
@@ -3197,7 +3247,7 @@
       background: rgba(148, 163, 184, 0.14);
     }
 
-    .goal-step .mini-bar > span {
+    .goal-step .mini-bar>span {
       display: block;
       height: 100%;
       border-radius: inherit;
@@ -3205,10 +3255,21 @@
       width: 0;
     }
 
-    .progress-insight-grid .progress-card:nth-child(1) { --accent-color: #f5a623; }
-    .progress-insight-grid .progress-card:nth-child(2) { --accent-color: #20e7d1; }
-    .progress-insight-grid .progress-card:nth-child(3) { --accent-color: #8b5cf6; }
-    .progress-insight-grid .progress-card:nth-child(4) { --accent-color: #3b82f6; }
+    .progress-insight-grid .progress-card:nth-child(1) {
+      --accent-color: #f5a623;
+    }
+
+    .progress-insight-grid .progress-card:nth-child(2) {
+      --accent-color: #20e7d1;
+    }
+
+    .progress-insight-grid .progress-card:nth-child(3) {
+      --accent-color: #8b5cf6;
+    }
+
+    .progress-insight-grid .progress-card:nth-child(4) {
+      --accent-color: #3b82f6;
+    }
 
     @media (max-width: 980px) {
       .progress-insight-grid {
@@ -4343,7 +4404,9 @@
     }
 
     @keyframes authMeteor {
-      0%, 62% {
+
+      0%,
+      62% {
         opacity: 0;
         transform: rotate(var(--angle, -18deg)) translateX(-42vw);
       }
@@ -4364,6 +4427,7 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
+
       .auth-sky-effects::before,
       .auth-sky-effects span {
         animation: none;
@@ -5054,35 +5118,35 @@
     }
 
     .lumi-stage-token {
-    position: relative;
-    width: 54px;
-    height: 54px;
-    --lumi-x: -13%;
-    --lumi-y: -14%;
-    --lumi-y-lift: -17%;
-    display: block;
-    overflow: visible;
-    padding: 0;
-    background: transparent !important;
-    border-radius: 17px !important;
-    isolation: isolate;
+      position: relative;
+      width: 54px;
+      height: 54px;
+      --lumi-x: -13%;
+      --lumi-y: -14%;
+      --lumi-y-lift: -17%;
+      display: block;
+      overflow: visible;
+      padding: 0;
+      background: transparent !important;
+      border-radius: 17px !important;
+      isolation: isolate;
     }
 
     .lumi-stage-token img {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 146%;
-    height: 146%;
-    max-width: none;
-    max-height: none;
-    object-fit: contain;
-    object-position: 50% 50%;
-    transform: translate(var(--lumi-x), var(--lumi-y));
-    display: block;
-    transform-origin: 52% 62%;
-    filter: drop-shadow(0 10px 16px rgba(31, 75, 128, 0.18));
-    z-index: 1;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 146%;
+      height: 146%;
+      max-width: none;
+      max-height: none;
+      object-fit: contain;
+      object-position: 50% 50%;
+      transform: translate(var(--lumi-x), var(--lumi-y));
+      display: block;
+      transform-origin: 52% 62%;
+      filter: drop-shadow(0 10px 16px rgba(31, 75, 128, 0.18));
+      z-index: 1;
     }
 
     .lumi-title-token {
@@ -5167,12 +5231,16 @@
     }
 
     @keyframes lumiTyping {
-      0%, 100% {
+
+      0%,
+      100% {
         transform: translate(var(--lumi-x), var(--lumi-y)) rotate(0deg) scale(1);
       }
+
       35% {
         transform: translate(calc(var(--lumi-x) + 1.5%), calc(var(--lumi-y) - 1.5%)) rotate(2deg) scale(1.03);
       }
+
       70% {
         transform: translate(calc(var(--lumi-x) - 1%), calc(var(--lumi-y) + 0.5%)) rotate(-1deg) scale(1.01);
       }
@@ -5869,7 +5937,12 @@
     }
 
     /* ── PREMIUM TYPOGRAPHY & DESIGN SYSTEM UPGRADES ── */
-    h1, h2, h3, h4, h5, h6,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
     .brand-title,
     .flow-title,
     .hub-title,
@@ -5944,6 +6017,7 @@
     .hub-row {
       transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s ease, border-color 0.28s ease !important;
     }
+
     .hub-row:hover {
       transform: translateY(-2px) !important;
       box-shadow: 0 16px 38px rgba(0, 0, 0, 0.35), 0 0 0 3px rgba(32, 231, 209, 0.05) !important;
@@ -5960,13 +6034,16 @@
       width: 8px;
       height: 8px;
     }
+
     ::-webkit-scrollbar-track {
       background: rgba(13, 21, 38, 0.3);
     }
+
     ::-webkit-scrollbar-thumb {
       background: rgba(148, 163, 184, 0.25);
       border-radius: 99px;
     }
+
     ::-webkit-scrollbar-thumb:hover {
       background: rgba(148, 163, 184, 0.45);
     }
@@ -5985,7 +6062,7 @@
       animation: bubbleFloat 3s ease-in-out infinite;
       box-shadow: 0 4px 14px rgba(59, 130, 246, 0.05);
     }
-    
+
     .lumi-speech-bubble::before {
       content: "";
       position: absolute;
@@ -5997,7 +6074,7 @@
       display: block;
       width: 0;
     }
-    
+
     .lumi-speech-bubble::after {
       content: "";
       position: absolute;
@@ -6009,32 +6086,41 @@
       display: block;
       width: 0;
     }
-    
+
     body[data-theme="blue-pastel"] .lumi-speech-bubble {
       background: rgba(79, 158, 232, 0.08);
       border: 1px solid rgba(79, 158, 232, 0.3);
       color: #1e40af;
     }
-    
+
     body[data-theme="blue-pastel"] .lumi-speech-bubble::after {
       border-color: #ffffff transparent;
     }
 
     @keyframes bubbleFloat {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-3px); }
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-3px);
+      }
     }
 
     /* ── HOT TOPICS GRID ── */
     .hot-topics-card {
       margin-bottom: 24px;
     }
+
     .hot-topics-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 16px;
       margin-top: 18px;
     }
+
     .hot-topic-card {
       display: flex;
       align-items: center;
@@ -6048,31 +6134,37 @@
       color: var(--text);
       transition: all 0.25s ease;
     }
+
     .hot-topic-card:hover {
       background: linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(32, 231, 209, 0.08));
       border-color: rgba(32, 231, 209, 0.4);
       transform: translateY(-2px);
       box-shadow: 0 10px 24px rgba(32, 231, 209, 0.05);
     }
+
     .hot-topic-icon {
       font-size: 26px;
       flex-shrink: 0;
     }
+
     .hot-topic-body {
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
+
     .hot-topic-title {
       font-weight: 700;
       font-size: 15px;
       line-height: 1.35;
     }
+
     .hot-topic-meta {
       display: flex;
       gap: 8px;
       align-items: center;
     }
+
     .hot-topic-category,
     .hot-topic-tag {
       font-size: 11px;
@@ -6080,10 +6172,12 @@
       padding: 3px 8px;
       border-radius: 99px;
     }
+
     .hot-topic-category {
       background: rgba(59, 130, 246, 0.12);
       color: #93c5fd;
     }
+
     .hot-topic-tag {
       background: rgba(139, 92, 246, 0.12);
       color: #c084fc;
@@ -6093,14 +6187,17 @@
       background: #f8fbff;
       border: 1px solid rgba(123, 156, 190, 0.16);
     }
+
     body[data-theme="blue-pastel"] .hot-topic-card:hover {
       background: linear-gradient(135deg, #edf7ff, #e9f2ff);
       border-color: #7bbcf0;
     }
+
     body[data-theme="blue-pastel"] .hot-topic-category {
       background: #e0f2fe;
       color: #0369a1;
     }
+
     body[data-theme="blue-pastel"] .hot-topic-tag {
       background: #f3e8ff;
       color: #6b21a8;
@@ -6113,7 +6210,1136 @@
     }
 
     /* ── LUXURY PROGRESS DASHBOARD STYLING OVERHAUL ── */
+
+    /* Luxury Outstanding Comparison Banner */
+    .comparison-banner {
+      display: flex !important;
+      align-items: center !important;
+      gap: 16px !important;
+      padding: 18px 24px !important;
+      border-radius: 20px !important;
+      background: linear-gradient(135deg, rgba(139, 124, 255, 0.16) 0%, rgba(32, 231, 209, 0.1) 100%) !important;
+      border: 1px solid rgba(139, 124, 255, 0.35) !important;
+      box-shadow: 0 10px 30px rgba(139, 124, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+      margin-bottom: 24px !important;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+      cursor: default;
+    }
     
+    .comparison-banner:hover {
+      transform: translateY(-2px) scale(1.01) !important;
+      border-color: rgba(32, 231, 209, 0.6) !important;
+      box-shadow: 0 14px 36px rgba(32, 231, 209, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    }
+    
+    body[data-theme="blue-pastel"] .comparison-banner {
+      background: linear-gradient(135deg, rgba(79, 158, 232, 0.12) 0%, rgba(13, 148, 136, 0.08) 100%) !important;
+      border-color: rgba(79, 158, 232, 0.3) !important;
+      box-shadow: 0 10px 30px rgba(79, 158, 232, 0.08) !important;
+    }
+    
+    .comparison-banner .banner-icon {
+      font-size: 28px !important;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.15)) !important;
+      animation: floatSmooth 3s ease-in-out infinite !important;
+    }
+    
+    .comparison-banner .banner-text {
+      font-size: 15px !important;
+      font-weight: 800 !important;
+      color: #fff !important;
+      flex-grow: 1;
+    }
+    
+    body[data-theme="blue-pastel"] .comparison-banner .banner-text {
+      color: #1e293b !important;
+    }
+    
+    .comparison-banner .banner-delta {
+      font-size: 22px !important;
+      font-weight: 900 !important;
+      padding: 4px 14px !important;
+      border-radius: 12px !important;
+      letter-spacing: -0.02em !important;
+    }
+    
+    .comparison-banner .banner-delta.up {
+      background: rgba(52, 211, 153, 0.18) !important;
+      border: 1px solid rgba(52, 211, 153, 0.4) !important;
+      color: #34d399 !important;
+      text-shadow: 0 0 8px rgba(52, 211, 153, 0.3) !important;
+    }
+    
+    .comparison-banner .banner-delta.down {
+      background: rgba(251, 113, 133, 0.18) !important;
+      border: 1px solid rgba(251, 113, 133, 0.4) !important;
+      color: #fb7185 !important;
+      text-shadow: 0 0 8px rgba(251, 113, 133, 0.3) !important;
+    }
+    
+    .comparison-banner .banner-delta.same {
+      background: rgba(148, 163, 184, 0.15) !important;
+      border: 1px solid rgba(148, 163, 184, 0.3) !important;
+      color: var(--muted) !important;
+    }
+    
+    /* 4 Metric Cards Title Badges */
+    .metric-label-badge-wrap {
+      margin-bottom: 16px !important;
+    }
+    
+    .metric-label-badge {
+      display: inline-block !important;
+      font-size: 12px !important;
+      font-weight: 900 !important;
+      padding: 4px 10px !important;
+      border-radius: 99px !important;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.02em !important;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15) !important;
+      cursor: default;
+      white-space: nowrap !important;
+    }
+    
+    .metric-label-badge:hover {
+      transform: scale(1.06) translateY(-1px) !important;
+    }
+
+    #progress-total-sessions {
+      font-size: 44px !important;
+    }
+    #progress-completed-sessions {
+      font-size: 14px !important;
+    }
+    
+    .card-title-sessions {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(96, 165, 250, 0.15) 100%) !important;
+      border-color: rgba(59, 130, 246, 0.4) !important;
+      color: #60a5fa !important;
+    }
+    .card-title-sessions:hover {
+      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%) !important;
+      border-color: #60a5fa !important;
+      color: #fff !important;
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.45) !important;
+    }
+    
+    .card-title-cer {
+      background: linear-gradient(135deg, rgba(32, 231, 209, 0.15) 0%, rgba(13, 148, 136, 0.15) 100%) !important;
+      border-color: rgba(32, 231, 209, 0.4) !important;
+      color: #20e7d1 !important;
+    }
+    .card-title-cer:hover {
+      background: linear-gradient(135deg, #20e7d1 0%, #0d9488 100%) !important;
+      border-color: #20e7d1 !important;
+      color: #fff !important;
+      box-shadow: 0 0 15px rgba(32, 231, 209, 0.45) !important;
+    }
+    
+    .card-title-rank {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(167, 139, 250, 0.15) 100%) !important;
+      border-color: rgba(139, 92, 246, 0.4) !important;
+      color: #c084fc !important;
+    }
+    .card-title-rank:hover {
+      background: linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%) !important;
+      border-color: #c084fc !important;
+      color: #fff !important;
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.45) !important;
+    }
+    
+    .card-title-skills {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(251, 113, 133, 0.15) 100%) !important;
+      border-color: rgba(245, 158, 11, 0.4) !important;
+      color: #fbbf24 !important;
+    }
+    .card-title-skills:hover {
+      background: linear-gradient(135deg, #f59e0b 0%, #facc15 100%) !important;
+      border-color: #facc15 !important;
+      color: #fff !important;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.45) !important;
+    }
+    
+    body[data-theme="blue-pastel"] .card-title-sessions {
+      color: #1d4ed8 !important;
+      border-color: rgba(29, 78, 216, 0.3) !important;
+    }
+    body[data-theme="blue-pastel"] .card-title-cer {
+      color: #0f766e !important;
+      border-color: rgba(15, 118, 110, 0.3) !important;
+    }
+    body[data-theme="blue-pastel"] .card-title-rank {
+      color: #6d28d9 !important;
+      border-color: rgba(109, 40, 217, 0.3) !important;
+    }
+    body[data-theme="blue-pastel"] .card-title-skills {
+      color: #b45309 !important;
+      border-color: rgba(180, 83, 9, 0.3) !important;
+    }
+    
+    /* CER Comparative Sparkline Mini Bars */
+    .compare-chart-container {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 12px !important;
+      margin-top: 14px !important;
+      padding-top: 12px !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+    body[data-theme="blue-pastel"] .compare-chart-container {
+      border-top-color: rgba(0, 0, 0, 0.05) !important;
+    }
+    .compare-mini-chart {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 4px !important;
+    }
+    .compare-mini-chart .chart-label {
+      font-size: 10px !important;
+      font-weight: 800 !important;
+      color: var(--muted-2) !important;
+      text-transform: uppercase !important;
+    }
+    .mini-bar-compare {
+      height: 6px !important;
+      background: rgba(255, 255, 255, 0.06) !important;
+      border-radius: 99px !important;
+      overflow: hidden !important;
+    }
+    body[data-theme="blue-pastel"] .mini-bar-compare {
+      background: rgba(0, 0, 0, 0.06) !important;
+    }
+    .mini-bar-compare span {
+      display: block !important;
+      height: 100% !important;
+      border-radius: inherit !important;
+      background: linear-gradient(90deg, #8b7cff, #20e7d1) !important;
+      transition: width 0.8s ease !important;
+    }
+    body[data-theme="blue-pastel"] .mini-bar-compare span {
+      background: linear-gradient(90deg, #6d28d9, #0284c7) !important;
+    }
+    .compare-mini-chart .chart-value {
+      font-size: 12px !important;
+      font-weight: 900 !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 4px !important;
+    }
+    
+    /* Sessions Breakdown Distribution styles */
+    .sessions-breakdown {
+      margin-top: 10px;
+    }
+
+    .mini-chart-path {
+      stroke-dasharray: 600;
+      stroke-dashoffset: 600;
+      animation: drawMiniPath 1.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes drawMiniPath {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    .mini-chart-node, .mini-chart-node-glow {
+      transform-origin: center;
+      animation: popMiniNode 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes popMiniNode {
+      from { transform: scale(0); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    
+    /* Practiced Topics Icon Hover Movement */
+    .topic-progress-row:hover .topic-row-icon {
+      transform: scale(1.08) !important;
+      box-shadow: 0 4px 14px rgba(139, 124, 255, 0.2) !important;
+      border-color: rgba(139, 124, 255, 0.5) !important;
+    }
+    .topic-row-icon {
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    }
+    .topic-icon-bounce {
+      display: inline-block !important;
+      animation: floatSmooth 2.5s ease-in-out infinite !important;
+    }
+    
+    @keyframes floatSmooth {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    
+    /* Clickable mode tag & tooltip in practiced topics */
+    .topic-tag-badge.mode.clickable {
+      position: relative;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+    }
+    
+    .topic-tag-badge.mode.clickable:hover {
+      background: rgba(96, 165, 250, 0.35) !important;
+      border-color: rgba(96, 165, 250, 0.6) !important;
+      box-shadow: 0 0 10px rgba(96, 165, 250, 0.4) !important;
+      transform: scale(1.05);
+    }
+    
+    .topic-tag-badge.mode.clickable::after {
+      content: "Nhấn để luyện thêm Chế độ " attr(data-mode-name);
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(96, 165, 250, 0.98));
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(32, 231, 209, 0.5);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), 0 0 10px rgba(32, 231, 209, 0.25);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+      z-index: 100;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    
+    .topic-tag-badge.mode.clickable:hover::after {
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+    }
+    
+    .topic-tag-badge.mode.clickable::before {
+      content: "";
+      position: absolute;
+      bottom: 110%;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      border-width: 6px;
+      border-style: solid;
+      border-color: rgba(32, 231, 209, 0.5) transparent transparent transparent;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+      z-index: 100;
+    }
+    
+    .topic-tag-badge.mode.clickable:hover::before {
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+    }
+    
+    body[data-theme="blue-pastel"] .topic-tag-badge.mode.clickable::after {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(79, 158, 232, 0.98));
+      border-color: rgba(79, 158, 232, 0.6);
+      color: #111827;
+      box-shadow: 0 4px 15px rgba(79, 158, 232, 0.15);
+    }
+    
+    body[data-theme="blue-pastel"] .topic-tag-badge.mode.clickable::before {
+      border-color: rgba(79, 158, 232, 0.6) transparent transparent transparent;
+    }
+    
+    /* Goal Step Hover and Clickable polish */
+    .goal-step {
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.28s ease, border-color 0.28s ease, background 0.28s ease !important;
+    }
+    .goal-step:hover {
+      transform: translateY(-4px) scale(1.02) !important;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.3) !important;
+    }
+    .goal-step.interactive {
+      cursor: default !important;
+    }
+    
+    /* Goal progress bar tooltip */
+    .goal-step .mini-bar {
+      position: relative;
+      cursor: pointer;
+    }
+    
+    .goal-step .mini-bar::after {
+      content: attr(data-pct);
+      position: absolute;
+      bottom: 160%;
+      left: 50%;
+      transform: translate(-50%, 6px) scale(0.9);
+      background: linear-gradient(135deg, #8b7cff, #20e7d1);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 800;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-shadow: 0 4px 15px rgba(139, 124, 255, 0.4);
+      z-index: 10;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .goal-step .mini-bar:hover::after {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+    }
+    
+    .goal-step .mini-bar::before {
+      content: "";
+      position: absolute;
+      bottom: 130%;
+      left: 50%;
+      transform: translate(-50%, 4px) scale(0.9);
+      border-width: 5px;
+      border-style: solid;
+      border-color: rgba(139, 124, 255, 0.8) transparent transparent transparent;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+      z-index: 10;
+    }
+    
+    .goal-step .mini-bar:hover::before {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+    }
+    
+    body[data-theme="blue-pastel"] .goal-step .mini-bar::after {
+      background: linear-gradient(135deg, #1c7ed6, #0ca678);
+      box-shadow: 0 4px 15px rgba(28, 126, 214, 0.2);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+    
+    body[data-theme="blue-pastel"] .goal-step .mini-bar::before {
+      border-color: rgba(28, 126, 214, 0.8) transparent transparent transparent;
+    }
+
+    /* Overrides for C-E-R click actions, SVG hover interactions, and achievement tracking */
+    .clickable-cer-chip {
+      cursor: pointer !important;
+      background: linear-gradient(135deg, rgba(32, 231, 209, 0.15) 0%, rgba(139, 124, 255, 0.15) 100%) !important;
+      border: 1px solid rgba(32, 231, 209, 0.4) !important;
+      color: #20e7d1 !important;
+      box-shadow: 0 0 10px rgba(32, 231, 209, 0.15) !important;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+      position: relative;
+      overflow: hidden;
+      font-weight: 800;
+      padding: 6px 14px !important;
+      border-radius: 99px !important;
+    }
+
+    .clickable-cer-chip:hover {
+      transform: scale(1.08) translateY(-1px) !important;
+      border-color: #8b7cff !important;
+      color: #fff !important;
+      box-shadow: 0 0 15px rgba(139, 124, 255, 0.45) !important;
+      background: linear-gradient(135deg, #20e7d1 0%, #8b7cff 100%) !important;
+    }
+
+    /* Category Pill Clickable & Tooltip */
+    .topic-tag-badge.category.clickable {
+      position: relative;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .topic-tag-badge.category.clickable:hover {
+      background: rgba(139, 124, 255, 0.35) !important;
+      border-color: rgba(139, 124, 255, 0.6) !important;
+      box-shadow: 0 0 10px rgba(139, 124, 255, 0.4) !important;
+      transform: scale(1.05);
+    }
+
+    .topic-tag-badge.category.clickable::after {
+      content: "Nhấn để luyện thêm " attr(data-category);
+      position: absolute;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(139, 124, 255, 0.98));
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(32, 231, 209, 0.5);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      white-space: nowrap;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), 0 0 10px rgba(32, 231, 209, 0.25);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+      z-index: 100;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+
+    .topic-tag-badge.category.clickable:hover::after {
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+    }
+
+    .topic-tag-badge.category.clickable::before {
+      content: "";
+      position: absolute;
+      bottom: 110%;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      border-width: 6px;
+      border-style: solid;
+      border-color: rgba(32, 231, 209, 0.5) transparent transparent transparent;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+      z-index: 100;
+    }
+
+    .topic-tag-badge.category.clickable:hover::before {
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+    }
+
+    body[data-theme="blue-pastel"] .topic-tag-badge.category.clickable::after {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(79, 158, 232, 0.98));
+      border-color: rgba(79, 158, 232, 0.6);
+      color: #111827;
+      box-shadow: 0 4px 15px rgba(79, 158, 232, 0.15);
+    }
+
+    body[data-theme="blue-pastel"] .topic-tag-badge.category.clickable::before {
+      border-color: rgba(79, 158, 232, 0.6) transparent transparent transparent;
+    }
+
+    /* Goal Meta Pill */
+    .goal-meta-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-right: 6px;
+      margin-top: 6px;
+      line-height: 1.4;
+      text-transform: none;
+      transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    }
+    .goal-meta-pill:hover {
+      transform: translateY(-2px) scale(1.05) !important;
+      box-shadow: 0 4px 12px rgba(139, 124, 255, 0.25) !important;
+    }
+
+    .goal-meta-pill.done {
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.25);
+      color: #a7f3d0;
+    }
+
+    .goal-meta-pill.current {
+      background: rgba(96, 165, 250, 0.1);
+      border: 1px solid rgba(96, 165, 250, 0.25);
+      color: #bfdbfe;
+    }
+
+    .goal-meta-pill.next {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      color: #fde68a;
+    }
+
+    body[data-theme="blue-pastel"] .goal-meta-pill.done {
+      background: rgba(52, 211, 153, 0.08);
+      border-color: rgba(52, 211, 153, 0.2);
+      color: #065f46;
+    }
+
+    body[data-theme="blue-pastel"] .goal-meta-pill.current {
+      background: rgba(96, 165, 250, 0.08);
+      border-color: rgba(96, 165, 250, 0.2);
+      color: #1e40af;
+    }
+
+    body[data-theme="blue-pastel"] .goal-meta-pill.next {
+      background: rgba(245, 158, 11, 0.08);
+      border-color: rgba(245, 158, 11, 0.2);
+      color: #92400e;
+    }
+
+    /* Radar SVG Hover Styles */
+    .hover-score-bubble {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translateY(4px);
+      transform-origin: center;
+    }
+
+    .radar-interactive-node:hover .hover-score-bubble,
+    .radar-interactive-vertex:hover .hover-score-bubble {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .radar-interactive-node:hover .outer-dot {
+      r: 12px;
+      opacity: 0.65;
+    }
+
+    .radar-interactive-node:hover .node-center {
+      r: 7px;
+    }
+
+    .radar-interactive-vertex:hover .outer-vertex-dot {
+      r: 7px;
+      fill: var(--vertex-color, rgba(32, 231, 209, 0.6));
+      fill-opacity: 0.8;
+    }
+
+    @keyframes radarPulse {
+      0% {
+        stroke-width: 3.5;
+        filter: drop-shadow(0 0 2px rgba(139, 124, 255, 0.5));
+      }
+
+      50% {
+        stroke-width: 4.5;
+        filter: drop-shadow(0 0 8px rgba(32, 231, 209, 0.8));
+      }
+
+      100% {
+        stroke-width: 3.5;
+        filter: drop-shadow(0 0 2px rgba(139, 124, 255, 0.5));
+      }
+    }
+
+    .radar-polygon {
+      animation: radarPulse 3s infinite ease-in-out;
+    }
+
+    /* Radar Custom Legend Cards */
+    .radar-legend-container {
+      margin-top: 18px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+
+    .radar-legend-card {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      user-select: none;
+    }
+
+    body[data-theme="blue-pastel"] .radar-legend-card {
+      background: rgba(0, 0, 0, 0.02);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .radar-legend-card:hover {
+      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    body[data-theme="blue-pastel"] .radar-legend-card:hover {
+      background: rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 15px rgba(79, 158, 232, 0.08);
+    }
+
+    .radar-legend-card.luan-diem:hover {
+      border-color: rgba(139, 124, 255, 0.5);
+      box-shadow: 0 0 10px rgba(139, 124, 255, 0.25);
+    }
+
+    .radar-legend-card.bang-chung:hover {
+      border-color: rgba(32, 231, 209, 0.5);
+      box-shadow: 0 0 10px rgba(32, 231, 209, 0.25);
+    }
+
+    .radar-legend-card.lap-luan:hover {
+      border-color: rgba(96, 165, 250, 0.5);
+      box-shadow: 0 0 10px rgba(96, 165, 250, 0.25);
+    }
+
+    .radar-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .radar-legend-text {
+      font-size: 13px;
+      font-weight: 750;
+      color: var(--text);
+    }
+
+    /* Trend Hover Tooltip HTML Card */
+    .trend-hover-tooltip {
+      position: absolute;
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(139, 124, 255, 0.45);
+      border-radius: 12px;
+      padding: 12px 14px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45), 0 0 15px rgba(139, 124, 255, 0.15);
+      pointer-events: none;
+      z-index: 1000;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      width: 240px;
+      transform: translate(-50%, -112%) scale(0.95);
+      opacity: 0;
+    }
+
+    body[data-theme="blue-pastel"] .trend-hover-tooltip {
+      background: rgba(255, 255, 255, 0.96);
+      border-color: rgba(79, 158, 232, 0.5);
+      box-shadow: 0 12px 36px rgba(79, 158, 232, 0.12);
+    }
+
+    .trend-hover-tooltip.active {
+      opacity: 1;
+      transform: translate(-50%, -112%) scale(1);
+    }
+
+    .trend-hover-tooltip.hidden {
+      display: none;
+    }
+
+    .trend-hover-tooltip .tooltip-title {
+      font-weight: 850;
+      font-size: 13px;
+      color: #fff;
+      margin-bottom: 4px;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    body[data-theme="blue-pastel"] .trend-hover-tooltip .tooltip-title {
+      color: #111827;
+    }
+
+    .trend-hover-tooltip .tooltip-meta {
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+
+    .trend-hover-tooltip .tooltip-score-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .trend-hover-tooltip .tooltip-score-label {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    body[data-theme="blue-pastel"] .trend-hover-tooltip .tooltip-score-label {
+      color: #4b5563;
+    }
+
+    .trend-hover-tooltip .tooltip-score-val {
+      color: #20e7d1;
+      font-weight: 900;
+    }
+
+    body[data-theme="blue-pastel"] .trend-hover-tooltip .tooltip-score-val {
+      color: #0284c7;
+    }
+
+    .trend-hover-tooltip .tooltip-progress-bar {
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    body[data-theme="blue-pastel"] .trend-hover-tooltip .tooltip-progress-bar {
+      background: rgba(0, 0, 0, 0.06);
+    }
+
+    .trend-hover-tooltip .tooltip-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #8b7cff, #20e7d1);
+      width: 0;
+      transition: width 0.3s ease;
+    }
+
+    body[data-theme="blue-pastel"] .trend-hover-tooltip .tooltip-progress-fill {
+      background: linear-gradient(90deg, #6d28d9, #0284c7);
+    }
+
+    /* Practiced Topics Layout Overrides */
+    .topic-progress {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+      margin-top: 20px !important;
+      width: 100% !important;
+    }
+
+    .topic-progress-row {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding: 16px 24px !important;
+      border-radius: 16px !important;
+      background: rgba(15, 23, 42, 0.45) !important;
+      border: 1px solid rgba(255, 255, 255, 0.06) !important;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+      position: relative;
+      overflow: hidden;
+      gap: 24px;
+      cursor: default;
+    }
+
+    body[data-theme="blue-pastel"] .topic-progress-row {
+      background: rgba(255, 255, 255, 0.8) !important;
+      border: 1px solid rgba(123, 156, 190, 0.18) !important;
+    }
+
+    .topic-progress-row:hover {
+      transform: translateY(-4px) scale(1.01) !important;
+      background: rgba(15, 23, 42, 0.55) !important;
+      border-color: rgba(139, 124, 255, 0.4) !important;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3), 0 0 15px rgba(139, 124, 255, 0.15) !important;
+    }
+
+    body[data-theme="blue-pastel"] .topic-progress-row:hover {
+      transform: translateY(-4px) scale(1.01) !important;
+      background: rgba(255, 255, 255, 0.95) !important;
+      border-color: rgba(123, 156, 190, 0.45) !important;
+      box-shadow: 0 10px 25px rgba(139, 124, 255, 0.12) !important;
+    }
+
+    .topic-row-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .topic-row-icon {
+      font-size: 20px;
+      background: rgba(139, 124, 255, 0.1);
+      padding: 8px 10px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(139, 124, 255, 0.2);
+    }
+
+    body[data-theme="blue-pastel"] .topic-row-icon {
+      background: rgba(109, 40, 217, 0.05);
+      border-color: rgba(109, 40, 217, 0.15);
+    }
+
+    .topic-row-main-info {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .topic-row-title {
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .topic-tags-container {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .topic-tag-badge {
+      padding: 2px 10px;
+      border-radius: 6px;
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .topic-tag-badge.category {
+      background: rgba(139, 124, 255, 0.15);
+      border: 1px solid rgba(139, 124, 255, 0.25);
+      color: #c084fc;
+    }
+
+    .topic-tag-badge.difficulty {
+      background: rgba(32, 231, 209, 0.15);
+      border: 1px solid rgba(32, 231, 209, 0.25);
+      color: #20e7d1;
+    }
+
+    .topic-tag-badge.mode {
+      background: rgba(96, 165, 250, 0.15);
+      border: 1px solid rgba(96, 165, 250, 0.25);
+      color: #60a5fa;
+    }
+
+    body[data-theme="blue-pastel"] .topic-tag-badge.category {
+      background: rgba(109, 40, 217, 0.08);
+      color: #6d28d9;
+      border-color: rgba(109, 40, 217, 0.18);
+    }
+
+    body[data-theme="blue-pastel"] .topic-tag-badge.difficulty {
+      background: rgba(2, 132, 199, 0.08);
+      color: #0284c7;
+      border-color: rgba(2, 132, 199, 0.18);
+    }
+
+    body[data-theme="blue-pastel"] .topic-tag-badge.mode {
+      background: rgba(13, 148, 136, 0.08);
+      color: #0d9488;
+      border-color: rgba(13, 148, 136, 0.18);
+    }
+
+    .topic-row-right {
+      display: flex;
+      align-items: center;
+      min-width: 150px;
+    }
+
+    .topic-row-score-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .topic-row-score-value {
+      font-size: 16px;
+      font-weight: 900;
+      color: #20e7d1;
+      text-align: right;
+    }
+
+    .topic-row-score-value .score-total {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    body[data-theme="blue-pastel"] .topic-row-score-value {
+      color: #0d9488;
+    }
+
+    .topic-row-progress-bar {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 99px;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    body[data-theme="blue-pastel"] .topic-row-progress-bar {
+      background: rgba(0, 0, 0, 0.06);
+    }
+
+    .topic-row-progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #8b7cff, #20e7d1);
+    }
+
+    body[data-theme="blue-pastel"] .topic-row-progress-fill {
+      background: linear-gradient(90deg, #6d28d9, #0284c7);
+    }
+
+    /* Target Milestone Achievement Cards Overrides */
+    .goal-step {
+      position: relative;
+      padding: 20px 24px !important;
+      border-radius: 16px !important;
+      background: rgba(15, 23, 42, 0.4) !important;
+      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+    }
+
+    body[data-theme="blue-pastel"] .goal-step {
+      background: rgba(255, 255, 255, 0.75) !important;
+      border: 1px solid rgba(123, 156, 190, 0.18) !important;
+    }
+
+    .goal-step:hover {
+      transform: translateY(-2px) scale(1.02) !important;
+      background: rgba(15, 23, 42, 0.55) !important;
+    }
+
+    .goal-step.done:hover,
+    .goal-step.done.interactive:hover {
+      box-shadow: 0 10px 30px rgba(52, 211, 153, 0.25), 0 0 15px rgba(52, 211, 153, 0.15) !important;
+      border-color: rgba(52, 211, 153, 0.6) !important;
+    }
+
+    .goal-step.current:hover,
+    .goal-step.current.interactive:hover {
+      box-shadow: 0 10px 30px rgba(96, 165, 250, 0.25), 0 0 15px rgba(96, 165, 250, 0.15) !important;
+      border-color: rgba(96, 165, 250, 0.6) !important;
+    }
+
+    .goal-step.next:hover,
+    .goal-step.next.interactive:hover {
+      box-shadow: 0 10px 30px rgba(245, 158, 11, 0.18), 0 0 15px rgba(245, 158, 11, 0.1) !important;
+      border-color: rgba(245, 158, 11, 0.5) !important;
+    }
+
+    body[data-theme="blue-pastel"] .goal-step:hover {
+      background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    body[data-theme="blue-pastel"] .goal-step.done:hover,
+    body[data-theme="blue-pastel"] .goal-step.done.interactive:hover {
+      box-shadow: 0 10px 25px rgba(52, 211, 153, 0.12) !important;
+      border-color: rgba(52, 211, 153, 0.45) !important;
+    }
+
+    body[data-theme="blue-pastel"] .goal-step.current:hover,
+    body[data-theme="blue-pastel"] .goal-step.current.interactive:hover {
+      box-shadow: 0 10px 25px rgba(96, 165, 250, 0.12) !important;
+      border-color: rgba(96, 165, 250, 0.45) !important;
+    }
+
+    body[data-theme="blue-pastel"] .goal-step.next:hover,
+    body[data-theme="blue-pastel"] .goal-step.next.interactive:hover {
+      box-shadow: 0 10px 25px rgba(245, 158, 11, 0.08) !important;
+      border-color: rgba(245, 158, 11, 0.35) !important;
+    }
+
+    .goal-step.done {
+      border-color: rgba(52, 211, 153, 0.35) !important;
+      background: linear-gradient(135deg, rgba(52, 211, 153, 0.05) 0%, rgba(15, 23, 42, 0.4) 100%) !important;
+      box-shadow: 0 0 15px rgba(52, 211, 153, 0.05);
+    }
+
+    body[data-theme="blue-pastel"] .goal-step.done {
+      background: linear-gradient(135deg, rgba(52, 211, 153, 0.08) 0%, rgba(255, 255, 255, 0.8) 100%) !important;
+    }
+
+    .goal-step.current {
+      border-color: rgba(96, 165, 250, 0.35) !important;
+      background: linear-gradient(135deg, rgba(96, 165, 250, 0.05) 0%, rgba(15, 23, 42, 0.4) 100%) !important;
+    }
+
+    body[data-theme="blue-pastel"] .goal-step.current {
+      background: linear-gradient(135deg, rgba(96, 165, 250, 0.08) 0%, rgba(255, 255, 255, 0.8) 100%) !important;
+    }
+
+    .goal-step.next {
+      border-color: rgba(245, 158, 11, 0.25) !important;
+    }
+
+    .goal-title {
+      font-size: 15px !important;
+      font-weight: 800 !important;
+      color: #fff !important;
+      margin-bottom: 4px;
+    }
+
+    body[data-theme="blue-pastel"] .goal-title {
+      color: #111827 !important;
+    }
+
+    .goal-meta {
+      font-size: 12px !important;
+      color: var(--muted) !important;
+      line-height: 1.45 !important;
+    }
+
+    .goal-pill {
+      font-size: 9px !important;
+      padding: 4px 10px !important;
+      border-radius: 6px !important;
+      font-weight: 900 !important;
+      letter-spacing: 0.05em !important;
+    }
+
+    .goal-pill.done {
+      background: rgba(52, 211, 153, 0.18) !important;
+      border: 1px solid rgba(52, 211, 153, 0.4) !important;
+      color: #34d399 !important;
+      box-shadow: 0 0 10px rgba(52, 211, 153, 0.2) !important;
+    }
+
+    .goal-pill.current {
+      background: rgba(59, 130, 246, 0.18) !important;
+      border: 1px solid rgba(59, 130, 246, 0.4) !important;
+      color: #60a5fa !important;
+    }
+
+    .goal-pill.next {
+      background: rgba(148, 163, 184, 0.1) !important;
+      border: 1px solid rgba(148, 163, 184, 0.2) !important;
+      color: var(--muted) !important;
+    }
+
+    .goal-action-btn {
+      align-self: flex-end;
+      padding: 6px 16px !important;
+      border-radius: 8px !important;
+      font-size: 10px !important;
+      font-weight: 800 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.05em !important;
+      background: linear-gradient(135deg, #8b7cff 0%, #3b82f6 100%) !important;
+      color: #fff !important;
+      border: 1px solid rgba(139, 124, 255, 0.3) !important;
+      cursor: pointer !important;
+      box-shadow: 0 4px 12px rgba(139, 124, 255, 0.2) !important;
+      transition: all 0.25s ease !important;
+      margin-top: 4px;
+      user-select: none;
+    }
+
+    .goal-action-btn:hover {
+      transform: scale(1.05) !important;
+      background: linear-gradient(135deg, #20e7d1 0%, #8b7cff 100%) !important;
+      box-shadow: 0 4px 15px rgba(32, 231, 209, 0.45) !important;
+      border-color: #20e7d1 !important;
+    }
+
+    .goal-step .mini-bar {
+      height: 4px !important;
+      border-radius: 99px !important;
+      background: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    body[data-theme="blue-pastel"] .goal-step .mini-bar {
+      background: rgba(0, 0, 0, 0.06) !important;
+    }
+
     /* 1. Metallic Animated Text Gradient for Main Title */
     #view-progress .page-title.animated-gradient {
       font-size: clamp(34px, 4.2vw, 50px) !important;
@@ -6136,10 +7362,15 @@
         padding-right: calc(min(230px, 28vw) + 32px) !important;
       }
     }
-    
+
     @keyframes premiumTextFlow {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 300% 50%; }
+      0% {
+        background-position: 0% 50%;
+      }
+
+      100% {
+        background-position: 300% 50%;
+      }
     }
 
     /* 2. Premium Grid Alignment (4 columns on wide screens) */
@@ -6149,13 +7380,13 @@
       gap: 20px !important;
       margin: 28px 0 34px !important;
     }
-    
+
     @media (max-width: 1200px) {
       #view-progress .metric-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
       }
     }
-    
+
     @media (max-width: 600px) {
       #view-progress .metric-grid {
         grid-template-columns: 1fr !important;
@@ -6175,7 +7406,7 @@
       overflow: hidden !important;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
-    
+
     body[data-theme="blue-pastel"] #view-progress .progress-card {
       background: rgba(255, 255, 255, 0.88) !important;
       border: 1px solid rgba(123, 156, 190, 0.22) !important;
@@ -6193,10 +7424,21 @@
     }
 
     /* Dynamic themed indicator strips & color properties */
-    #view-progress .metric-grid .progress-card:nth-child(1) { --accent-color: #3b82f6; }
-    #view-progress .metric-grid .progress-card:nth-child(2) { --accent-color: #20e7d1; }
-    #view-progress .metric-grid .progress-card:nth-child(3) { --accent-color: #8b5cf6; }
-    #view-progress .metric-grid .progress-card:nth-child(4) { --accent-color: #f5a623; }
+    #view-progress .metric-grid .progress-card:nth-child(1) {
+      --accent-color: #3b82f6;
+    }
+
+    #view-progress .metric-grid .progress-card:nth-child(2) {
+      --accent-color: #20e7d1;
+    }
+
+    #view-progress .metric-grid .progress-card:nth-child(3) {
+      --accent-color: #8b5cf6;
+    }
+
+    #view-progress .metric-grid .progress-card:nth-child(4) {
+      --accent-color: #f5a623;
+    }
 
     #view-progress .progress-card::before {
       content: "";
@@ -6209,7 +7451,7 @@
       opacity: 0.8;
       z-index: 2;
     }
-    
+
     #view-progress .progress-card::after {
       content: "";
       position: absolute;
@@ -6220,14 +7462,16 @@
       pointer-events: none;
       transition: opacity 0.3s ease;
     }
+
     #view-progress .progress-card:hover::after {
       opacity: 0.09;
     }
-    
+
     body[data-theme="blue-pastel"] #view-progress .progress-card::after {
       background: radial-gradient(circle at 50% 0%, var(--accent-color, #3b82f6), transparent 65%);
       opacity: 0.04;
     }
+
     body[data-theme="blue-pastel"] #view-progress .progress-card:hover::after {
       opacity: 0.08;
     }
@@ -6241,11 +7485,11 @@
       overflow: hidden;
       position: relative;
     }
-    
+
     body[data-theme="blue-pastel"] #view-progress .card-progress-bar-wrapper {
       background: rgba(123, 156, 190, 0.12);
     }
-    
+
     #view-progress .card-progress-bar {
       height: 100%;
       border-radius: inherit;
@@ -6262,6 +7506,7 @@
       gap: 8px !important;
       margin-top: 12px !important;
     }
+
     .compare-badge {
       font-size: 11px !important;
       font-weight: 700 !important;
@@ -6275,21 +7520,25 @@
       gap: 4px !important;
       transition: all 0.2s ease !important;
     }
+
     .compare-badge.up {
       background: rgba(16, 185, 129, 0.12) !important;
       color: #34d399 !important;
       border-color: rgba(16, 185, 129, 0.2) !important;
     }
+
     .compare-badge.down {
       background: rgba(239, 68, 68, 0.12) !important;
       color: #f87171 !important;
       border-color: rgba(239, 68, 68, 0.2) !important;
     }
+
     body[data-theme="blue-pastel"] .compare-badge.up {
       background: #e6fcf5 !important;
       color: #0ca678 !important;
       border-color: #c3fae8 !important;
     }
+
     body[data-theme="blue-pastel"] .compare-badge.down {
       background: #fff5f5 !important;
       color: #fa5252 !important;
@@ -6298,13 +7547,24 @@
 
     /* Rank Card & Pulse */
     @keyframes rankPulse {
-      0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 6px var(--glow-color, rgba(139, 92, 246, 0.4))); }
-      50% { transform: translateY(-3px) scale(1.08); filter: drop-shadow(0 0 14px var(--glow-color, rgba(139, 92, 246, 0.7))); }
+
+      0%,
+      100% {
+        transform: translateY(0) scale(1);
+        filter: drop-shadow(0 0 6px var(--glow-color, rgba(139, 92, 246, 0.4)));
+      }
+
+      50% {
+        transform: translateY(-3px) scale(1.08);
+        filter: drop-shadow(0 0 14px var(--glow-color, rgba(139, 92, 246, 0.7)));
+      }
     }
+
     .progress-rank-card {
       position: relative;
       overflow: hidden;
     }
+
     .progress-rank-card::before {
       content: "";
       position: absolute;
@@ -6323,31 +7583,37 @@
       gap: 12px !important;
       margin-top: 8px !important;
     }
+
     .skill-analysis-row {
       display: flex !important;
       flex-direction: column !important;
       padding: 12px 16px !important;
       border-radius: var(--radius-sm, 12px) !important;
       border: 1px solid rgba(255, 255, 255, 0.04) !important;
-      border-left: 4px solid var(--border-color, rgba(255,255,255,0.2)) !important;
+      border-left: 4px solid var(--border-color, rgba(255, 255, 255, 0.2)) !important;
       transition: all 0.25s ease !important;
     }
+
     .skill-analysis-row.strong {
       --border-color: var(--success, #10b981);
       background: linear-gradient(90deg, rgba(16, 185, 129, 0.06), rgba(16, 185, 129, 0.01)) !important;
     }
+
     .skill-analysis-row.weak {
       --border-color: var(--pink, #fb7185);
       background: linear-gradient(90deg, rgba(251, 113, 133, 0.06), rgba(251, 113, 133, 0.01)) !important;
     }
+
     .skill-analysis-row:hover {
       transform: translateX(4px) !important;
       border-left-width: 6px !important;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
     }
+
     .skill-analysis-row.strong:hover {
       background: linear-gradient(90deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.02)) !important;
     }
+
     .skill-analysis-row.weak:hover {
       background: linear-gradient(90deg, rgba(251, 113, 133, 0.1), rgba(251, 113, 133, 0.02)) !important;
     }
@@ -6357,22 +7623,27 @@
       background: linear-gradient(90deg, rgba(12, 166, 120, 0.06), rgba(12, 166, 120, 0.01)) !important;
       border-color: rgba(12, 166, 120, 0.1) !important;
     }
+
     body[data-theme="blue-pastel"] .skill-analysis-row.weak {
       --border-color: #fa5252;
       background: linear-gradient(90deg, rgba(250, 82, 82, 0.06), rgba(250, 82, 82, 0.01)) !important;
       border-color: rgba(250, 82, 82, 0.1) !important;
     }
+
     body[data-theme="blue-pastel"] .skill-analysis-row.strong:hover {
       background: linear-gradient(90deg, rgba(12, 166, 120, 0.1), rgba(12, 166, 120, 0.02)) !important;
     }
+
     body[data-theme="blue-pastel"] .skill-analysis-row.weak:hover {
       background: linear-gradient(90deg, rgba(250, 82, 82, 0.1), rgba(250, 82, 82, 0.02)) !important;
     }
+
     .skill-analysis-info {
       display: flex !important;
       justify-content: space-between !important;
       align-items: center !important;
     }
+
     .skill-analysis-label {
       font-size: 10px !important;
       font-weight: 800 !important;
@@ -6380,29 +7651,37 @@
       letter-spacing: 0.05em !important;
       color: var(--muted-2) !important;
     }
+
     .skill-analysis-label.strong {
       color: var(--success, #10b981) !important;
     }
+
     body[data-theme="blue-pastel"] .skill-analysis-label.strong {
       color: #0ca678 !important;
     }
+
     .skill-analysis-label.weak {
       color: var(--pink, #fb7185) !important;
     }
+
     body[data-theme="blue-pastel"] .skill-analysis-label.weak {
       color: #fa5252 !important;
     }
+
     .skill-analysis-value {
       font-size: 14px !important;
       font-weight: 800 !important;
       color: var(--text) !important;
     }
+
     .skill-analysis-value.weak {
       color: var(--pink, #fb7185) !important;
     }
+
     body[data-theme="blue-pastel"] .skill-analysis-value.weak {
       color: #fa5252 !important;
     }
+
     .skill-analysis-note {
       font-size: 11px !important;
       color: var(--muted) !important;
@@ -6425,18 +7704,21 @@
       background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
     }
+
     #view-progress .metric-grid .progress-card:nth-child(2) .metric-label {
       background: linear-gradient(135deg, #20e7d1, #08c8f6) !important;
       -webkit-background-clip: text !important;
       background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
     }
+
     #view-progress .metric-grid .progress-card:nth-child(3) .metric-label {
       background: linear-gradient(135deg, #8b5cf6, #d946ef) !important;
       -webkit-background-clip: text !important;
       background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
     }
+
     #view-progress .metric-grid .progress-card:nth-child(4) .metric-label {
       background: linear-gradient(135deg, #f5a623, #facc15) !important;
       -webkit-background-clip: text !important;
@@ -6450,25 +7732,28 @@
       background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
     }
+
     body[data-theme="blue-pastel"] #view-progress .metric-grid .progress-card:nth-child(2) .metric-label {
       background: linear-gradient(135deg, #0f766e, #0d9488) !important;
       -webkit-background-clip: text !important;
       background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
     }
+
     body[data-theme="blue-pastel"] #view-progress .metric-grid .progress-card:nth-child(3) .metric-label {
       background: linear-gradient(135deg, #6d28d9, #8b5cf6) !important;
       -webkit-background-clip: text !important;
       background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
     }
+
     body[data-theme="blue-pastel"] #view-progress .metric-grid .progress-card:nth-child(4) .metric-label {
       background: linear-gradient(135deg, #b45309, #d97706) !important;
       -webkit-background-clip: text !important;
       background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
     }
-    
+
     #view-progress .metric-value {
       font-size: 38px !important;
       font-weight: 800 !important;
@@ -6476,7 +7761,7 @@
       letter-spacing: -0.02em !important;
       line-height: 1.1 !important;
     }
-    
+
     #view-progress .metric-note {
       font-size: 13px !important;
       color: var(--muted) !important;
@@ -6485,7 +7770,9 @@
     }
 
     /* Roadmap, Targets, Category Breakdown and Gaps Styles */
-    .goal-step, .insight-item, .breakdown-row {
+    .goal-step,
+    .insight-item,
+    .breakdown-row {
       padding: 16px !important;
       border-radius: var(--radius-sm, 14px) !important;
       background: rgba(255, 255, 255, 0.02) !important;
@@ -6495,7 +7782,7 @@
       position: relative !important;
       overflow: hidden !important;
     }
-    
+
     body[data-theme="blue-pastel"] .goal-step,
     body[data-theme="blue-pastel"] .insight-item,
     body[data-theme="blue-pastel"] .breakdown-row {
@@ -6504,7 +7791,9 @@
     }
 
     /* Hover effect for interactive items */
-    .goal-step.interactive, 
+    .goal-step.interactive {
+      cursor: default !important;
+    }
     .breakdown-row.interactive {
       cursor: pointer !important;
     }
@@ -6516,18 +7805,19 @@
       background: rgba(255, 255, 255, 0.05) !important;
       box-shadow: 0 8px 24px rgba(32, 231, 209, 0.08) !important;
     }
-    
+
     body[data-theme="blue-pastel"] .goal-step.interactive:hover,
     body[data-theme="blue-pastel"] .breakdown-row.interactive:hover {
       border-color: rgba(59, 130, 246, 0.35) !important;
       background: rgba(255, 255, 255, 0.95) !important;
       box-shadow: 0 8px 24px rgba(79, 158, 232, 0.08) !important;
     }
-    
+
     /* Active target border animation for "current" priority steps */
     .goal-step.current {
       border-color: rgba(139, 92, 246, 0.3) !important;
     }
+
     .goal-step.current::before {
       content: "";
       position: absolute;
@@ -6548,29 +7838,37 @@
       background: var(--success, #10b981) !important;
     }
 
-    .goal-row, .insight-head, .breakdown-topline {
+    .goal-row,
+    .insight-head,
+    .breakdown-topline {
       display: flex !important;
       justify-content: space-between !important;
       align-items: flex-start !important;
       gap: 12px !important;
       margin-bottom: 8px !important;
     }
-    
-    .goal-title, .insight-title, .breakdown-title {
+
+    .goal-title,
+    .insight-title,
+    .breakdown-title {
       font-size: 14px !important;
       font-weight: 700 !important;
       color: var(--text) !important;
       line-height: 1.4 !important;
     }
-    
-    .goal-meta, .insight-text, .breakdown-meta {
+
+    .goal-meta,
+    .insight-text,
+    .breakdown-meta {
       font-size: 12px !important;
       color: var(--muted) !important;
       line-height: 1.5 !important;
       margin-top: 4px !important;
     }
 
-    .goal-pill, .insight-pill, .breakdown-pill {
+    .goal-pill,
+    .insight-pill,
+    .breakdown-pill {
       font-size: 10px !important;
       font-weight: 800 !important;
       text-transform: uppercase !important;
@@ -6578,14 +7876,22 @@
       padding: 3px 8px !important;
       border-radius: 99px !important;
       white-space: nowrap !important;
+      transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    }
+    .goal-pill:hover,
+    .insight-pill:hover,
+    .breakdown-pill:hover {
+      transform: translateY(-2px) scale(1.06) !important;
+      box-shadow: 0 4px 10px rgba(139, 124, 255, 0.2) !important;
     }
 
-    .goal-pill.done, .insight-pill.progress {
+    .goal-pill.done,
+    .insight-pill.progress {
       background: rgba(16, 185, 129, 0.12) !important;
       color: #34d399 !important;
       border: 1px solid rgba(16, 185, 129, 0.2) !important;
     }
-    
+
     body[data-theme="blue-pastel"] .goal-pill.done,
     body[data-theme="blue-pastel"] .insight-pill.progress {
       background: #e6fcf5 !important;
@@ -6593,7 +7899,8 @@
       border-color: #c3fae8 !important;
     }
 
-    .goal-pill.current, .breakdown-pill {
+    .goal-pill.current,
+    .breakdown-pill {
       background: rgba(59, 130, 246, 0.12) !important;
       color: #60a5fa !important;
       border: 1px solid rgba(59, 130, 246, 0.2) !important;
@@ -6606,14 +7913,16 @@
       border-color: #d0ebff !important;
     }
 
-    .goal-pill.next, .insight-pill.missing {
+    .goal-pill.next,
+    .insight-pill.missing {
       background: rgba(148, 163, 184, 0.1) !important;
       color: var(--muted) !important;
       border: 1px solid rgba(148, 163, 184, 0.15) !important;
     }
 
     /* Progress and breakdown bars */
-    .mini-bar, .breakdown-bar {
+    .mini-bar,
+    .breakdown-bar {
       height: 6px !important;
       border-radius: 99px !important;
       background: rgba(255, 255, 255, 0.05) !important;
@@ -6627,7 +7936,8 @@
       background: rgba(123, 156, 190, 0.12) !important;
     }
 
-    .mini-bar span, .breakdown-fill {
+    .mini-bar span,
+    .breakdown-fill {
       display: block !important;
       height: 100% !important;
       border-radius: inherit !important;
@@ -6657,17 +7967,19 @@
       opacity: 0;
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
       pointer-events: none;
+      cursor: pointer !important;
     }
-    
+
     body[data-theme="blue-pastel"] .goal-action-btn {
       background: rgba(59, 130, 246, 0.08) !important;
       border: 1px solid rgba(59, 130, 246, 0.2) !important;
       color: var(--blue, #3b82f6) !important;
     }
-    
+
     .goal-step.interactive:hover .goal-action-btn {
       opacity: 1;
       transform: translateY(-50%) scale(1);
+      pointer-events: auto !important;
     }
 
     .goal-step.interactive:hover {
@@ -6681,7 +7993,7 @@
       gap: 24px !important;
       margin-top: 24px !important;
     }
-    
+
     @media (max-width: 900px) {
       .progress-bottom-grid {
         grid-template-columns: 1fr !important;
@@ -6697,24 +8009,27 @@
       -webkit-background-clip: text !important;
       background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.06) !important;
       transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
       cursor: default;
     }
-    
+
     #view-progress .section-title:hover {
       transform: scale(1.02) translateX(2px) !important;
     }
-    
+
     .radar-card .section-title {
       background: linear-gradient(135deg, #c084fc 0%, #818cf8 100%) !important;
     }
+
     .trend-card .section-title {
       background: linear-gradient(135deg, #38bdf8 0%, #20e7d1 100%) !important;
     }
+
     .progress-bottom-grid .progress-card:first-child .section-title {
       background: linear-gradient(135deg, #34d399 0%, #059669 100%) !important;
     }
+
     .progress-bottom-grid .progress-card:last-child .section-title {
       background: linear-gradient(135deg, #fbbf24 0%, #f97316 100%) !important;
     }
@@ -6722,12 +8037,15 @@
     body[data-theme="blue-pastel"] .radar-card .section-title {
       background: linear-gradient(135deg, #6d28d9, #4f46e5) !important;
     }
+
     body[data-theme="blue-pastel"] .trend-card .section-title {
       background: linear-gradient(135deg, #0284c7, #0891b2) !important;
     }
+
     body[data-theme="blue-pastel"] .progress-bottom-grid .progress-card:first-child .section-title {
       background: linear-gradient(135deg, #059669, #0d9488) !important;
     }
+
     body[data-theme="blue-pastel"] .progress-bottom-grid .progress-card:last-child .section-title {
       background: linear-gradient(135deg, #d97706, #ea580c) !important;
     }
@@ -6741,6 +8059,7 @@
       padding-top: 12px !important;
       border-top: 1px solid var(--line-soft) !important;
     }
+
     .rank-legend-item {
       display: flex !important;
       align-items: center !important;
@@ -6756,6 +8075,7 @@
       min-height: 28px !important;
       white-space: nowrap !important;
     }
+
     .rank-legend-item::before {
       content: "";
       position: absolute;
@@ -6768,29 +8088,35 @@
       transition: opacity 0.25s ease;
       z-index: 1;
     }
+
     .rank-legend-item:hover::before {
       opacity: 1;
     }
+
     .rank-legend-item .rank-icon {
       font-size: 13px !important;
       transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
       z-index: 2;
       display: inline-block;
     }
+
     .rank-legend-item:hover .rank-icon {
       transform: scale(1.2) rotate(8deg) !important;
     }
-    .rank-legend-item > div {
+
+    .rank-legend-item>div {
       z-index: 2;
       display: flex !important;
       align-items: center !important;
       gap: 6px !important;
       white-space: nowrap !important;
     }
+
     .rank-legend-item .rank-desc {
       z-index: 2;
       white-space: nowrap !important;
     }
+
     /* Specific Glowing Themes per Rank */
     .rank-legend-item.rank-tap-su {
       --accent-color: #94a3b8;
@@ -6798,30 +8124,35 @@
       --border-glow: rgba(148, 163, 184, 0.25);
       --shadow-color: rgba(148, 163, 184, 0.1);
     }
+
     .rank-legend-item.rank-hung-bien {
       --accent-color: #20e7d1;
       --accent-glow: rgba(32, 231, 209, 0.06);
       --border-glow: rgba(32, 231, 209, 0.35);
       --shadow-color: rgba(32, 231, 209, 0.15);
     }
+
     .rank-legend-item.rank-master {
       --accent-color: #a78bfa;
       --accent-glow: rgba(167, 139, 250, 0.06);
       --border-glow: rgba(167, 139, 250, 0.35);
       --shadow-color: rgba(167, 139, 250, 0.2);
     }
+
     .rank-legend-item.rank-dai-kien-tuong {
       --accent-color: #facc15;
       --accent-glow: rgba(250, 204, 21, 0.06);
       --border-glow: rgba(250, 204, 21, 0.4);
       --shadow-color: rgba(250, 204, 21, 0.25);
     }
+
     .rank-legend-item:hover {
       transform: translateX(4px) !important;
       background: var(--accent-glow) !important;
       border-color: var(--border-glow) !important;
       box-shadow: 0 4px 12px var(--shadow-color) !important;
     }
+
     .rank-legend-item .rank-title {
       font-weight: 800 !important;
       font-size: 10px !important;
@@ -6831,49 +8162,54 @@
       letter-spacing: 0.02em;
       white-space: nowrap !important;
     }
+
     .rank-legend-item .rank-desc {
       font-size: 9.5px !important;
       color: var(--muted) !important;
       font-weight: 600 !important;
       letter-spacing: -0.01em;
     }
-    
+
     /* Light Mode Specific Glow overrides */
     body[data-theme="blue-pastel"] .rank-legend-item {
       background: rgba(123, 156, 190, 0.04) !important;
       border-color: rgba(123, 156, 190, 0.12) !important;
     }
+
     body[data-theme="blue-pastel"] .rank-legend-item.rank-tap-su {
       --accent-color: #475569;
       --accent-glow: rgba(71, 85, 105, 0.03);
       --border-glow: rgba(71, 85, 105, 0.2);
       --shadow-color: rgba(71, 85, 105, 0.08);
     }
+
     body[data-theme="blue-pastel"] .rank-legend-item.rank-hung-bien {
       --accent-color: #0b7285;
       --accent-glow: rgba(11, 114, 133, 0.03);
       --border-glow: rgba(11, 114, 133, 0.2);
       --shadow-color: rgba(11, 114, 133, 0.08);
     }
+
     body[data-theme="blue-pastel"] .rank-legend-item.rank-master {
       --accent-color: #6f2dbd;
       --accent-glow: rgba(111, 45, 189, 0.03);
       --border-glow: rgba(111, 45, 189, 0.2);
       --shadow-color: rgba(111, 45, 189, 0.08);
     }
+
     body[data-theme="blue-pastel"] .rank-legend-item.rank-dai-kien-tuong {
       --accent-color: #b28a00;
       --accent-glow: rgba(178, 138, 0, 0.03);
       --border-glow: rgba(178, 138, 0, 0.2);
       --shadow-color: rgba(178, 138, 0, 0.15);
     }
-    
+
     @media (max-width: 1024px) {
       #view-progress .progress-insight-grid {
         grid-template-columns: repeat(2, 1fr) !important;
       }
     }
-    
+
     @media (max-width: 700px) {
       #view-progress .progress-insight-grid {
         grid-template-columns: 1fr !important;
@@ -6887,16 +8223,41 @@
       opacity: 0;
       animation: progressFadeIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
     }
-    #view-progress .metric-grid .progress-card:nth-child(1) { animation-delay: 0.08s; }
-    #view-progress .metric-grid .progress-card:nth-child(2) { animation-delay: 0.16s; }
-    #view-progress .metric-grid .progress-card:nth-child(3) { animation-delay: 0.24s; }
-    #view-progress .metric-grid .progress-card:nth-child(4) { animation-delay: 0.32s; }
-    #view-progress .comparison-banner { animation-delay: 0.4s; }
-    #view-progress .progress-charts-grid { animation-delay: 0.48s; }
+
+    #view-progress .metric-grid .progress-card:nth-child(1) {
+      animation-delay: 0.08s;
+    }
+
+    #view-progress .metric-grid .progress-card:nth-child(2) {
+      animation-delay: 0.16s;
+    }
+
+    #view-progress .metric-grid .progress-card:nth-child(3) {
+      animation-delay: 0.24s;
+    }
+
+    #view-progress .metric-grid .progress-card:nth-child(4) {
+      animation-delay: 0.32s;
+    }
+
+    #view-progress .comparison-banner {
+      animation-delay: 0.4s;
+    }
+
+    #view-progress .progress-charts-grid {
+      animation-delay: 0.48s;
+    }
 
     @keyframes progressFadeIn {
-      from { opacity: 0; transform: translateY(18px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   </style>
   <link rel="stylesheet" href="styles/onboarding.css">
@@ -7259,7 +8620,8 @@
               <span class="soft-pill" style="background:rgba(239,68,68,0.12);color:#fca5a5">Chọn nhanh</span>
             </div>
             <div class="hot-topics-grid">
-              <button class="hot-topic-card" type="button" onclick="selectHotTopic('Học sinh có nên được dùng AI để làm bài tập?', 'Giáo dục', ['AI', 'Học tập'], event)">
+              <button class="hot-topic-card" type="button"
+                onclick="selectHotTopic('Học sinh có nên được dùng AI để làm bài tập?', 'Giáo dục', ['AI', 'Học tập'], event)">
                 <span class="hot-topic-icon">🤖</span>
                 <span class="hot-topic-body">
                   <span class="hot-topic-title">Học sinh có nên dùng AI để làm bài tập?</span>
@@ -7269,7 +8631,8 @@
                   </span>
                 </span>
               </button>
-              <button class="hot-topic-card" type="button" onclick="selectHotTopic('Có nên cấm mạng xã hội đối với trẻ em dưới 16 tuổi?', 'Xã hội', ['Mạng xã hội', 'Trẻ em'], event)">
+              <button class="hot-topic-card" type="button"
+                onclick="selectHotTopic('Có nên cấm mạng xã hội đối với trẻ em dưới 16 tuổi?', 'Xã hội', ['Mạng xã hội', 'Trẻ em'], event)">
                 <span class="hot-topic-icon">📱</span>
                 <span class="hot-topic-body">
                   <span class="hot-topic-title">Có nên cấm MXH đối với trẻ dưới 16 tuổi?</span>
@@ -7279,7 +8642,8 @@
                   </span>
                 </span>
               </button>
-              <button class="hot-topic-card" type="button" onclick="selectHotTopic('Có nên đánh thuế cực nặng vào túi nilon và nhựa dùng một lần?', 'Môi trường', ['Đời sống', 'Sinh thái'], event)">
+              <button class="hot-topic-card" type="button"
+                onclick="selectHotTopic('Có nên đánh thuế cực nặng vào túi nilon và nhựa dùng một lần?', 'Môi trường', ['Đời sống', 'Sinh thái'], event)">
                 <span class="hot-topic-icon">🌿</span>
                 <span class="hot-topic-body">
                   <span class="hot-topic-title">Có nên đánh thuế cực nặng túi nhựa dùng một lần?</span>
@@ -7289,7 +8653,8 @@
                   </span>
                 </span>
               </button>
-              <button class="hot-topic-card" type="button" onclick="selectHotTopic('Trường học có nên thi cử dạng dự án thực tế thay vì thi viết?', 'Giáo dục', ['Phương pháp', 'Thi cử'], event)">
+              <button class="hot-topic-card" type="button"
+                onclick="selectHotTopic('Trường học có nên thi cử dạng dự án thực tế thay vì thi viết?', 'Giáo dục', ['Phương pháp', 'Thi cử'], event)">
                 <span class="hot-topic-icon">🎓</span>
                 <span class="hot-topic-body">
                   <span class="hot-topic-title">Trường học có nên thi dạng dự án thay vì thi viết?</span>
@@ -7447,7 +8812,8 @@
             <div class="practice-mode-content">
               <span class="practice-mode-label">Chế độ luyện tập</span>
               <span class="practice-mode-title" id="practice-mode-title">Tranh biện tự do</span>
-              <span class="practice-mode-description" id="practice-mode-description">User vs AI, luân phiên phản biện</span>
+              <span class="practice-mode-description" id="practice-mode-description">User vs AI, luân phiên phản
+                biện</span>
             </div>
           </div>
 
@@ -7472,8 +8838,10 @@
                     <span id="voice-draft-status">Nhập bằng giọng nói</span>
                   </div>
                   <div class="voice-draft-actions">
-                    <button id="voice-draft-button" type="button" onclick="startVoiceDraft()" class="secondary-btn voice-draft-button">🎙 Nói</button>
-                    <button id="voice-retry-button" type="button" onclick="startVoiceDraft()" class="secondary-btn voice-draft-button hidden">Ghi lại</button>
+                    <button id="voice-draft-button" type="button" onclick="startVoiceDraft()"
+                      class="secondary-btn voice-draft-button">🎙 Nói</button>
+                    <button id="voice-retry-button" type="button" onclick="startVoiceDraft()"
+                      class="secondary-btn voice-draft-button hidden">Ghi lại</button>
                   </div>
                   <div class="voice-draft-note" id="voice-draft-note"></div>
                 </div>
@@ -7509,7 +8877,8 @@
                 <div id="ai-output" class="empty-message">Chờ lập luận đầu tiên của bạn. Huấn luyện viên AI sẽ phản biện
                   và giải thích điểm cần cải thiện.</div>
                 <div class="practice-next-row hidden" id="practice-next-row">
-                  <button class="practice-next-button" id="practice-next-button" type="button" data-practice-next>Tiếp theo →</button>
+                  <button class="practice-next-button" id="practice-next-button" type="button" data-practice-next>Tiếp
+                    theo →</button>
                 </div>
                 <div class="rebuttal-audio-box" id="rebuttal-audio-box" aria-live="polite">
                   <div class="rebuttal-audio-head">
@@ -7605,30 +8974,59 @@
           <!-- 4 metric cards -->
           <div class="metric-grid">
             <div class="progress-card">
-              <div class="metric-label">Tổng số phiên</div>
+              <div class="metric-label-badge-wrap">
+                <span class="metric-label-badge card-title-sessions">Tổng số phiên</span>
+              </div>
               <div class="metric-value" id="progress-total-sessions">0</div>
               <div class="metric-note" id="progress-completed-sessions">0 phiên hoàn tất</div>
-              <div class="card-progress-bar-wrapper"><div class="card-progress-bar" id="progress-sessions-bar" style="width: 0%"></div></div>
+              <!-- Sessions Mode breakdown -->
+              <div id="sessions-breakdown-container"></div>
             </div>
             <div class="progress-card">
-              <div class="metric-label">CER trung bình</div>
+              <div class="metric-label-badge-wrap">
+                <span class="metric-label-badge card-title-cer">CER trung bình</span>
+              </div>
               <div class="metric-value" id="progress-avg">0</div>
               <div class="metric-note" id="progress-streak">0 ngày liên tiếp</div>
-              <div class="card-progress-bar-wrapper"><div class="card-progress-bar" id="progress-avg-bar" style="width: 0%"></div></div>
-              <!-- Comparative Badges -->
-              <div class="compare-badge-container">
-                <span class="compare-badge" id="compare-weekly" title="So với trung bình tuần">Tuần: --</span>
-                <span class="compare-badge" id="compare-monthly" title="So với trung bình tháng">Tháng: --</span>
+              <!-- Visual Weekly/Monthly comparative sections with mini trend graphs -->
+              <div class="compare-vertical-container" style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px; width: 100%;">
+                <!-- Week Section -->
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 800;">
+                    <span style="color: var(--muted); text-transform: uppercase; font-size: 11px;">Tuần này</span>
+                    <span id="compare-weekly-text" style="color: var(--text); font-size: 13px; font-weight: 900;">--/100</span>
+                  </div>
+                  <div class="mini-bar-compare" style="height: 6px;"><span id="compare-weekly-bar" style="width: 0%"></span></div>
+                  <div id="compare-weekly-chart" style="height: 90px; margin-top: 8px;"></div>
+                </div>
+                <!-- Month Section -->
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 800;">
+                    <span style="color: var(--muted); text-transform: uppercase; font-size: 11px;">Tháng này</span>
+                    <span id="compare-monthly-text" style="color: var(--text); font-size: 13px; font-weight: 900;">--/100</span>
+                  </div>
+                  <div class="mini-bar-compare" style="height: 6px;"><span id="compare-monthly-bar" style="width: 0%"></span></div>
+                  <div id="compare-monthly-chart" style="height: 90px; margin-top: 8px;"></div>
+                </div>
               </div>
             </div>
             <div class="progress-card progress-rank-card">
-              <div class="metric-label">Hạng danh hiệu</div>
-              <div class="rank-name-container" style="display: flex; align-items: center; gap: 10px; min-height: 42px;">
-                <div class="metric-value" id="progress-rank-name" style="margin: 0 !important; line-height: 1 !important;">Tập sự</div>
-                <div class="skill-highlight" id="progress-rank-badge" style="font-size: 28px; animation: rankPulse 2s ease-in-out infinite; line-height: 1; display: inline-flex; align-items: center; justify-content: center; height: 32px; width: 32px;">🛡️</div>
+              <div class="metric-label-badge-wrap">
+                <span class="metric-label-badge card-title-rank">Hạng danh hiệu</span>
               </div>
-              <div class="metric-note" id="progress-rank-next" style="margin-top: 10px !important;">Cần thêm điểm để nâng hạng</div>
-              <div class="card-progress-bar-wrapper" style="margin-top: 14px !important;"><div class="card-progress-bar" id="progress-rank-bar" style="width: 0%; background: linear-gradient(90deg, var(--purple), var(--cyan));"></div></div>
+              <div class="rank-name-container" style="display: flex; align-items: center; gap: 10px; min-height: 42px;">
+                <div class="metric-value" id="progress-rank-name"
+                  style="margin: 0 !important; line-height: 1 !important;">Tập sự</div>
+                <div class="skill-highlight" id="progress-rank-badge"
+                  style="font-size: 28px; animation: rankPulse 2s ease-in-out infinite; line-height: 1; display: inline-flex; align-items: center; justify-content: center; height: 32px; width: 32px;">
+                  🛡️</div>
+              </div>
+              <div class="metric-note" id="progress-rank-next" style="margin-top: 10px !important;">Cần thêm điểm để
+                nâng hạng</div>
+              <div class="card-progress-bar-wrapper" style="margin-top: 14px !important;">
+                <div class="card-progress-bar" id="progress-rank-bar"
+                  style="width: 0%; background: linear-gradient(90deg, var(--purple), var(--cyan));"></div>
+              </div>
               <div class="rank-legend-grid">
                 <!-- Card 1: Tập sự -->
                 <div class="rank-legend-item rank-tap-su">
@@ -7665,28 +9063,44 @@
               </div>
             </div>
             <div class="progress-card">
-              <div class="metric-label">Phân tích kỹ năng</div>
+              <div class="metric-label-badge-wrap">
+                <span class="metric-label-badge card-title-skills">Phân tích kỹ năng</span>
+              </div>
               <div class="skill-analysis-rows">
                 <div class="skill-analysis-row strong">
-                  <div class="skill-analysis-info" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 12px;">
-                    <span class="skill-analysis-label strong" style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--success, #10b981);">Mạnh nhất</span>
-                    <strong class="skill-analysis-value" id="progress-strength" style="font-size: 14px; font-weight: 800; color: var(--text);">-</strong>
+                  <div class="skill-analysis-info"
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 12px;">
+                    <span class="skill-analysis-label strong"
+                      style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--success, #10b981);">Mạnh
+                      nhất</span>
+                    <strong class="skill-analysis-value" id="progress-strength"
+                      style="font-size: 14px; font-weight: 800; color: var(--text);">-</strong>
                   </div>
-                  <span id="progress-strength-note" class="skill-analysis-note" style="font-size: 11px; color: var(--muted); margin-top: 2px;">Chưa có dữ liệu</span>
+                  <span id="progress-strength-note" class="skill-analysis-note"
+                    style="font-size: 11px; color: var(--muted); margin-top: 2px;">Chưa có dữ liệu</span>
                 </div>
                 <div class="skill-analysis-row weak">
-                  <div class="skill-analysis-info" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 12px;">
-                    <span class="skill-analysis-label weak" style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--pink, #fb7185);">Cần luyện</span>
-                    <strong class="skill-analysis-value weak" id="progress-weakness" style="font-size: 14px; font-weight: 800; color: var(--pink, #fb7185);">-</strong>
+                  <div class="skill-analysis-info"
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 12px;">
+                    <span class="skill-analysis-label weak"
+                      style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--pink, #fb7185);">Cần
+                      luyện</span>
+                    <strong class="skill-analysis-value weak" id="progress-weakness"
+                      style="font-size: 14px; font-weight: 800; color: var(--pink, #fb7185);">-</strong>
                   </div>
-                  <span id="progress-weakness-note" class="skill-analysis-note" style="font-size: 11px; color: var(--muted); margin-top: 2px;">Chưa có dữ liệu</span>
+                  <span id="progress-weakness-note" class="skill-analysis-note"
+                    style="font-size: 11px; color: var(--muted); margin-top: 2px;">Chưa có dữ liệu</span>
                 </div>
               </div>
               <div style="display: none;">
                 <span id="progress-strength-chip"></span>
                 <span id="progress-weakness-chip"></span>
-                <div class="card-progress-bar-wrapper"><div class="card-progress-bar" id="progress-strength-bar" style="width: 0%"></div></div>
-                <div class="card-progress-bar-wrapper"><div class="card-progress-bar" id="progress-weakness-bar" style="width: 0%"></div></div>
+                <div class="card-progress-bar-wrapper">
+                  <div class="card-progress-bar" id="progress-strength-bar" style="width: 0%"></div>
+                </div>
+                <div class="card-progress-bar-wrapper">
+                  <div class="card-progress-bar" id="progress-weakness-bar" style="width: 0%"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -7701,26 +9115,55 @@
           <!-- Charts grid: Radar (left) + Trend (right) -->
           <div class="progress-charts-grid">
             <!-- Left: Radar / Spider Chart -->
-            <div class="progress-card radar-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="progress-card radar-card"
+              style="display: flex; flex-direction: column; justify-content: space-between;">
               <div class="panel-head">
                 <h2 class="section-title" style="margin:0">Radar kỹ năng</h2>
-                <span class="chip teal">C · E · R</span>
+                <button class="chip teal clickable-cer-chip" onclick="window.AIDebateKnowledge?.open()"
+                  title="Xem kiến thức CER là gì?">C · E · R</button>
               </div>
-              <div class="radar-container" id="radar-chart-container" style="display: flex; justify-content: center; align-items: center; flex-grow: 1;"></div>
-              <div class="chart-legend" id="radar-legend" style="margin-top: 12px; display: flex; justify-content: center; gap: 16px;">
-                <span class="legend-item"><span class="legend-dot" style="background:#8b7cff"></span>Luận điểm</span>
-                <span class="legend-item"><span class="legend-dot" style="background:#20e7d1"></span>Bằng chứng</span>
-                <span class="legend-item"><span class="legend-dot" style="background:#60a5fa"></span>Lập luận</span>
+              <div class="radar-container" id="radar-chart-container"
+                style="display: flex; justify-content: center; align-items: center; flex-grow: 1;"></div>
+              <div class="radar-legend-container" id="radar-legend">
+                <div class="radar-legend-card luan-diem" onclick="practiceSkill('claim')"
+                  title="Nhấn để luyện Luận điểm">
+                  <span class="radar-legend-dot" style="background: #8b7cff;"></span>
+                  <span class="radar-legend-text">Luận điểm</span>
+                </div>
+                <div class="radar-legend-card bang-chung" onclick="practiceSkill('evidence')"
+                  title="Nhấn để luyện Bằng chứng">
+                  <span class="radar-legend-dot" style="background: #20e7d1;"></span>
+                  <span class="radar-legend-text">Bằng chứng</span>
+                </div>
+                <div class="radar-legend-card lap-luan" onclick="practiceSkill('reasoning')"
+                  title="Nhấn để luyện Lập luận">
+                  <span class="radar-legend-dot" style="background: #60a5fa;"></span>
+                  <span class="radar-legend-text">Lập luận</span>
+                </div>
               </div>
             </div>
 
             <!-- Right: Trend Line Chart -->
-            <div class="progress-card trend-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="progress-card trend-card"
+              style="display: flex; flex-direction: column; justify-content: space-between;">
               <div class="panel-head">
                 <h2 class="section-title" style="margin:0">Xu hướng tiến bộ</h2>
-                <span class="chip teal" id="progress-sessions-chip">0 phiên</span>
+                <span class="chip teal clickable-cer-chip" id="progress-sessions-chip">0 phiên</span>
               </div>
-              <div class="chart" id="trend-chart-container" style="display: flex; align-items: center; justify-content: center; flex-grow: 1; min-height: 220px;"></div>
+              <div class="chart" id="trend-chart-container"
+                style="display: flex; align-items: center; justify-content: center; flex-grow: 1; min-height: 220px;">
+              </div>
+              <div id="trend-hover-tooltip" class="trend-hover-tooltip hidden">
+                <div class="tooltip-title" id="tooltip-title">Chủ đề</div>
+                <div class="tooltip-meta" id="tooltip-meta">Phân loại</div>
+                <div class="tooltip-score-row">
+                  <span class="tooltip-score-label">Điểm CER:</span>
+                  <span class="tooltip-score-val" id="tooltip-score">0/100</span>
+                </div>
+                <div class="tooltip-progress-bar">
+                  <div class="tooltip-progress-fill" id="tooltip-progress-fill"></div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -7729,8 +9172,11 @@
             <!-- Practiced Topics -->
             <div class="progress-card" style="display: flex; flex-direction: column; justify-content: space-between;">
               <div>
-                <h2 class="section-title" style="margin-top:0">Chủ đề đã luyện</h2>
-                <div class="topic-progress" id="progress-topics"></div>
+                <div class="panel-head">
+                  <h2 class="section-title" style="margin:0">Chủ đề đã luyện</h2>
+                  <span class="clickable-cer-chip" id="progress-topics-count-chip">0 chủ đề</span>
+                </div>
+                <div class="topic-progress" id="progress-topics" style="margin-top: 20px;"></div>
               </div>
             </div>
 
@@ -7739,7 +9185,7 @@
               <div>
                 <div class="panel-head">
                   <h2 class="section-title" style="margin:0">Mốc mục tiêu</h2>
-                  <span class="chip teal">Targets</span>
+                  <span class="clickable-cer-chip">Targets</span>
                 </div>
                 <div class="goal-track" id="progress-targets" style="margin-top: 20px;"></div>
               </div>
@@ -8035,6 +9481,14 @@
       "claim": "Luận điểm",
       "evidence": "Bằng chứng",
       "reasoning": "Lập luận",
+      "free_debate": "Tranh biện tự do",
+      "claim_writing": "Luyện viết Claim",
+      "find_evidence": "Luyện tìm Evidence",
+      "quick_rebuttal": "Phản biện nhanh",
+      "argument_building": "Xây dựng lập luận",
+      "full_argument": "Xây dựng lập luận",
+      "argument_builder": "Xây dựng lập luận",
+      "cer": "Xây dựng lập luận",
       "-": "-",
     };
 
@@ -8694,7 +10148,7 @@
         state.topicCategoryFilter = category;
       }
       resetTopicVisibleCount();
-    renderTopicExplorer();
+      renderTopicExplorer();
     }
 
     function setTopicDifficultyFilter(difficulty) {
@@ -10701,9 +12155,9 @@
 
     // ─── RADAR CHART (Vanilla SVG) ────────────────────────────────────────────
     function drawRadarChart(containerId, scores) {
-      const W = 320, H = 320;
+      const W = 360, H = 360;
       const cx = W / 2, cy = H / 2;
-      const maxR = 100;
+      const maxR = 95;
       const levels = 5;
       const axes = [
         { key: 'claim', label: 'Luận điểm', angle: -90, color: '#8b7cff' },
@@ -10719,12 +12173,12 @@
       let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">`;
       svg += `<defs>
       <radialGradient id="radarFill" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#8b7cff" stop-opacity="0.4"/>
-        <stop offset="60%" stop-color="#60a5fa" stop-opacity="0.2"/>
-        <stop offset="100%" stop-color="#20e7d1" stop-opacity="0.08"/>
+        <stop offset="0%" stop-color="#8b7cff" stop-opacity="0.55"/>
+        <stop offset="70%" stop-color="#60a5fa" stop-opacity="0.3"/>
+        <stop offset="100%" stop-color="#20e7d1" stop-opacity="0.1"/>
       </radialGradient>
       <filter id="radarGlow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#8b7cff" flood-opacity="0.25" />
+        <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#8b7cff" flood-opacity="0.35" />
       </filter>
       <filter id="nodeGlow" x="-50%" y="-50%" width="200%" height="200%">
         <feGaussianBlur stdDeviation="3" result="blur"/>
@@ -10756,27 +12210,52 @@
         return pt(a.angle, (val / 100) * maxR);
       });
       const dataPath = dataPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z';
-      svg += `<path d="${dataPath}" fill="url(#radarFill)" stroke="#8b7cff" stroke-width="3" stroke-linejoin="round" filter="url(#radarGlow)"/>`;
+      svg += `<path d="${dataPath}" class="radar-polygon" fill="url(#radarFill)" stroke="#8b7cff" stroke-width="3.5" stroke-linejoin="round" filter="url(#radarGlow)"/>`;
 
-      // Nodes on each axis
-      dataPoints.forEach((p, i) => {
-        svg += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="8" fill="${axes[i].color}" opacity="0.35" filter="url(#nodeGlow)"/>`;
-        svg += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" fill="${axes[i].color}"/>`;
-        svg += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2" fill="white"/>`;
+      // Interactive Vertices (Max 100 points) on outer ring
+      axes.forEach((a, i) => {
+        const end = pt(a.angle, maxR);
+        svg += `
+         <g class="radar-interactive-vertex" style="cursor: pointer;">
+           <circle cx="${end.x.toFixed(1)}" cy="${end.y.toFixed(1)}" r="16" fill="transparent" class="interactive-trigger"/>
+           <circle cx="${end.x.toFixed(1)}" cy="${end.y.toFixed(1)}" r="4" fill="rgba(255,255,255,0.2)" stroke="${a.color}" stroke-width="1.2" class="outer-vertex-dot" style="--vertex-color: ${a.color}"/>
+           <g class="hover-score-bubble">
+             <rect x="${(end.x - 22).toFixed(1)}" y="${(end.y - 32).toFixed(1)}" width="44" height="20" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke="${a.color}" stroke-width="1.5"/>
+             <text x="${end.x.toFixed(1)}" y="${(end.y - 18).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="900" fill="${a.color}" font-family="inherit">100</text>
+           </g>
+         </g>
+         `;
       });
 
-      // Labels
+      // Nodes on each axis (representing current scores)
+      dataPoints.forEach((p, i) => {
+        const val = Math.round(scores[axes[i].key] || 0);
+        svg += `
+        <g class="radar-interactive-node" style="cursor: pointer;">
+          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="18" fill="transparent" class="interactive-trigger"/>
+          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="8" fill="${axes[i].color}" opacity="0.35" filter="url(#nodeGlow)" class="outer-dot"/>
+          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" fill="${axes[i].color}" class="node-center"/>
+          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2" fill="white"/>
+          <g class="hover-score-bubble">
+            <rect x="${(p.x - 22).toFixed(1)}" y="${(p.y - 32).toFixed(1)}" width="44" height="20" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke="${axes[i].color}" stroke-width="1.5"/>
+            <text x="${p.x.toFixed(1)}" y="${(p.y - 18).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="900" fill="white" font-family="inherit">${val}</text>
+          </g>
+        </g>
+        `;
+      });
+
+      // Double-sized Labels & permanent score values below
       axes.forEach((a, i) => {
-        const labelR = maxR + 25;
+        const labelR = maxR + 38;
         const lp = pt(a.angle, labelR);
         const val = Math.round(scores[a.key] || 0);
         let dy = 0;
-        if (a.angle === -90) dy = -10;
-        else if (a.angle === 30) dy = 12;
-        else if (a.angle === 150) dy = 12;
+        if (a.angle === -90) dy = -16;
+        else if (a.angle === 30) dy = 16;
+        else if (a.angle === 150) dy = 16;
 
-        svg += `<text x="${lp.x.toFixed(1)}" y="${(lp.y + dy).toFixed(1)}" text-anchor="middle" font-size="12" fill="var(--text)" font-weight="700" font-family="inherit">${a.label}</text>`;
-        svg += `<text x="${lp.x.toFixed(1)}" y="${(lp.y + dy + 16).toFixed(1)}" text-anchor="middle" font-size="15" fill="${a.color}" font-weight="800" font-family="inherit">${val}</text>`;
+        svg += `<text x="${lp.x.toFixed(1)}" y="${(lp.y + dy).toFixed(1)}" text-anchor="middle" font-size="20" fill="var(--text)" font-weight="800" font-family="inherit">${a.label}</text>`;
+        svg += `<text x="${lp.x.toFixed(1)}" y="${(lp.y + dy + 28).toFixed(1)}" text-anchor="middle" font-size="26" fill="${a.color}" font-weight="900" font-family="inherit">${val}</text>`;
       });
 
       // Center dot
@@ -10827,7 +12306,7 @@
       [0, 25, 50, 75, 100].forEach(v => {
         const y = yOf(v);
         svg += `<line x1="${PAD.l}" y1="${y.toFixed(1)}" x2="${W - PAD.r}" y2="${y.toFixed(1)}" stroke="rgba(148,163,184,0.08)" stroke-width="1"/>`;
-        svg += `<text x="${PAD.l - 7}" y="${y.toFixed(1)}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="rgba(148,163,184,0.45)" font-family="inherit">${v}</text>`;
+        svg += `<text x="${PAD.l - 7}" y="${y.toFixed(1)}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="rgba(148,163,184,1)" font-weight="800" font-family="inherit">${v}</text>`;
       });
 
       // Generate Bezier path
@@ -10858,9 +12337,15 @@
         const x = xOf(i).toFixed(1), y = yOf(s).toFixed(1);
         const topicObj = sortedTopics[i];
         const topicName = typeof topicObj === 'object' && topicObj ? (topicObj.topic || "Không rõ") : String(topicObj);
+        const category = typeof topicObj === 'object' && topicObj ? (topicObj.category || "Chưa phân loại") : "Chưa phân loại";
+        const difficulty = typeof topicObj === 'object' && topicObj ? (topicObj.difficulty || "Trung bình") : "Trung bình";
+        const mode = typeof topicObj === 'object' && topicObj ? (topicObj.mode || "free_debate") : "free_debate";
+
         svg += `
-        <g class="chart-node" style="cursor: pointer;">
-          <title>Phiên #${i + 1}: ${topicName}\nĐiểm: ${Math.round(s)}/100</title>
+        <g class="chart-node" style="cursor: pointer;"
+           onmouseover="showTrendTooltip(event, '${escapeAttr(topicName)}', '${escapeAttr(category)}', '${escapeAttr(difficulty)}', '${escapeAttr(mode)}', ${Math.round(s)})"
+           onmouseout="hideTrendTooltip()">
+          <circle cx="${x}" cy="${y}" r="12" fill="#8b7cff" opacity="0.15"/>
           <circle cx="${x}" cy="${y}" r="8" fill="#8b7cff" opacity="0.25"/>
           <circle cx="${x}" cy="${y}" r="5" fill="#8b7cff" class="node-center"/>
           <circle cx="${x}" cy="${y}" r="2" fill="white"/>
@@ -10869,19 +12354,148 @@
         if (n <= 10) {
           // Alternate text position above and below the point to prevent overlap
           const isEven = i % 2 === 0;
-          const textY = isEven ? (yOf(s) - 14) : (yOf(s) + 20);
-          svg += `<text x="${x}" y="${textY.toFixed(1)}" text-anchor="middle" font-size="11" fill="var(--text)" font-weight="800" font-family="inherit" style="text-shadow: 0 1px 4px rgba(0,0,0,0.55);">${Math.round(s)}</text>`;
+          const textY = isEven ? (yOf(s) - 16) : (yOf(s) + 24);
+          svg += `<text x="${x}" y="${textY.toFixed(1)}" text-anchor="middle" font-size="20" fill="var(--text)" font-weight="900" font-family="inherit" style="text-shadow: 0 2px 6px rgba(0,0,0,0.65);">${Math.round(s)}</text>`;
         }
       });
 
       // X-axis labels (session index)
       scores.forEach((_, i) => {
         const x = xOf(i).toFixed(1);
-        svg += `<text x="${x}" y="${H - 6}" text-anchor="middle" font-size="10" fill="rgba(148,163,184,0.45)" font-family="inherit">#${i + 1}</text>`;
+        svg += `<text x="${x}" y="${H - 6}" text-anchor="middle" font-size="10" fill="rgba(148,163,184,1)" font-weight="800" font-family="inherit">#${i + 1}</text>`;
       });
 
       svg += '</svg>';
       el.innerHTML = svg;
+    }
+
+    function drawMiniTrendChart(containerId, scores, strokeColor = "#8b7cff", areaColor = "rgba(139,124,255,0.15)") {
+      const el = document.getElementById(containerId);
+      if (!el) return;
+      if (!scores || scores.length === 0) {
+        el.innerHTML = '<div style="font-size: 11px; color: var(--muted); text-align: center; padding: 10px 0;">Chưa có phiên nào</div>';
+        return;
+      }
+      if (scores.length === 1) {
+        scores = [scores[0], scores[0]];
+      }
+      
+      const W = el.clientWidth || 250;
+      const H = 90;
+      const PAD = { t: 22, r: 16, b: 18, l: 28 };
+      const plotW = W - PAD.l - PAD.r;
+      const plotH = H - PAD.t - PAD.b;
+      const n = scores.length;
+      
+      const xOf = i => PAD.l + (i / (n - 1)) * plotW;
+      const yOf = v => PAD.t + plotH - (v / 100) * plotH;
+
+      let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">`;
+      
+      const gradId = `miniGrad-${containerId}`;
+      const areaGradId = `miniAreaGrad-${containerId}`;
+      const glowId = `miniGlow-${containerId}`;
+      
+      svg += `<defs>
+        <linearGradient id="${gradId}" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="${strokeColor}" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="${strokeColor}"/>
+        </linearGradient>
+        <linearGradient id="${areaGradId}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${strokeColor}" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="${strokeColor}" stop-opacity="0.0"/>
+        </linearGradient>
+        <filter id="${glowId}" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="${strokeColor}" flood-opacity="0.4" />
+        </filter>
+      </defs>`;
+
+      // Horizontal grid lines (50, 100)
+      [50, 100].forEach(v => {
+        const y = yOf(v);
+        svg += `<line x1="${PAD.l}" y1="${y.toFixed(1)}" x2="${W - PAD.r}" y2="${y.toFixed(1)}" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1" stroke-dasharray="3,3"/>`;
+        svg += `<text x="${PAD.l - 6}" y="${y.toFixed(1)}" text-anchor="end" dominant-baseline="middle" font-size="9" fill="var(--muted)" font-weight="800">${v}</text>`;
+      });
+
+      // Bezier curve
+      let pathD = `M ${xOf(0).toFixed(1)} ${yOf(scores[0]).toFixed(1)}`;
+      for (let i = 0; i < n - 1; i++) {
+        const x1 = xOf(i), y1 = yOf(scores[i]);
+        const x2 = xOf(i + 1), y2 = yOf(scores[i + 1]);
+        const cp1x = x1 + (x2 - x1) / 3;
+        const cp1y = y1;
+        const cp2x = x1 + 2 * (x2 - x1) / 3;
+        const cp2y = y2;
+        pathD += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+      }
+
+      const areaD = pathD + ` L ${xOf(n - 1).toFixed(1)} ${H - PAD.b} L ${xOf(0).toFixed(1)} ${H - PAD.b} Z`;
+      svg += `<path d="${areaD}" fill="url(#${areaGradId})"/>`;
+      svg += `<path d="${pathD}" fill="none" stroke="url(#${gradId})" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#${glowId})" class="mini-chart-path"/>`;
+
+      // Nodes, values, and X-axis labels
+      scores.forEach((s, i) => {
+        const x = xOf(i).toFixed(1);
+        const y = yOf(s).toFixed(1);
+        
+        svg += `<circle cx="${x}" cy="${y}" r="5" fill="${strokeColor}" opacity="0.3" class="mini-chart-node-glow"/>`;
+        svg += `<circle cx="${x}" cy="${y}" r="3" fill="white" stroke="${strokeColor}" stroke-width="1.5" class="mini-chart-node"/>`;
+        svg += `<text x="${x}" y="${y - 8}" text-anchor="middle" font-size="10" fill="var(--text)" font-weight="900" style="text-shadow: 0 1px 3px rgba(0,0,0,0.8);">${s}</text>`;
+        
+        const labelY = H - 4;
+        svg += `<text x="${x}" y="${labelY}" text-anchor="middle" font-size="9" fill="var(--muted)" font-weight="800">#${i + 1}</text>`;
+      });
+
+      svg += '</svg>';
+      el.innerHTML = svg;
+    }
+
+    function showTrendTooltip(event, title, category, difficulty, mode, score) {
+      const tooltip = document.getElementById("trend-hover-tooltip");
+      if (!tooltip) return;
+
+      document.getElementById("tooltip-title").textContent = displayValue(title);
+
+      const metaEl = document.getElementById("tooltip-meta");
+      if (metaEl) {
+        const displayCategory = displayValue(category);
+        const displayDifficulty = displayValue(difficulty);
+        const displayMode = displayValue(mode);
+
+        metaEl.innerHTML = `
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; margin-bottom: 8px;">
+            <span class="topic-tag-badge category">${escapeHtml(displayCategory)}</span>
+            <span class="topic-tag-badge difficulty">${escapeHtml(displayDifficulty)}</span>
+            <span class="topic-tag-badge mode">${escapeHtml(displayMode)}</span>
+          </div>
+        `;
+      }
+
+      document.getElementById("tooltip-score").textContent = score + "/100";
+      document.getElementById("tooltip-progress-fill").style.width = score + "%";
+
+      tooltip.classList.remove("hidden");
+      tooltip.classList.add("active");
+
+      const card = event.currentTarget.closest(".trend-card");
+      const cardRect = card.getBoundingClientRect();
+
+      const x = event.clientX - cardRect.left;
+      const y = event.clientY - cardRect.top;
+
+      tooltip.style.left = x + "px";
+      tooltip.style.top = y + "px";
+    }
+
+    function hideTrendTooltip() {
+      const tooltip = document.getElementById("trend-hover-tooltip");
+      if (!tooltip) return;
+      tooltip.classList.remove("active");
+      setTimeout(() => {
+        if (!tooltip.classList.contains("active")) {
+          tooltip.classList.add("hidden");
+        }
+      }, 200);
     }
 
     function practiceSkill(skill) {
@@ -10897,10 +12511,18 @@
       }
       selectMode(mode);
       goToView("session");
-      const startBtn = document.getElementById("start-btn");
-      if (startBtn) {
-        startBtn.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+      setTimeout(() => {
+        const container = document.getElementById("training-mode-options");
+        if (container) {
+          container.scrollIntoView({ behavior: "smooth", block: "center" });
+          const activeCard = container.querySelector(`.mode-card.selected`);
+          if (activeCard) {
+            activeCard.classList.remove("pulse-highlight");
+            void activeCard.offsetWidth; // trigger reflow
+            activeCard.classList.add("pulse-highlight");
+          }
+        }
+      }, 150);
     }
 
     function practiceCategory(categoryName) {
@@ -10912,6 +12534,26 @@
       if (topicGrid) {
         topicGrid.scrollIntoView({ behavior: "smooth", block: "start" });
       }
+    }
+
+    function practiceMode(mode) {
+      if (!mode) return;
+      const key = String(mode).toLowerCase().trim();
+      const normalized = PRACTICE_MODE_ALIASES[key] || key;
+      selectMode(normalized);
+      goToView("session");
+      setTimeout(() => {
+        const container = document.getElementById("training-mode-options");
+        if (container) {
+          container.scrollIntoView({ behavior: "smooth", block: "center" });
+          const activeCard = container.querySelector(`.mode-card.selected`);
+          if (activeCard) {
+            activeCard.classList.remove("pulse-highlight");
+            void activeCard.offsetWidth; // trigger reflow
+            activeCard.classList.add("pulse-highlight");
+          }
+        }
+      }, 150);
     }
 
     function renderProgressTargets(overall, claim, evidence, reasoning, streak, recentTrendDelta, rawTopics) {
@@ -10933,7 +12575,7 @@
           );
         }
       }
-      
+
       const skills = [
         { name: "claim", score: claim },
         { name: "evidence", score: evidence },
@@ -10941,10 +12583,13 @@
       ];
       const weakestSkill = skills.reduce((min, s) => s.score < min.score ? s : min, skills[0]);
 
+      const uniqueCategories = new Set((rawTopics || []).map(t => typeof t === 'object' && t ? t.category : '').filter(Boolean));
+      const categoryCount = uniqueCategories.size;
+
       const targets = [
         {
-          title: "Mục tiêu hôm nay: Luyện tập 1 phiên",
-          meta: completedToday 
+          title: "📅 Mục tiêu hôm nay: Luyện tập 1 phiên",
+          meta: completedToday
             ? "Tuyệt vời! Bạn đã hoàn thành mục tiêu ngày hôm nay. 🔥"
             : "Hôm nay bạn chưa có phiên luyện tập nào. Bấm 'Luyện ngay' để giữ đà nhé!",
           value: completedToday ? 100 : 0,
@@ -10952,45 +12597,112 @@
           action: "goToView('session')"
         },
         {
-          title: "Duy trì tối thiểu 3 phiên đều tay mỗi tuần",
+          title: "⚡ Duy trì tối thiểu 3 phiên đều tay mỗi tuần",
           meta: `Chuỗi hiện tại: ${streak} ngày liên tiếp. ${streak >= 3 ? "Đã đạt nhịp luyện cơ bản." : "Cần đẩy nhịp luyện trước khi tối ưu điểm số."}`,
           value: Math.min(100, streak * 20),
           status: streak >= 3 ? "done" : streak > 0 ? "current" : "next",
           action: "goToView('session')"
         },
         {
-          title: "Đưa CER trung bình lên vùng 75+",
+          title: "🎯 Đưa CER trung bình lên vùng 75+",
           meta: `Hiện tại bạn đang ở ${overall}/100. Mốc 75 là vùng đủ vững để tranh biện ổn định hơn.`,
           value: overall,
           status: overall >= 75 ? "done" : overall >= 60 ? "current" : "next",
           action: "goToView('session')"
         },
         {
-          title: "Rút khoảng cách giữa kỹ năng mạnh nhất và yếu nhất",
-          meta: `Claim ${claim}/100 · Evidence ${evidence}/100 · Reasoning ${reasoning}/100${recentTrendDelta ? ` · Phiên gần nhất thay đổi ${recentTrendDelta > 0 ? "+" : ""}${Math.round(recentTrendDelta)}` : ""}`,
+          title: "⚖️ Rút khoảng cách giữa các kỹ năng",
+          meta: `Luận điểm ${claim}/100 · Bằng chứng ${evidence}/100 · Lập luận ${reasoning}/100${recentTrendDelta ? ` · Phiên gần nhất thay đổi ${recentTrendDelta > 0 ? "+" : ""}${Math.round(recentTrendDelta)}` : ""}`,
           value: Math.max(claim, evidence, reasoning),
           status: Math.abs(claim - evidence) <= 12 && Math.abs(claim - reasoning) <= 12 && Math.abs(evidence - reasoning) <= 12 ? "done" : "current",
           action: `practiceSkill('${escapeAttr(weakestSkill.name)}')`
         },
+        {
+          title: "🔥 Chiến binh bền bỉ: Luyện liên tục",
+          meta: `Duy trì chuỗi luyện tập 5 ngày liên tiếp để tạo lập thói quen. Chuỗi hiện tại: ${streak} ngày.`,
+          value: Math.min(100, Math.round((streak / 5) * 100)),
+          status: streak >= 5 ? "done" : streak > 0 ? "current" : "next",
+          action: "goToView('session')"
+        },
+        {
+          title: "👑 Tranh biện toàn năng: Đều tay cả 3 kỹ năng",
+          meta: `Đạt điểm CER từ 75 trở lên ở cả ba kỹ năng (Luận điểm: ${claim}, Bằng chứng: ${evidence}, Lập luận: ${reasoning}).`,
+          value: Math.min(100, Math.round(((claim >= 75 ? 1 : 0) + (evidence >= 75 ? 1 : 0) + (reasoning >= 75 ? 1 : 0)) * 33.3)),
+          status: claim >= 75 && evidence >= 75 && reasoning >= 75 ? "done" : (claim >= 75 || evidence >= 75 || reasoning >= 75) ? "current" : "next",
+          action: `practiceSkill('${escapeAttr(weakestSkill.name)}')`
+        },
+        {
+          title: "📚 Thợ săn chủ đề: Đa dạng hóa kiến thức",
+          meta: `Luyện tập ít nhất 3 chủ đề thuộc các danh mục khác nhau. Hiện tại bạn đã luyện: ${categoryCount} danh mục.`,
+          value: Math.min(100, Math.round((categoryCount / 3) * 100)),
+          status: categoryCount >= 3 ? "done" : categoryCount > 0 ? "current" : "next",
+          action: "goToView('session')"
+        }
       ];
 
+      // Sort targets: done first, then current sorted descending by value, then next
+      targets.sort((a, b) => {
+        const statusOrder = { 'done': 1, 'current': 2, 'next': 3 };
+        const orderA = statusOrder[a.status] || 99;
+        const orderB = statusOrder[b.status] || 99;
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+        if (a.status === 'current') {
+          return (b.value || 0) - (a.value || 0);
+        }
+        return 0;
+      });
+
       output.innerHTML = targets.map(step => {
-        const interactiveClass = step.action ? "interactive" : "";
-        const onclickAttr = step.action ? `onclick="${step.action}"` : "";
+        const isInteractive = step.action && step.status !== "done";
+        const interactiveClass = isInteractive ? "interactive" : "";
+        const onclickAttr = isInteractive ? `onclick="${step.action}"` : "";
+        const statusLabel = step.status === "done" ? "ĐÃ ĐẠT" : step.status === "current" ? "SẮP ĐẠT" : "MỚI";
+
+        // Split meta by period
+        const sentences = String(step.meta || "")
+          .split(".")
+          .map(s => s.trim())
+          .filter(Boolean);
+        const metaHtml = sentences
+          .map(sentence => `<span class="goal-meta-pill ${step.status}">${escapeHtml(sentence)}.</span>`)
+          .join("");
+
         return `
-          <div class="goal-step ${step.status} ${interactiveClass}" ${onclickAttr}>
+          <div class="goal-step ${step.status} ${interactiveClass}">
             <div class="goal-row" style="padding-right: 90px; position: relative;">
               <div>
                 <div class="goal-title">${escapeHtml(step.title)}</div>
-                <div class="goal-meta">${escapeHtml(step.meta)}</div>
+                <div class="goal-meta">${metaHtml}</div>
               </div>
-              <span class="goal-pill ${step.status}">${step.status === "done" ? "Đạt" : step.status === "current" ? "Sắp đạt" : "Mới"}</span>
+              <span class="goal-pill ${step.status}">${statusLabel}</span>
             </div>
-            <div class="mini-bar"><span style="width:${Math.min(100, Math.round(step.value || 0))}%"></span></div>
-            ${step.action ? `<div class="goal-action-btn">Luyện ngay →</div>` : ''}
+            <div class="mini-bar" data-pct="${Math.min(100, Math.round(step.value || 0))}%"><span style="width:${Math.min(100, Math.round(step.value || 0))}%"></span></div>
+            ${isInteractive ? `<div class="goal-action-btn" onclick="${step.action}">Luyện ngay →</div>` : ''}
           </div>
         `;
       }).join("");
+    }
+
+    // ─── RENDER PROGRESS (main) ───────────────────────────────────────────────
+    // Helper to get matching icon based on topic/category details
+    function getTopicIcon(name, category) {
+      const n = String(name || "").toLowerCase();
+      const c = String(category || "").toLowerCase();
+
+      if (c.includes("y tế") || c.includes("sức khỏe") || c.includes("health") || c.includes("medical") || n.includes("y tế") || n.includes("sức khỏe") || n.includes("bệnh")) return "🏥";
+      if (c.includes("chính trị") || c.includes("luật") || c.includes("politics") || c.includes("law") || n.includes("chính trị") || n.includes("luật") || n.includes("pháp luật")) return "🏛️";
+      if (c.includes("nghệ thuật") || c.includes("âm nhạc") || c.includes("art") || c.includes("music") || n.includes("nghệ thuật") || n.includes("âm nhạc") || n.includes("hội họa")) return "🎨";
+      if (c.includes("thể thao") || c.includes("sport") || n.includes("thể thao") || n.includes("bóng đá") || n.includes("olympic")) return "🏆";
+      if (c.includes("gia đình") || c.includes("family") || n.includes("gia đình") || n.includes("cha mẹ") || n.includes("con cái")) return "👨‍👩‍👧‍👦";
+      if (c.includes("giáo dục") || c.includes("education") || c.includes("học") || n.includes("giáo dục") || n.includes("học đường") || n.includes("trường")) return "📚";
+      if (c.includes("khoa học") || c.includes("science") || n.includes("khoa học") || n.includes("vũ trụ") || n.includes("nghiên cứu")) return "🔬";
+      if (c.includes("công nghệ") || c.includes("tech") || c.includes("ai") || n.includes("công nghệ") || n.includes("trí tuệ nhân tạo") || n.includes("robot") || n.includes("máy tính")) return "💻";
+      if (c.includes("kinh tế") || c.includes("tài chính") || c.includes("finance") || c.includes("economy") || n.includes("kinh tế") || n.includes("tài chính") || n.includes("tiền")) return "📈";
+      if (c.includes("môi trường") || c.includes("tự nhiên") || c.includes("green") || c.includes("environment") || n.includes("môi trường") || n.includes("biến đổi khí hậu") || n.includes("trái đất")) return "🌱";
+
+      return "📝";
     }
 
     // ─── RENDER PROGRESS (main) ───────────────────────────────────────────────
@@ -11029,12 +12741,40 @@
         document.getElementById("progress-streak").textContent = `${streak} ngày liên tiếp`;
         document.getElementById("progress-strength").textContent = labelFor(data.skill_strength || "-");
         document.getElementById("progress-weakness").textContent = labelFor(data.skill_weakness || "-");
-        document.getElementById("progress-strength-note").textContent = data.skill_strength
-          ? `Điểm trung bình: ${scoreForSkill(data.skill_strength, { claim, evidence, reasoning })}/100`
-          : "Chưa có dữ liệu";
-        document.getElementById("progress-weakness-note").textContent = data.skill_weakness
-          ? `Điểm trung bình: ${scoreForSkill(data.skill_weakness, { claim, evidence, reasoning })}/100`
-          : "Chưa có dữ liệu";
+
+        // Actionable dynamic coaching tips (concise, shortened)
+        const strengthNote = document.getElementById("progress-strength-note");
+        const weaknessNote = document.getElementById("progress-weakness-note");
+        if (strengthNote) {
+          const score = data.skill_strength ? scoreForSkill(data.skill_strength, { claim, evidence, reasoning }) : 0;
+          let tip = "";
+          const key = String(data.skill_strength || "").toLowerCase().trim();
+          if (key === "claim") {
+            tip = "Định vị luận điểm sắc bén. Hãy tiếp tục phát huy! 🎯";
+          } else if (key === "evidence") {
+            tip = "Bằng chứng thuyết phục, tạo sự vững vàng cho lập luận! 🔎";
+          } else if (key === "reasoning") {
+            tip = "Mối liên kết nhân quả rất chặt chẽ và logic! ⚡";
+          } else {
+            tip = "Tiếp tục duy trì phong độ hiện tại nhé!";
+          }
+          strengthNote.innerHTML = `<div style="font-size: 13px; font-weight: 800;">Điểm trung bình: ${score}/100</div><div style="margin-top: 4px; font-weight: 700; color: var(--success, #10b981); font-size: 12px;">${tip}</div>`;
+        }
+        if (weaknessNote) {
+          const score = data.skill_weakness ? scoreForSkill(data.skill_weakness, { claim, evidence, reasoning }) : 0;
+          let tip = "";
+          const key = String(data.skill_weakness || "").toLowerCase().trim();
+          if (key === "claim") {
+            tip = "Luận điểm chưa đủ sắc bén. Hãy luyện tập 'Luyện viết Claim'! ✍️";
+          } else if (key === "evidence") {
+            tip = "Thiếu dẫn chứng bổ trợ. Hãy luyện tập 'Luyện tìm Evidence'! 🔎";
+          } else if (key === "reasoning") {
+            tip = "Liên kết logic còn lỏng lẻo. Hãy luyện 'Phản biện nhanh'! 🧱";
+          } else {
+            tip = "Hãy hoàn thành thêm phiên để nhận lời khuyên.";
+          }
+          weaknessNote.innerHTML = `<div style="font-size: 13px; font-weight: 800; color: var(--pink, #fb7185);">Điểm trung bình: ${score}/100</div><div style="margin-top: 4px; font-weight: 700; color: var(--pink, #fb7185); font-size: 12px;">${tip}</div>`;
+        }
 
         // Update metric card progress bars
         const sessionsBar = document.getElementById("progress-sessions-bar");
@@ -11049,11 +12789,117 @@
           weaknessBar.style.width = `${Math.min(100, weaknessScore)}%`;
         }
 
-        // Comparative Badges (Weekly / Monthly)
+        // Mode breakdown in Card 1 (Total Sessions) - 5 separate progress rows
+        const rawTopics = Array.isArray(data.recent_topics) ? data.recent_topics : [];
+        const sessionsBreakdownContainer = document.getElementById("sessions-breakdown-container");
+        if (sessionsBreakdownContainer) {
+          const completedSessions = data.completed_sessions || 0;
+          const modeCounts = {
+            free_debate: 0,
+            claim_writing: 0,
+            find_evidence: 0,
+            quick_rebuttal: 0,
+            full_argument: 0
+          };
+          let countValid = 0;
+          rawTopics.forEach(item => {
+            if (item && item.mode) {
+              const m = item.mode.toLowerCase().trim();
+              const norm = PRACTICE_MODE_ALIASES[m] || m;
+              if (modeCounts[norm] !== undefined) {
+                modeCounts[norm]++;
+                countValid++;
+              }
+            }
+          });
+          if (countValid === 0 && completedSessions > 0) {
+            modeCounts.free_debate = completedSessions;
+            countValid = completedSessions;
+          }
+          const modeConfig = {
+            free_debate: { name: "Tranh biện tự do", color: "var(--blue, #3b82f6)" },
+            claim_writing: { name: "Luyện viết Claim", color: "var(--purple, #8b5cf6)" },
+            find_evidence: { name: "Luyện tìm Evidence", color: "var(--cyan, #20e7d1)" },
+            quick_rebuttal: { name: "Phản biện nhanh", color: "var(--pink, #fb7185)" },
+            full_argument: { name: "Xây dựng lập luận", color: "var(--yellow, #facc15)" }
+          };
+          
+          let listHtml = "";
+          Object.keys(modeCounts).forEach(m => {
+            const count = modeCounts[m];
+            const conf = modeConfig[m];
+            const pct = countValid > 0 ? Math.round((count / countValid) * 100) : 0;
+            listHtml += `
+              <div style="margin-top: 10px; margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; color: var(--text);">
+                  <span>${conf.name}</span>
+                  <span style="color: var(--muted); font-size: 12px;">${count} phiên</span>
+                </div>
+                <div class="mini-bar-compare" style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; margin-top: 4px; margin-bottom: 3px;">
+                  <span style="display: block; height: 100%; border-radius: inherit; background: ${conf.color}; width: ${pct}%;"></span>
+                </div>
+                <div style="font-size: 12px; font-weight: 900; color: ${conf.color}; text-align: left;">
+                  ${pct}%
+                </div>
+              </div>
+            `;
+          });
+
+          const totalDuration = completedSessions * 4;
+          sessionsBreakdownContainer.innerHTML = `
+            <div class="sessions-breakdown" style="margin-top: 14px;">
+              ${listHtml}
+              <div style="font-size: 12px; font-weight: 800; color: var(--cyan); margin-top: 12px; display: flex; align-items: center; gap: 4px;">
+                ⏱ Ước tính học tập: ~${totalDuration} phút
+              </div>
+            </div>
+          `;
+        }
+
+        // Side-by-side mini comparative progress bars in Card 2 (CER Average)
+        const compareWeeklyBar = document.getElementById("compare-weekly-bar");
+        const compareWeeklyText = document.getElementById("compare-weekly-text");
+        const weeklyScore = Math.round(toScore(data.weekly_avg_score || 0));
+        if (compareWeeklyBar) {
+          compareWeeklyBar.style.width = `${weeklyScore > 0 ? Math.min(100, weeklyScore) : 0}%`;
+        }
+        if (compareWeeklyText) {
+          compareWeeklyText.textContent = weeklyScore > 0 ? `${weeklyScore}/100` : "--/100";
+        }
+        const compareMonthlyBar = document.getElementById("compare-monthly-bar");
+        const compareMonthlyText = document.getElementById("compare-monthly-text");
+        const monthlyScore = Math.round(toScore(data.monthly_avg_score || 0));
+        if (compareMonthlyBar) {
+          compareMonthlyBar.style.width = `${monthlyScore > 0 ? Math.min(100, monthlyScore) : 0}%`;
+        }
+        if (compareMonthlyText) {
+          compareMonthlyText.textContent = monthlyScore > 0 ? `${monthlyScore}/100` : "--/100";
+        }
+
+        // Draw the mini charts based on weekly and monthly sessions
+        const now = new Date();
+        const weekCutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const monthCutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+        let wScores = rawTopics.filter(t => {
+          const d = t.completed_at || t.created_at;
+          return d ? new Date(d) >= weekCutoff : false;
+        }).map(t => Math.round(t.score || 0)).reverse();
+        if (wScores.length === 0) wScores = [overall];
+
+        let mScores = rawTopics.filter(t => {
+          const d = t.completed_at || t.created_at;
+          return d ? new Date(d) >= monthCutoff : false;
+        }).map(t => Math.round(t.score || 0)).reverse();
+        if (mScores.length === 0) mScores = [overall];
+
+        drawMiniTrendChart("compare-weekly-chart", wScores, "#20e7d1", "rgba(32, 231, 209, 0.1)");
+        drawMiniTrendChart("compare-monthly-chart", mScores, "#8b7cff", "rgba(139, 92, 246, 0.1)");
+
+        // Comparative Badges (Weekly / Monthly) - keep hidden values updated
         const weeklyVal = document.getElementById("compare-weekly");
         const monthlyVal = document.getElementById("compare-monthly");
         if (weeklyVal) {
-          const weeklyScore = Math.round(toScore(data.weekly_avg_score || 0));
           if (weeklyScore > 0) {
             const diff = weeklyScore - overall;
             weeklyVal.className = `compare-badge ${diff > 0 ? "up" : diff < 0 ? "down" : ""}`;
@@ -11064,7 +12910,6 @@
           }
         }
         if (monthlyVal) {
-          const monthlyScore = Math.round(toScore(data.monthly_avg_score || 0));
           if (monthlyScore > 0) {
             const diff = monthlyScore - overall;
             monthlyVal.className = `compare-badge ${diff > 0 ? "up" : diff < 0 ? "down" : ""}`;
@@ -11135,38 +12980,52 @@
         drawRadarChart("radar-chart-container", { claim, evidence, reasoning });
 
         // Trend chart + session chip
-        const rawTopics = Array.isArray(data.recent_topics) ? data.recent_topics : [];
         const categoryBreakdown = Array.isArray(data.topic_category_breakdown) ? data.topic_category_breakdown : [];
         const chip = document.getElementById("progress-sessions-chip");
         if (chip) chip.textContent = `${rawTopics.length} phiên gần nhất`;
         drawTrendChart("trend-chart-container", rawTopics);
 
+        // Topics Count Chip
+        const topicsCountChip = document.getElementById("progress-topics-count-chip");
+        if (topicsCountChip) {
+          const totalSessions = data.total_sessions || rawTopics.length || 0;
+          topicsCountChip.textContent = `${totalSessions} chủ đề`;
+        }
 
         renderProgressTargets(overall, claim, evidence, reasoning, streak, data.recent_trend_delta || 0, rawTopics);
 
-        // Week comparison insight
+        // Dynamic exciting comparison banner (fixed bug comparing youngest vs oldest)
         const banner = document.getElementById("progress-comparison-banner");
-        if (banner && rawTopics.length >= 2) {
-          const latest = typeof rawTopics[rawTopics.length - 1] === 'object' ? (rawTopics[rawTopics.length - 1].score || 0) : 0;
-          const prev = typeof rawTopics[rawTopics.length - 2] === 'object' ? (rawTopics[rawTopics.length - 2].score || 0) : 0;
-          const delta = Math.round(latest - prev);
-          const bannerText = document.getElementById("progress-comparison-text");
-          const bannerDelta = document.getElementById("progress-comparison-delta");
-          if (delta > 0) {
+        if (banner) {
+          if (rawTopics.length >= 2) {
+            const latest = typeof rawTopics[0] === 'object' ? (rawTopics[0].score || 0) : 0;
+            const prev = typeof rawTopics[1] === 'object' ? (rawTopics[1].score || 0) : 0;
+            const delta = Math.round(latest - prev);
+            const bannerText = document.getElementById("progress-comparison-text");
+            const bannerDelta = document.getElementById("progress-comparison-delta");
             banner.style.display = "flex";
-            banner.querySelector(".banner-icon").textContent = "🚀";
-            if (bannerText) bannerText.textContent = `Phiên gần nhất tốt hơn phiên trước!`;
-            if (bannerDelta) { bannerDelta.textContent = `+${delta}`; bannerDelta.className = "banner-delta up"; }
-          } else if (delta < 0) {
+            if (delta > 0) {
+              banner.querySelector(".banner-icon").textContent = "🚀";
+              if (bannerText) bannerText.textContent = `Phiên gần nhất bứt phá vượt trội! Phong độ đang lên rất cao, hãy giữ vững đà chiến thắng nhé! 🔥`;
+              if (bannerDelta) { bannerDelta.textContent = `+${delta}`; bannerDelta.className = "banner-delta up"; }
+            } else if (delta < 0) {
+              banner.querySelector(".banner-icon").textContent = "📉";
+              if (bannerText) bannerText.textContent = `Phiên gần nhất có phần giảm nhẹ (${delta}đ). Đừng nản lòng, hãy bắt đầu một phiên mới để lấy lại phong độ ngay nhé! 🚀`;
+              if (bannerDelta) { bannerDelta.textContent = `${delta}`; bannerDelta.className = "banner-delta down"; }
+            } else {
+              banner.querySelector(".banner-icon").textContent = "⚖️";
+              if (bannerText) bannerText.textContent = `Giao phong cân bằng! Điểm số giữ nguyên so với phiên trước. Hãy thử thách một chủ đề mới để bứt phá nào! ⚡`;
+              if (bannerDelta) { bannerDelta.textContent = "=="; bannerDelta.className = "banner-delta same"; }
+            }
+          } else if (rawTopics.length === 1) {
             banner.style.display = "flex";
-            banner.querySelector(".banner-icon").textContent = "📉";
-            if (bannerText) bannerText.textContent = `Phiên gần nhất thấp hơn một chút.`;
-            if (bannerDelta) { bannerDelta.textContent = `${delta}`; bannerDelta.className = "banner-delta down"; }
+            banner.querySelector(".banner-icon").textContent = "🌱";
+            const bannerText = document.getElementById("progress-comparison-text");
+            const bannerDelta = document.getElementById("progress-comparison-delta");
+            if (bannerText) bannerText.textContent = `Khởi đầu tuyệt vời! Hãy hoàn thành thêm một phiên nữa để mở khóa biểu đồ xu hướng chi tiết.`;
+            if (bannerDelta) { bannerDelta.textContent = "N/A"; bannerDelta.className = "banner-delta same"; }
           } else {
-            banner.style.display = "flex";
-            banner.querySelector(".banner-icon").textContent = "⚖️";
-            if (bannerText) bannerText.textContent = `Điểm giữ nguyên so với phiên trước. Thử thách kỹ năng Bằng chứng để bứt phá!`;
-            if (bannerDelta) { bannerDelta.textContent = "=="; bannerDelta.className = "banner-delta same"; }
+            banner.style.display = "none";
           }
         }
 
@@ -11178,22 +13037,36 @@
         output.innerHTML = rawTopics.map((item, index) => {
           const name = typeof item === 'object' && item ? (item.topic || "Không rõ") : String(item);
           const score = typeof item === 'object' && item ? Math.round(item.score || 0) : (overall || scoreForIndex(index));
-          const color = score >= 75 ? 'evidence' : score >= 50 ? 'reasoning' : '';
           const category = typeof item === 'object' && item ? displayValue(item.category || "Chưa phân loại") : "Chưa phân loại";
           const difficulty = typeof item === 'object' && item ? displayValue(item.difficulty || "Trung bình") : "Trung bình";
-          const mode = typeof item === 'object' && item ? displayValue(item.mode || "free_debate") : "free_debate";
+          const rawMode = typeof item === 'object' && item ? (item.mode || "free_debate") : "free_debate";
+          const modeDisplay = displayValue(rawMode);
+
+          const topicIcon = getTopicIcon(name, item.category || category);
+
           return `
           <div class="topic-progress-row">
-            <header>
-              <div>
-                <strong>${escapeHtml(displayValue(name))}</strong>
-                <div class="insight-text">${escapeHtml(category)} · ${escapeHtml(difficulty)} · ${escapeHtml(mode)}</div>
+            <div class="topic-row-left">
+              <div class="topic-row-icon"><span class="topic-icon-bounce">${topicIcon}</span></div>
+              <div class="topic-row-main-info">
+                <div class="topic-row-title">${escapeHtml(displayValue(name))}</div>
+                <div class="topic-tags-container">
+                  <span class="topic-tag-badge category clickable" onclick="practiceCategory('${escapeAttr(category)}')" data-category="${escapeAttr(category)}">${escapeHtml(category)}</span>
+                  <span class="topic-tag-badge difficulty">${escapeHtml(difficulty)}</span>
+                  <span class="topic-tag-badge mode clickable" onclick="practiceMode('${escapeAttr(rawMode)}')" data-mode-name="${escapeAttr(modeDisplay)}">${escapeHtml(modeDisplay)}</span>
+                </div>
               </div>
-              <span class="chip teal">${score}/100</span>
-            </header>
-            <div class="bar"><div class="bar-fill ${color}" style="--value:${score}%"></div></div>
+            </div>
+            <div class="topic-row-right">
+              <div class="topic-row-score-wrapper">
+                <span class="topic-row-score-value">${score}<span class="score-total">/100</span></span>
+                <div class="topic-row-progress-bar">
+                  <div class="topic-row-progress-fill" style="width: ${score}%"></div>
+                </div>
+              </div>
+            </div>
           </div>
-        `;
+          `;
         }).join("");
 
       } catch (error) {
@@ -11283,7 +13156,11 @@
     }
 
     function displayValue(value) {
-      return displayLabels[String(value ?? "")] || String(value ?? "");
+      const strVal = String(value ?? "");
+      if (displayLabels[strVal]) return displayLabels[strVal];
+      const lowerVal = strVal.toLowerCase().trim();
+      if (displayLabels[lowerVal]) return displayLabels[lowerVal];
+      return strVal;
     }
 
     function titleCase(value) {
@@ -11324,7 +13201,7 @@
   <script src="scripts/onboarding.js"></script>
   <script>
     // ─── INTERACTIVE PARTICLE CONSTELLATION EFFECT ─────────────────────────────
-    (function() {
+    (function () {
       const canvas = document.createElement("canvas");
       canvas.id = "constellation-canvas";
       document.body.insertBefore(canvas, document.body.firstChild);
@@ -11379,8 +13256,9 @@
       resize();
 
       window.addEventListener("mousemove", (e) => {
-        mouse.x = e.clientX;
-        mouse.y = e.clientY;
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = e.clientX - rect.left;
+        mouse.y = e.clientY - rect.top;
       });
 
       window.addEventListener("mouseleave", () => {
@@ -11408,7 +13286,7 @@
           if (mouse.x !== null && mouse.y !== null) {
             const dx = mouse.x - this.x;
             const dy = mouse.y - this.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
+            const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist < mouseDist) {
               if (dist > 45) {
                 // Smooth attraction pull
@@ -11440,7 +13318,10 @@
       }
 
       function loop() {
-        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
         const theme = document.body.getAttribute("data-theme") || "blue-pastel";
         const palette = theme === "dark" ? colorsDark : colorsLight;
 
@@ -11459,7 +13340,7 @@
             const p2 = particles[j];
             const dx = p1.x - p2.x;
             const dy = p1.y - p2.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
+            const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist < connectionDist) {
               const alpha = (1 - dist / connectionDist) * 0.32;
@@ -11477,7 +13358,7 @@
           if (mouse.x !== null && mouse.y !== null) {
             const dx = p1.x - mouse.x;
             const dy = p1.y - mouse.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
+            const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist < mouseDist) {
               const alpha = (1 - dist / mouseDist) * 0.7;
               ctx.beginPath();
