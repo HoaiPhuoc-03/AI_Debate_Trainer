@@ -418,7 +418,6 @@ def generate_debate_analysis(
 
     try:
         user_search_context, ai_search_context = "", ""
-        from app.services.prompt_builder import normalize_practice_mode
         active_mode = normalize_practice_mode(practice_mode or mode)
         if active_mode in ("free_debate", "find_evidence", "full_argument"):
             try:
