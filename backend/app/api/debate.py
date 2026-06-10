@@ -331,6 +331,9 @@ def debate_turn(
         cer=result["cer"],
         mode_scores=result.get("mode_scores") if active_mode == "quick_rebuttal" else None,
         feedback=result["feedback"],
+        fact_check=result.get("fact_check", []),
+        evidence_source_links=result.get("evidence_source_links", []),
+        better_source_suggestions=result.get("better_source_suggestions", []),
     )
 
 

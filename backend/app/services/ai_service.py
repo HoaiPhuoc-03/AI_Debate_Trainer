@@ -81,6 +81,8 @@ def build_messages(
     practice_target_flaws: list[str] | None = None,
     practice_round: int | None = None,
     memory_context: dict | None = None,
+    user_search_context: str = "",
+    ai_search_context: str = "",
 ) -> list[dict[str, str]]:
     # Use build_cer_messages() which returns a proper [system, user] pair.
     # GEPA design: the system prompt is written IN Vietnamese so the model's
@@ -103,6 +105,8 @@ def build_messages(
         practice_target_flaws=practice_target_flaws,
         practice_round=practice_round,
         memory_context=memory_context,
+        user_search_context=user_search_context,
+        ai_search_context=ai_search_context,
     )
 
 
@@ -170,6 +174,10 @@ def _rubric_to_analysis(
         "evidence_quote": rubric.get("evidence_quote", ""),
         "checklist": rubric.get("checklist", {}),
         "scoring_error": rubric.get("scoring_error", ""),
+        # Mode-specific fields: fact-checking, source links, and source suggestions.
+        "fact_check": rubric.get("fact_check", []),
+        "evidence_source_links": rubric.get("evidence_source_links", []),
+        "better_source_suggestions": rubric.get("better_source_suggestions", []),
         "content_flags": [],
         "raw_text": rubric.get("raw_scoring_text", ""),
         "raw_scoring_text": rubric.get("raw_scoring_text", ""),
@@ -409,6 +417,16 @@ def generate_debate_analysis(
         }
 
     try:
+        user_search_context, ai_search_context = "", ""
+        from app.services.prompt_builder import normalize_practice_mode
+        active_mode = normalize_practice_mode(practice_mode or mode)
+        if active_mode in ("free_debate", "find_evidence", "full_argument"):
+            try:
+                from app.services.search_service import get_combined_search_context
+                user_search_context, ai_search_context = get_combined_search_context(user_argument, topic, stance)
+            except Exception:
+                pass
+
         build_start = time.perf_counter()
         groq_messages = build_messages(
             topic=topic,
@@ -427,6 +445,8 @@ def generate_debate_analysis(
             practice_target_flaws=practice_target_flaws,
             practice_round=practice_round,
             memory_context=memory_context,
+            user_search_context=user_search_context,
+            ai_search_context=ai_search_context,
         )
         build_prompt_ms = int((time.perf_counter() - build_start) * 1000)
 

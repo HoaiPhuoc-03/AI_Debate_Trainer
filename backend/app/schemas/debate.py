@@ -170,6 +170,13 @@ class ModeScoresResponse(BaseModel):
     overall: float = 0.0
 
 
+class FactCheckItem(BaseModel):
+    claim_text: str = ""
+    verdict: str = "unverifiable"  # verified | inaccurate | unverifiable | outdated
+    explanation: str = ""
+    source_url: str | None = None
+
+
 class DebateTurnResponse(BaseModel):
     session_id: str
     user_argument: str
@@ -190,6 +197,9 @@ class DebateTurnResponseV2(DebateTurnResponse):
     turn_number: int
     max_turns: int
     mode_scores: ModeScoresResponse | None = None
+    fact_check: list[FactCheckItem] = Field(default_factory=list)
+    evidence_source_links: list[str] = Field(default_factory=list)
+    better_source_suggestions: list[str] = Field(default_factory=list)
 
 
 class SessionInfoResponse(BaseModel):

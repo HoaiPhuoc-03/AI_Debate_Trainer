@@ -26,6 +26,9 @@
 # ---------------------------------------------------------------------------
 
 
+import re
+import unicodedata
+
 def _language_name(language: str) -> str:
     return "tiếng Việt" if language == "vi" else "English"
 
@@ -71,40 +74,47 @@ def _format_turn_history(turn_history: list[dict] | None, max_turns: int = 3) ->
     return "\n".join(lines)
 
 
-# ---------------------------------------------------------------------------
-# System prompt — written IN Vietnamese, NO numeric scores
-# ---------------------------------------------------------------------------
+_FACT_CHECK_INSTRUCTION = """KIỂM CHỨNG BẰNG CHỨNG (fact_check):
+  - Hãy là một kiểm chứng viên hoài nghi, khắt khe.
+  - Chỉ kiểm chứng nếu người học đưa ra số liệu, nguồn trích dẫn, hoặc nghiên cứu cụ thể. Nếu không có, trả về [] (mảng rỗng).
+  - Đối chiếu thông tin người học đưa ra với "=== KẾT QUẢ TÌM KIẾM INTERNET ĐỂ KIỂM CHỨNG BẰNG CHỨNG NGƯỜI DÙNG ===".
+  - Gắn nhãn verdict:
+    * "verified": nguồn/số liệu có thật, trùng khớp thông tin tìm kiếm.
+    * "inaccurate" hoặc "unverifiable": số liệu/nguồn bịa đặt, sai lệch, không có thật, hoặc không hợp lý (ví dụ: NASA nghiên cứu về viết lách phổ thông).
+  - Cấu trúc mỗi mục:
+    * "claim_text": trích nguyên văn số liệu hoặc nguồn được nêu.
+    * "verdict": "verified" | "inaccurate" | "unverifiable" | "outdated".
+    * "explanation": giải thích ngắn gọn bằng tiếng Việt lý do nghi ngờ/xác thực.
+    * "source_url": trích xuất chính xác URL cụ thể từ kết quả tìm kiếm nếu trùng khớp/liên quan đến nguồn được trích dẫn (ví dụ: link bài báo cụ thể trên WHO/UNESCO), hoặc để null nếu không tìm thấy."""
+
+
 def _build_system_prompt(output_language: str, age_group: str, debate_level: str) -> str:
-    return f"""Bạn là hệ thống chấm điểm và phản biện tranh luận bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung feedback.
+    return f"""Bạn là hệ thống chấm điểm và phản biện tranh luận bằng {output_language}. KHÔNG dùng tiếng Anh.
 
-NHIỆM VỤ - phân tích nội bộ rồi trả về DUY NHẤT JSON hợp lệ:
-  Người dùng chọn một lập trường: Ủng hộ hoặc Phản đối. AI giữ vai trò đối lập với lập trường của người dùng.
-  Trước khi điền JSON, xác định nội bộ:
-  a) Có nguồn/tổ chức/số liệu có tên cụ thể không?
-  b) Lập luận chính là gì? Phạm vi có rõ không?
-  c) Có lỗi logic hoặc giả định ẩn không?
+NHIỆM VỤ - Phân tích lập luận và trả về JSON:
+  - Viết "ai_rebuttal": Viết dạng đoạn văn liền mạch, tự nhiên bằng {output_language} (4-6 câu).
+  - Phản biện phải đề cập trực tiếp ý người dùng và tích hợp đủ 3 phần: Luận điểm phản biện, Bằng chứng thực tế cụ thể (tên tổ chức, số liệu, năm cụ thể) và Lập luận kết nối.
+  - BẰNG CHỨNG CỦA AI: Bằng chứng bạn đưa ra trong "ai_rebuttal" phải CỤ THỂ (ví dụ: số liệu phần trăm, tổ chức uy tín, năm công bố cụ thể). Tuyệt đối KHÔNG sử dụng các câu mơ hồ chung chung như "nhiều nghiên cứu cho thấy", "các chuyên gia nói", "nhiều báo cáo chỉ ra".
+  - RÀNG BUỘC LINK: Tuyệt đối KHÔNG chèn bất kỳ liên kết URL hay link markdown nào vào trong văn bản "ai_rebuttal". Văn bản "ai_rebuttal" phải hoàn toàn là text thuần túy.
+  - Giọng ({age_group}): {_tone_rule(age_group)} | Độ sâu ({debate_level}): {_level_rule(debate_level)}
 
-Viết "ai_rebuttal" - 4–6 câu phản biện bằng {output_language}:
-  - Phải mở đầu bằng: "Tuy nhiên,", "Thực tế cho thấy," hoặc "Ngược lại,"
-  - Phải phản hồi nội dung cụ thể trong lập luận của người dùng.
-  - Không viết phản biện chung chung áp dụng cho mọi lập luận.
-  - Giọng ({age_group}): {_tone_rule(age_group)}
-  - Độ sâu ({debate_level}): {_level_rule(debate_level)}
+NGUỒN THAM KHẢO AI (evidence_source_links):
+  - Hãy chọn một bài viết/số liệu thực tế từ "=== KẾT QUẢ TÌM KIẾM INTERNET ĐỂ AI LẤY BẰNG CHỨNG PHẢN BIỆN ===" để đưa vào phần bằng chứng trong "ai_rebuttal".
+  - BẮT BUỘC cung cấp liên kết nguồn cụ thể trích xuất trực tiếp từ kết quả tìm kiếm đó để đưa vào "evidence_source_links".
+  - Định dạng: "Tên nguồn - URL cụ thể của bài viết/nghiên cứu" (ví dụ: "UNESCO - https://www.unesco.org/en/articles/more-specific-path"). Tuyệt đối KHÔNG dùng link trang chủ chung chung (như https://unesco.org) nếu trong kết quả tìm kiếm có link bài viết cụ thể.
 
-CỔNG BẰNG CHỨNG - bắt buộc áp dụng trước khi chấm:
-  Có bằng chứng thực: tên tổ chức + năm, số liệu cụ thể, sự kiện có ngày.
-  Không phải bằng chứng: "nhiều nghiên cứu cho thấy", "mọi người biết", lý luận thuần túy không có nguồn.
+{_FACT_CHECK_INSTRUCTION}
 
-THANG ĐIỂM:
-  claim_score: chất lượng luận điểm chính (0-100)
-  evidence_score: chất lượng bằng chứng (0-100, = 0 nếu không có bằng chứng thực)
-  reasoning_score: chất lượng suy luận (0-100)
-  overall_score = round(claim*0.3 + evidence*0.3 + reasoning*0.4)
+CỔNG BẰNG CHỨNG (evidence_score > 0 chỉ khi có bằng chứng thực tế):
+  - Có bằng chứng: Tên tổ chức/năm cụ thể (WHO 2023, McKinsey 2022), số liệu (23%, tăng 3 lần), hoặc sự kiện rõ ngày.
+  - Không bằng chứng (evidence_score = 0): KHÔNG dùng các câu mơ hồ như "nhiều nghiên cứu cho thấy", "mọi người đều biết", hay lý lẽ suông không nguồn.
 
-CHỐNG DỒN ĐIỂM:
-  - Không dùng cùng điểm cho các lập luận khác nhau về chất lượng.
-  - Không dùng toàn số tròn.
-  - Điểm phải phản ánh từng câu trả lời cụ thể."""
+THANG ĐIỂM & CHỐNG DỒN ĐIỂM:
+  - claim_score (0–100): Lập trường rõ + phạm vi cụ thể: 50–80. Mơ hồ: 20–45. Không rõ: 0–20.
+  - evidence_score (0–100): Nhiều nguồn + số liệu: 60–90. Một nguồn: 30–60. Không bằng chứng: 0.
+  - reasoning_score (0–100): Nhân quả rõ + không lỗi logic: 50–80. Có lỗ hổng: 25–50. Yếu/circular: 0–25.
+  - overall_score = round(claim×0.3 + evidence×0.3 + reasoning×0.4)
+  - Lập luận khác nhau PHẢI có điểm khác nhau. KHÔNG dùng số tròn trăm (100) hoặc tận cùng là 0 (ví dụ: 10,20,30...)."""
 
 
 # ---------------------------------------------------------------------------
@@ -147,135 +157,190 @@ def _json_schema(output_language: str, mode: str | None = None) -> str:
     return (
         "{\n"
         '  "is_valid": true,\n'
-        '  "evidence_quote": "<trich nguyen van nguon/so lieu tu lap luan, hoac NONE>",\n'
-        '  "checklist": {"has_clear_position": true/false, "has_bounded_scope": true/false, "has_real_evidence": true/false, "has_causal_chain": true/false},\n'
-        f'  "ai_rebuttal": "<4-6 cau phan bien truc tiep lap luan tren bang {output_language}>",\n'
-        '  "claim_score": <so nguyen>,\n'
-        '  "evidence_score": <so nguyen, bat buoc 0 neu khong co bang chung thuc>,\n'
-        '  "reasoning_score": <so nguyen>,\n'
-        '  "overall_score": <round(claim*0.3 + evidence*0.3 + reasoning*0.4)>,\n'
-        '  "claim_breakdown": {"clarity": <0-40>, "relevance": <0-30>, "specificity": <0-30>},\n'
-        '  "evidence_breakdown": {"presence": <0-40>, "evidence_specificity": <0-30>, "evidence_relevance": <0-30>},\n'
-        '  "reasoning_breakdown": {"logical_connection": <0-40>, "causal_explanation": <0-40>, "fallacy_control": <0-20>},\n'
-        f'  "claim_explanation": "<ly do diem claim bang {output_language}>",\n'
-        f'  "evidence_explanation": "<ly do diem evidence bang {output_language}>",\n'
-        f'  "reasoning_explanation": "<ly do diem reasoning bang {output_language}>",\n'
-        f'  "strengths": ["<diem manh bang {output_language}>"],\n'
-        f'  "weaknesses": ["<diem yeu bang {output_language}>"],\n'
-        f'  "suggestions": ["<goi y bang {output_language}>"]\n'
-        "}"
+        '  "evidence_quote": "<trích nguyên văn nguồn/số liệu từ lập luận, hoặc NONE>",\n'
+        '  "checklist": {{"has_clear_position": true/false, "has_bounded_scope": true/false, "has_real_evidence": true/false, "has_causal_chain": true/false}},\n'
+        f'  "ai_rebuttal": "<4–6 câu phản biện TRỰC TIẾP lập luận trên bằng {output_language}, chứa bằng chứng cụ thể tự chọn (ví dụ: số liệu, tổ chức), KHÔNG dùng từ mơ hồ, KHÔNG chứa bất kỳ liên kết URL hay link markdown nào>",\n'
+        '  "evidence_source_links": ["<Tên nguồn - URL cụ thể trích trực tiếp từ kết quả tìm kiếm hỗ trợ cho bằng chứng của AI trong ai_rebuttal, KHÔNG dùng trang chủ chung chung (ví dụ: WHO - https://www.who.int/news-room/fact-sheets/detail/depression)>"],\n'
+        '  "fact_check": [<danh sách kiểm chứng bằng chứng người dùng, mỗi mục: {{"claim_text": "<trích>", "verdict": "verified|inaccurate|unverifiable|outdated", "explanation": "<giải thích>", "source_url": "<URL cụ thể từ kết quả tìm kiếm, hoặc null nếu không tìm thấy>"}}, hoặc [] nếu không có bằng chứng>],\n'
+        '  "claim_score": <số nguyên>,\n'
+        '  "evidence_score": <số nguyên, bắt buộc 0 nếu không có bằng chứng thực>,\n'
+        '  "reasoning_score": <số nguyên>,\n'
+        '  "overall_score": <round(claim×0.3 + evidence×0.3 + reasoning×0.4)>,\n'
+        '  "claim_breakdown": {{"clarity": <0–40>, "relevance": <0–30>, "specificity": <0–30>}},\n'
+        '  "evidence_breakdown": {{"presence": <0–40>, "evidence_specificity": <0–30>, "evidence_relevance": <0–30>}},\n'
+        '  "reasoning_breakdown": {{"logical_connection": <0–40>, "causal_explanation": <0–40>, "fallacy_control": <0–20>}},\n'
+        f'  "claim_explanation": "<lý do điểm claim bằng {output_language}>",\n'
+        f'  "evidence_explanation": "<lý do điểm evidence bằng {output_language}>",\n'
+        f'  "reasoning_explanation": "<lý do điểm reasoning bằng {output_language}>",\n'
+        f'  "strengths": ["<điểm mạnh bằng {output_language}>"],\n'
+        f'  "weaknesses": ["<điểm yếu bằng {output_language}>"],\n'
+        f'  "suggestions": ["<gợi ý bằng {output_language}>"]\n'
+        '}}'
     )
 
 
+def _json_schema_free_debate(output_language: str) -> str:
+    """JSON schema for free_debate mode - includes coherent paragraph rebuttal and source links."""
+    return (
+        '{{\n'
+        '  "is_valid": true,\n'
+        '  "evidence_quote": "<trích nguyên văn nguồn/số liệu từ lập luận, hoặc NONE>",\n'
+        '  "checklist": {{"has_clear_position": true/false, "has_bounded_scope": true/false, "has_real_evidence": true/false, "has_causal_chain": true/false}},\n'
+        f'  "ai_rebuttal": "<phản biện mạch lạc dạng đoạn văn tự nhiên bằng {output_language}, KHÔNG chứa nhãn như [Luận điểm], chứa bằng chứng cụ thể tự chọn, KHÔNG dùng từ mơ hồ, KHÔNG chứa bất kỳ liên kết URL hay link markdown nào>",\n'
+        '  "evidence_source_links": ["<Tên nguồn - URL cụ thể trích trực tiếp từ kết quả tìm kiếm hỗ trợ cho bằng chứng của AI trong ai_rebuttal, KHÔNG dùng trang chủ chung chung (ví dụ: WHO - https://www.who.int/news-room/fact-sheets/detail/depression)>"],\n'
+        '  "fact_check": [<danh sách kiểm chứng bằng chứng người dùng, mỗi mục: {{"claim_text": "<trích>", "verdict": "verified|inaccurate|unverifiable|outdated", "explanation": "<giải thích>", "source_url": "<URL cụ thể từ kết quả tìm kiếm, hoặc null nếu không tìm thấy>"}}, hoặc [] nếu không có bằng chứng>],\n'
+        '  "claim_score": <số nguyên>,\n'
+        '  "evidence_score": <số nguyên, bắt buộc 0 nếu không có bằng chứng thực>,\n'
+        '  "reasoning_score": <số nguyên>,\n'
+        '  "overall_score": <round(claim×0.3 + evidence×0.3 + reasoning×0.4)>,\n'
+        '  "claim_breakdown": {{"clarity": <0–40>, "relevance": <0–30>, "specificity": <0–30>}},\n'
+        '  "evidence_breakdown": {{"presence": <0–40>, "evidence_specificity": <0–30>, "evidence_relevance": <0–30>}},\n'
+        '  "reasoning_breakdown": {{"logical_connection": <0–40>, "causal_explanation": <0–40>, "fallacy_control": <0–20>}},\n'
+        f'  "claim_explanation": "<lý do điểm claim bằng {output_language}>",\n'
+        f'  "evidence_explanation": "<lý do điểm evidence bằng {output_language}>",\n'
+        f'  "reasoning_explanation": "<lý do điểm reasoning bằng {output_language}>",\n'
+        f'  "strengths": ["<điểm mạnh bằng {output_language}>"],\n'
+        f'  "weaknesses": ["<điểm yếu bằng {output_language}>"],\n'
+        f'  "suggestions": ["<gợi ý bằng {output_language}>"]\n'
+        '}}'
+    )
+
+
+def _json_schema_find_evidence(output_language: str) -> str:
+    """JSON schema for find_evidence mode - evidence-only critique with fact_check and source suggestions."""
+    return (
+        '{{\n'
+        '  "is_valid": true,\n'
+        '  "evidence_quote": "<trích nguyên văn nguồn/số liệu từ lập luận, hoặc NONE>",\n'
+        '  "checklist": {{"has_clear_position": true/false, "has_bounded_scope": true/false, "has_real_evidence": true/false, "has_causal_chain": true/false}},\n'
+        f'  "ai_rebuttal": "<đánh giá CHỈ về bằng chứng: phù hợp với claim, độ mạnh/độ tin cậy của bằng chứng, và đề xuất nguồn tốt hơn bằng {output_language}, hoàn toàn KHÔNG chứa liên kết URL hay link markdown>",\n'
+        '  "evidence_source_links": ["<Tên nguồn - URL cụ thể trích trực tiếp từ kết quả tìm kiếm giới thiệu nguồn tốt hơn hỗ trợ người dùng, KHÔNG dùng trang chủ chung chung (ví dụ: WHO - https://www.who.int/news-room/fact-sheets/detail/depression)>"],\n'
+        '  "fact_check": [<danh sách kiểm chứng bằng chứng người dùng, mỗi mục: {{"claim_text": "<trích>", "verdict": "verified|inaccurate|unverifiable|outdated", "explanation": "<giải thích>", "source_url": "<URL cụ thể từ kết quả tìm kiếm, hoặc null nếu không tìm thấy>"}}, hoặc [] nếu không có bằng chứng>],\n'
+        '  "better_source_suggestions": ["<Tên nguồn/cơ sở dữ liệu - mô tả ngắn>"],\n'
+        '  "claim_score": 0,\n'
+        '  "evidence_score": <số nguyên, bắt buộc 0 nếu không có bằng chứng thực>,\n'
+        '  "reasoning_score": 0,\n'
+        '  "overall_score": <evidence_score>,\n'
+        '  "claim_breakdown": {{"clarity": 0, "relevance": 0, "specificity": 0}},\n'
+        '  "evidence_breakdown": {{"presence": <0–40>, "evidence_specificity": <0–30>, "evidence_relevance": <0–30>}},\n'
+        '  "reasoning_breakdown": {{"logical_connection": 0, "causal_explanation": 0, "fallacy_control": 0}},\n'
+        f'  "claim_explanation": "",\n'
+        f'  "evidence_explanation": "<lý do điểm evidence bằng {output_language}>",\n'
+        f'  "reasoning_explanation": "",\n'
+        f'  "strengths": ["<điểm mạnh bằng chứng bằng {output_language}>"],\n'
+        f'  "weaknesses": ["<điểm yếu bằng chứng bằng {output_language}>"],\n'
+        f'  "suggestions": ["<gợi ý cải thiện bằng chứng bằng {output_language}>"]\n'
+        '}}'
+    )
+
+
+def _json_schema_claim_and_rebuttal(output_language: str) -> str:
+    """JSON schema for claim_writing and quick_rebuttal modes - NO fact_check or evidence_source_links."""
+    return (
+        '{{\n'
+        '  "is_valid": true,\n'
+        '  "evidence_quote": "<trích nguyên văn nguồn/số liệu từ lập luận, hoặc NONE>",\n'
+        '  "checklist": {{"has_clear_position": true/false, "has_bounded_scope": true/false, "has_real_evidence": true/false, "has_causal_chain": true/false}},\n'
+        f'  "ai_rebuttal": "<nhận xét/đánh giá CHỈ về chất lượng và độ mạnh của luận điểm (đối với claim_writing) hoặc lập luận (đối với quick_rebuttal) bằng {output_language}, KHÔNG chứa bất kỳ liên kết URL hay link markdown nào>",\n'
+        '  "claim_score": <số nguyên>,\n'
+        '  "evidence_score": <số nguyên, bắt buộc 0 nếu không có bằng chứng thực>,\n'
+        '  "reasoning_score": <số nguyên>,\n'
+        '  "overall_score": <overall score>,\n'
+        '  "claim_breakdown": {{"clarity": <0–40>, "relevance": <0–30>, "specificity": <0–30>}},\n'
+        '  "evidence_breakdown": {{"presence": <0–40>, "evidence_specificity": <0–30>, "evidence_relevance": <0–30>}},\n'
+        '  "reasoning_breakdown": {{"logical_connection": <0–40>, "causal_explanation": <0–40>, "fallacy_control": <0–20>}},\n'
+        f'  "claim_explanation": "<lý do điểm claim bằng {output_language}>",\n'
+        f'  "evidence_explanation": "<lý do điểm evidence bằng {output_language}>",\n'
+        f'  "reasoning_explanation": "<lý do điểm reasoning bằng {output_language}>",\n'
+        f'  "strengths": ["<điểm mạnh bằng {output_language}>"],\n'
+        f'  "weaknesses": ["<điểm yếu bằng {output_language}>"],\n'
+        f'  "suggestions": ["<gợi ý bằng {output_language}>"]\n'
+        '}}'
+    )
+
+
+def _json_schema_for_mode(mode: str, output_language: str) -> str:
+    """Returns the appropriate JSON schema for the given practice mode."""
+    if mode == "free_debate":
+        return _json_schema_free_debate(output_language)
+    elif mode == "find_evidence":
+        return _json_schema_find_evidence(output_language)
+    elif mode == "claim_writing":
+        return _json_schema_claim_and_rebuttal(output_language)
+    elif mode == "quick_rebuttal":
+        return _json_schema(output_language, mode)
+    return _json_schema(output_language)
+
+
 # ---------------------------------------------------------------------------
-# Mode-specific system prompts — written IN Vietnamese, NO numeric scores
+# Mode-specific system prompts - written IN Vietnamese, NO numeric scores
 # ---------------------------------------------------------------------------
 
 def _build_claim_writing_system_prompt(output_language: str, age_group: str, debate_level: str) -> str:
-    return f"""Bạn là huấn luyện viên luyện viết LUẬN ĐIỂM (Claim) bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
+    return f"""Bạn là huấn luyện viên luyện viết LUẬN ĐIỂM (Claim) bằng {output_language}. KHÔNG dùng tiếng Anh.
 
-NHIỆM VỤ:
-  Người dùng luôn chọn một trong hai lập trường: Ủng hộ hoặc Phản đối.
-  Bạn sẽ ĐÁNH GIÁ luận điểm (claim) mà người dùng viết.
-  Trước khi điền JSON, xác định nội bộ:
-  a) Luận điểm có lập trường rõ ràng không?
-  b) Phạm vi có cụ thể, giới hạn hợp lý không?
-  c) Có kết nối trực tiếp với chủ đề không?
-  d) Có mạnh mẽ, có thể tranh biện được không?
+NHIỆM VỤ - Phân tích luận điểm và trả về JSON:
+  - Viết "ai_rebuttal" (chỉ nhận xét về LUẬN ĐIỂM, tuyệt đối không bình luận về bằng chứng hay lý luận khác):
+    * Chỉ tập trung bình luận và đánh giá xem luận điểm (Claim) của người dùng mạnh/yếu như thế nào (1–3 câu).
+  - RÀNG BUỘC LINK: Tuyệt đối KHÔNG chèn bất kỳ liên kết URL hay link markdown nào vào trong văn bản "ai_rebuttal". Văn bản "ai_rebuttal" phải hoàn toàn là text thuần túy.
+  - Giọng ({age_group}): {_tone_rule(age_group)} | Độ sâu ({debate_level}): {_level_rule(debate_level)}
 
 TRỌNG TÂM CHẤM: CHỈ tập trung vào claim_score.
-  - evidence_score và reasoning_score đặt = 0 (vì chế độ này KHÔNG yêu cầu bằng chứng hay lập luận).
-  - overall_score = claim_score (vì chỉ chấm claim).
+  - evidence_score = 0 | reasoning_score = 0 | overall_score = claim_score.
 
-Viết "ai_rebuttal" — 3–5 câu ĐÁNH GIÁ luận điểm bằng {output_language}:
-  - PHẢI chỉ ra điểm mạnh và điểm yếu CỤ THỂ của luận điểm
-  - PHẢI gợi ý cách viết lại luận điểm tốt hơn
-  - Giọng ({age_group}): {_tone_rule(age_group)}
-  - Độ sâu ({debate_level}): {_level_rule(debate_level)}
-
-THANG ĐIỂM claim_score (0–100):
-  - Lập trường rõ + phạm vi cụ thể + kết nối chủ đề + tranh biện được: 60–90
-  - Có lập trường nhưng mơ hồ, phạm vi quá rộng: 25–55
-  - Không có lập trường rõ hoặc chỉ là nhận xét chung: 0–25
-
-CHỐNG DỒN ĐIỂM:
-  - KHÔNG dùng cùng điểm cho các luận điểm khác nhau về chất lượng
-  - KHÔNG dùng số tròn trăm (10,20,30...)
-  - Luận điểm khác nhau PHẢI có điểm khác nhau"""
+THANG ĐIỂM & CHỐNG DỒN ĐIỂM:
+  - claim_score (0–100): Rõ lập trường + phạm vi tốt + tranh biện được: 60–90. Mơ hồ: 25–55. Yếu/nhận xét chung: 0–25.
+  - Lập luận khác nhau PHẢI có điểm khác nhau. KHÔNG dùng số tròn trăm (100) hoặc tận cùng là 0 (ví dụ: 10,20,30...)."""
 
 
 def _build_find_evidence_system_prompt(output_language: str, age_group: str, debate_level: str) -> str:
-    return f"""Bạn là huấn luyện viên luyện tìm BẰNG CHỨNG (Evidence) bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
+    return f"""Bạn là huấn luyện viên luyện tìm BẰNG CHỨNG (Evidence) bằng {output_language}. KHÔNG dùng tiếng Anh.
 
-NHIỆM VỤ:
-  Người dùng luôn chọn một trong hai lập trường: Ủng hộ hoặc Phản đối.
-  Bạn sẽ ĐÁNH GIÁ bằng chứng mà người dùng đưa ra để hỗ trợ một luận điểm.
-  Trước khi điền JSON, xác định nội bộ:
-  a) Có nguồn/tổ chức/số liệu có tên cụ thể không?
-  b) Bằng chứng có liên quan trực tiếp đến luận điểm không?
-  c) Bằng chứng có đủ cụ thể và đáng tin cậy không?
-  d) Có nhiều hơn một nguồn không?
+NHIỆM VỤ - Phân tích bằng chứng và trả về JSON:
+  - Viết "ai_rebuttal" (đánh giá CHỈ về BẰNG CHỨNG, tuyệt đối không bình luận về luận điểm hay lỗi lý luận khác):
+    1) Nhận xét mức độ phù hợp của bằng chứng đối với luận điểm (Claim) (1-2 câu).
+    2) Nhận xét độ mạnh/độ tin cậy của bằng chứng đó (1-2 câu).
+    3) Đưa ra gợi ý/khuyến nghị các nguồn tài liệu tốt hơn để tìm bằng chứng mạnh hơn (1-2 câu).
+  - RÀNG BUỘC LINK: Tuyệt đối KHÔNG chèn bất kỳ liên kết URL hay link markdown nào vào trong văn bản "ai_rebuttal". Văn bản "ai_rebuttal" phải hoàn toàn là text thuần túy.
+  - Giọng ({age_group}): {_tone_rule(age_group)} | Độ sâu ({debate_level}): {_level_rule(debate_level)}
 
 TRỌNG TÂM CHẤM: CHỈ tập trung vào evidence_score.
-  - claim_score và reasoning_score đặt = 0 (vì chế độ này KHÔNG yêu cầu viết claim hay lập luận).
-  - overall_score = evidence_score (vì chỉ chấm evidence).
+  - claim_score = 0 | reasoning_score = 0 | overall_score = evidence_score.
 
-CỔNG BẰNG CHỨNG — bắt buộc áp dụng:
-  CÓ bằng chứng thực (evidence_score > 0):
-    → Tên tổ chức + năm: "WHO 2023", "McKinsey 2022", "báo cáo OECD"
-    → Số liệu cụ thể: "23%", "tăng 3 lần", "15 triệu người"
-    → Sự kiện có ngày: "từ năm 2019", "tháng 3/2024"
-  KHÔNG phải bằng chứng (evidence_score=0):
-    → "Nhiều nghiên cứu cho thấy", "mọi người biết", "thực tế là"
-    → Lý luận thuần túy không có nguồn
+NGUỒN GỢI Ý ĐỂ TÌM BẰNG CHỨNG MẠNH HƠN (evidence_source_links):
+  - Dựa vào kết quả tìm kiếm trong "=== KẾT QUẢ TÌM KIẾM INTERNET ĐỂ AI LẤY BẰNG CHỨNG PHẢN BIỆN ===", hãy chọn ra 1-2 liên kết bài viết cụ thể và uy tín nhất để người dùng tham khảo tìm kiếm bằng chứng tốt hơn.
+  - Đưa các liên kết này vào mảng "evidence_source_links".
+  - Định dạng mỗi mục trong mảng: "Tên nguồn - URL cụ thể của bài viết/nghiên cứu" (ví dụ: "UNESCO - https://www.unesco.org/en/articles/more-specific-path"). Tuyệt đối không dùng link trang chủ chung chung (như https://unesco.org) nếu trong kết quả tìm kiếm có link bài viết cụ thể.
 
-Viết "ai_rebuttal" — 3–5 câu ĐÁNH GIÁ bằng chứng bằng {output_language}:
-  - PHẢI chỉ ra nguồn nào mạnh, nguồn nào yếu
-  - PHẢI gợi ý cách tìm bằng chứng tốt hơn
-  - Giọng ({age_group}): {_tone_rule(age_group)}
-  - Độ sâu ({debate_level}): {_level_rule(debate_level)}
+CỔNG BẰNG CHỨNG (evidence_score > 0 chỉ khi có bằng chứng thực tế):
+  - Có bằng chứng: Tên tổ chức/năm cụ thể, số liệu cụ thể, hoặc sự kiện rõ ngày.
+  - Không bằng chứng: 0.
 
-THANG ĐIỂM evidence_score (0–100):
-  - Nhiều nguồn cụ thể + số liệu + sự kiện: 60–90
-  - Một nguồn cụ thể: 30–60
-  - Không có nguồn thực: 0
+{_FACT_CHECK_INSTRUCTION}
 
-CHỐNG DỒN ĐIỂM:
-  - KHÔNG dùng cùng điểm cho các bằng chứng khác nhau về chất lượng
-  - KHÔNG dùng số tròn trăm (10,20,30...)"""
+GỢI Ý NGUỒN TỐT HƠN (better_source_suggestions):
+  - Gợi ý 2-3 nguồn dạng: "Tên nguồn/cơ sở dữ liệu - mô tả ngắn".
+
+THANG ĐIỂM & CHỐNG DỒN ĐIỂM:
+  - evidence_score (0–100): Nhiều nguồn + số liệu: 60–90. Một nguồn: 30–60. Không có nguồn thực: 0.
+  - Lập luận khác nhau PHẢI có điểm khác nhau. KHÔNG dùng số tròn trăm (100) hoặc tận cùng là 0 (ví dụ: 10,20,30...)."""
 
 
 def _build_quick_rebuttal_system_prompt(output_language: str, age_group: str, debate_level: str) -> str:
-    return f"""Bạn là huấn luyện viên luyện PHẢN BIỆN NHANH (Quick Rebuttal) bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
+    return f"""Bạn là huấn luyện viên luyện PHẢN BIỆN NHANH (Quick Rebuttal) bằng {output_language}. KHÔNG dùng tiếng Anh.
 
-NHIỆM VỤ:
-  Người dùng luôn chọn một trong hai lập trường: Ủng hộ hoặc Phản đối.
-  Bạn sẽ ĐÁNH GIÁ khả năng phản biện và phát hiện lỗ hổng logic của người dùng.
-  Trước khi điền JSON, xác định nội bộ:
-  a) Người dùng có xác định đúng điểm yếu trong lập luận không?
-  b) Phản biện có logic chặt chẽ không?
-  c) Có lỗi logic nào trong phản biện của người dùng không?
-  d) Chuỗi nhân quả có rõ ràng không?
+NHIỆM VỤ - Phân tích phản biện và trả về JSON:
+  - Viết "ai_rebuttal" (chỉ nhận xét về LẬP LUẬN/SUY LUẬN, tuyệt đối không bình luận về luận điểm hay bằng chứng khác):
+    * Chỉ tập trung bình luận và đánh giá xem lập luận/suy luận (Reasoning) của người dùng mạnh/yếu như thế nào (1–3 câu).
+  - RÀNG BUỘC LINK: Tuyệt đối KHÔNG chèn bất kỳ liên kết URL hay link markdown nào vào trong văn bản "ai_rebuttal". Văn bản "ai_rebuttal" phải hoàn toàn là text thuần túy.
+  - Giọng ({age_group}): {_tone_rule(age_group)} | Độ sâu ({debate_level}): {_level_rule(debate_level)}
 
 TRỌNG TÂM CHẤM: CHỈ tập trung vào reasoning_score.
-  - claim_score và evidence_score đặt = 0 (vì chế độ này KHÔNG yêu cầu viết claim hay tìm evidence).
-  - overall_score = reasoning_score (vì chỉ chấm reasoning).
+  - claim_score = 0 | evidence_score = 0 | overall_score = reasoning_score.
 
-Viết "ai_rebuttal" — 3–5 câu ĐÁNH GIÁ phản biện bằng {output_language}:
-  - PHẢI xác nhận những điểm người dùng phát hiện đúng
-  - PHẢI chỉ ra lỗ hổng mà người dùng bỏ sót
-  - PHẢI đưa ra phân tích đúng nếu người dùng sai
-  - Giọng ({age_group}): {_tone_rule(age_group)}
-  - Độ sâu ({debate_level}): {_level_rule(debate_level)}
-
-THANG ĐIỂM reasoning_score (0–100):
-  - Chuỗi nhân quả rõ + phát hiện đúng lỗ logic + không có lỗi logic mới: 60–90
-  - Có liên kết logic nhưng bỏ sót lỗ hổng quan trọng: 25–55
-  - Suy luận yếu, không phát hiện được lỗ hổng: 0–25
-
-CHỐNG DỒN ĐIỂM:
-  - KHÔNG dùng cùng điểm cho các phản biện khác nhau về chất lượng
-  - KHÔNG dùng số tròn trăm (10,20,30...)"""
+THANG ĐIỂM & CHỐNG DỒN ĐIỂM:
+  - reasoning_score (0–100): Chuỗi nhân quả rõ + phát hiện đúng lỗ logic: 60–90. Bỏ sót lỗ hổng quan trọng: 25–55. Suy luận yếu/sai: 0–25.
+  - Lập luận khác nhau PHẢI có điểm khác nhau. KHÔNG dùng số tròn trăm (100) hoặc tận cùng là 0 (ví dụ: 10,20,30...)."""
 
 
 def _build_quick_rebuttal_system_prompt_v2(output_language: str, age_group: str, debate_level: str) -> str:
@@ -351,55 +416,30 @@ Feedback chi tap trung vao quick rebuttal quality, khong dung free debate or ful
 
 
 def _build_full_argument_system_prompt(output_language: str, age_group: str, debate_level: str) -> str:
-    return f"""Bạn là hệ thống chấm điểm và phản biện lập luận HOÀN CHỈNH (C+E+R) bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
+    return f"""Bạn là hệ thống chấm điểm và phản biện lập luận HOÀN CHỈNH (C+E+R) bằng {output_language}. KHÔNG dùng tiếng Anh.
 
-NHIỆM VỤ — phân tích nội bộ rồi trả về DUY NHẤT JSON (không có text nào trước JSON):
-  Người dùng luôn chọn một trong hai lập trường: Ủng hộ hoặc Phản đối.
-  Trước khi điền JSON, xác định nội bộ:
-  a) Có nguồn/tổ chức/số liệu có tên cụ thể không?
-  b) Lập luận chính là gì? Phạm vi có rõ không?
-  c) Có lỗi logic hoặc giả định ẩn không?
-  d) Ba thành phần C+E+R có liên kết chặt chẽ không?
+NHIỆM VỤ - Phân tích lập luận và trả về JSON:
+  - Viết "ai_rebuttal": Đoạn văn 4–6 câu đánh giá toàn diện cả 3 phần (luận điểm, bằng chứng, lập luận), chỉ ra phần yếu nhất và đưa ra gợi ý, ví dụ cụ thể (tên tổ chức, số liệu cụ thể nếu có). Tuyệt đối KHÔNG sử dụng các nhận xét/gợi ý chung chung mơ hồ.
+  - RÀNG BUỘC LINK: Tuyệt đối KHÔNG chèn bất kỳ liên kết URL hay link markdown nào vào trong văn bản "ai_rebuttal". Văn bản "ai_rebuttal" phải hoàn toàn là text thuần túy.
+  - Giọng ({age_group}): {_tone_rule(age_group)} | Độ sâu ({debate_level}): {_level_rule(debate_level)}
 
-TRỌNG TÂM: Chấm ĐẦY ĐỦ cả 3 thành phần Claim + Evidence + Reasoning.
-  overall_score = round(claim×0.3 + evidence×0.3 + reasoning×0.4)
+NGUỒN THAM KHẢO AI (evidence_source_links):
+  - Hãy chọn một bài viết/số liệu thực tế từ "=== KẾT QUẢ TÌM KIẾM INTERNET ĐỂ AI LẤY BẰNG CHỨNG PHẢN BIỆN ===" để đưa vào phần bằng chứng trong "ai_rebuttal".
+  - BẮT BUỘC cung cấp liên kết nguồn cụ thể trích xuất trực tiếp từ kết quả tìm kiếm đó để đưa vào "evidence_source_links".
+  - Định dạng: "Tên nguồn - URL cụ thể của bài viết/nghiên cứu" (ví dụ: "UNESCO - https://www.unesco.org/en/articles/more-specific-path"). Tuyệt đối KHÔNG dùng link trang chủ chung chung (như https://unesco.org) nếu trong kết quả tìm kiếm có link bài viết cụ thể.
 
-Viết "ai_rebuttal" — 4–6 câu ĐÁNH GIÁ TOÀN DIỆN lập luận bằng {output_language}:
-  - PHẢI đánh giá cả 3 thành phần: luận điểm, bằng chứng, lập luận
-  - PHẢI chỉ ra thành phần yếu nhất và gợi ý cải thiện cụ thể
-  - Giọng ({age_group}): {_tone_rule(age_group)}
-  - Độ sâu ({debate_level}): {_level_rule(debate_level)}
+{_FACT_CHECK_INSTRUCTION}
 
-CỔNG BẰNG CHỨNG — bắt buộc áp dụng trước khi chấm:
-  CÓ bằng chứng thực (has_real_evidence=true, evidence_score > 0):
-    → Tên tổ chức + năm, số liệu cụ thể, sự kiện có ngày
-  KHÔNG phải bằng chứng (has_real_evidence=false, evidence_score=0):
-    → "Nhiều nghiên cứu cho thấy", "mọi người biết", lý luận thuần túy
+CỔNG BẰNG CHỨNG (evidence_score > 0 chỉ khi có bằng chứng thực tế):
+  - Có bằng chứng thực tế: Tên tổ chức/năm cụ thể, số liệu cụ thể, hoặc sự kiện rõ ngày tháng.
+  - Không có bằng chứng thực tế (evidence_score = 0): Chỉ dùng "nhiều nghiên cứu cho thấy", "mọi người đều biết", hoặc lý lẽ suông không nguồn.
 
-THANG ĐIỂM (chấm theo TỪNG TRƯỜNG HỢP CỤ THỂ):
-  claim_score: Chất lượng luận điểm chính (0–100)
-    - Có lập trường rõ + phạm vi cụ thể + kết nối với chủ đề: 50–80
-    - Có lập trường nhưng mơ hồ, không phạm vi: 20–45
-    - Không có lập trường rõ: 0–20
-  evidence_score: Chất lượng bằng chứng (0–100, = 0 nếu không có bằng chứng thực)
-    - Nhiều nguồn cụ thể + số liệu + sự kiện: 60–90
-    - Một nguồn cụ thể: 30–60
-    - Không có nguồn thực: 0
-  reasoning_score: Chất lượng suy luận (0–100)
-    - Chuỗi nhân quả rõ + không có lỗi logic: 50–80
-    - Có liên kết logic nhưng có lỗ hổng: 25–50
-    - Suy luận yếu hoặc circular: 0–25
-
-CHỐNG DỒN ĐIỂM:
-  - KHÔNG dùng cùng điểm cho các lập luận khác nhau về chất lượng
-  - KHÔNG dùng số tròn trăm hoặc trừ các giá trị cuối bằng 0 (10,20,30...)
-  - Lập luận khác nhau PHẢI có điểm khác nhau"""
-
-
-import re
-import unicodedata
-
-# ---------------------------------------------------------------------------
+THANG ĐIỂM & CHỐNG DỒN ĐIỂM:
+  - claim_score (0–100): Lập trường rõ + phạm vi cụ thể: 50–80. Mơ hồ: 20–45. Không rõ: 0–20.
+  - evidence_score (0–100): Nhiều nguồn + số liệu: 60–90. Một nguồn: 30–60. Không bằng chứng: 0.
+  - reasoning_score (0–100): Nhân quả rõ + không lỗi logic: 50–80. Có lỗ hổng: 25–50. Yếu: 0–25.
+  - overall_score = round(claim×0.3 + evidence×0.3 + reasoning×0.4)
+  - Lập luận khác nhau PHẢI có điểm khác nhau. KHÔNG dùng số tròn trăm (100) hoặc tận cùng là 0 (ví dụ: 10,20,30...)."""
 # Mode dispatch helper
 # ---------------------------------------------------------------------------
 PRACTICE_MODE_ALIASES = {
@@ -548,6 +588,8 @@ def build_cer_messages(
     practice_target_flaws: list[str] | None = None,
     practice_round: int | None = None,
     memory_context: dict | None = None,
+    user_search_context: str = "",
+    ai_search_context: str = "",
 ) -> list[dict[str, str]]:
     """
     Returns a [system, user] message pair for the Groq API.
@@ -575,6 +617,9 @@ def build_cer_messages(
     )
     memory_section = _memory_context(memory_context)
 
+    user_search_section = f"\n{user_search_context}\n" if user_search_context else ""
+    ai_search_section = f"\n{ai_search_context}\n" if ai_search_context else ""
+
     user_prompt = (
         f"=== NGỮ CẢNH ===\n"
         f"Chủ đề   : {topic}\n"
@@ -584,11 +629,13 @@ def build_cer_messages(
         f"{history_section}"
         f"{memory_section}"
         f"{practice_section}"
+        f"{user_search_section}"
+        f"{ai_search_section}"
         f"\n=== LẬP LUẬN HIỆN TẠI CỦA NGƯỜI DÙNG ===\n"
         f"{user_argument}\n"
         f"\n=== YÊU CẦU ===\n"
         f"Phân tích lập luận trên và trả về DUY NHẤT JSON hợp lệ (không có text nào trước JSON, không markdown):\n"
-        f"{_json_schema(output_language, mode)}"
+        f"{_json_schema_for_mode(mode, output_language)}"
     )
 
     return [
