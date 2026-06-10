@@ -36,7 +36,7 @@
     },
     {
       id: "argument-building",
-      icon: "↗",
+      icon: "img:./assets/lumi-building-idea.png",
       label: "Xây dựng lập luận",
       title: "Cách dựng một lập luận",
       summary: "Một lượt tranh biện tốt nên đi theo trình tự rõ: nêu ý, chứng minh, giải thích và chốt lại.",
@@ -77,7 +77,7 @@
     },
     {
       id: "strong-cer",
-      icon: "✓",
+      icon: "img:./assets/lumi-right.png",
       label: "Ví dụ áp dụng",
       title: "Ví dụ CER tốt",
       summary: "Một CER tốt có claim cụ thể, bằng chứng rõ và reasoning giải thích tác động.",
@@ -111,7 +111,7 @@
     },
     {
       id: "weak-cer",
-      icon: "!",
+      icon: "img:./assets/lumi-warning.png",
       label: "Ví dụ đối chiếu",
       title: "Ví dụ CER yếu",
       summary: "CER yếu thường chỉ là cảm nhận cá nhân, thiếu evidence và thiếu cầu nối logic.",
@@ -145,7 +145,7 @@
     },
     {
       id: "rebuttal-techniques",
-      icon: "?",
+      icon: "img:./assets/lumi-plan.png",
       label: "Kỹ thuật phản biện",
       title: "Phản biện có chiến lược",
       summary: "Phản biện mạnh không chỉ nói ngược lại, mà kiểm tra giả định, bằng chứng và hệ quả.",
@@ -186,7 +186,7 @@
     },
     {
       id: "fallacies",
-      icon: "⚖",
+      icon: "img:./assets/lumi-debate.png",
       label: "Tư duy phản biện",
       title: "Lỗi ngụy biện logic",
       summary: "Ngụy biện làm lập luận nghe có vẻ mạnh nhưng nền logic lại yếu.",
@@ -241,7 +241,7 @@
     },
     {
       id: "speaking-improvement",
-      icon: "✦",
+      icon: "img:./assets/lumi-speaking.png",
       label: "Cải thiện bài nói",
       title: "Nói rõ và thuyết phục hơn",
       summary: "Một bài nói tốt cần gọn, cụ thể và có đường dây logic dễ theo dõi.",
@@ -282,7 +282,7 @@
     },
     {
       id: "score-guide",
-      icon: "★",
+      icon: "img:./assets/lumi-score.png",
       label: "Đánh giá điểm",
       title: "Hiểu điểm CER",
       summary: "Điểm CER giúp bạn biết phần nào của lập luận đang mạnh và phần nào cần luyện thêm.",
@@ -323,7 +323,7 @@
     },
     {
       id: "practice-guardrails",
-      icon: "×",
+      icon: "img:./assets/lumi-wrong.png",
       label: "Luyện tập",
       title: "Các lỗi thường gặp",
       summary: "Các lỗi phổ biến làm lượt tranh biện yếu dù ý tưởng ban đầu không tệ.",
@@ -410,7 +410,7 @@
   function renderSlide(slide, index, total) {
     return `
       <article class="knowledge-slide ${slide.tabs?.length ? "has-tabs" : ""}" role="group" aria-roledescription="slide" aria-label="${index + 1} / ${total}" data-slide-id="${escapeHtml(slide.id)}">
-        <div class="knowledge-slide-icon" aria-hidden="true">${escapeHtml(slide.icon)}</div>
+        <div class="knowledge-slide-icon" aria-hidden="true">${slide.icon.startsWith('img:') ? `<img src="${slide.icon.slice(4)}" class="slide-custom-img" alt="" style="width:100%;height:100%;object-fit:contain;">` : escapeHtml(slide.icon)}</div>
         <div class="knowledge-slide-content">
           <div class="knowledge-slide-label">${escapeHtml(slide.label)}</div>
           <h3>${escapeHtml(slide.title)}</h3>

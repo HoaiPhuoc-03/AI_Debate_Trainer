@@ -6954,6 +6954,12 @@
       0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(255, 69, 0, 0.4)); }
       100% { transform: scale(1.2); filter: drop-shadow(0 0 15px rgba(255, 69, 0, 1)); }
     }
+    .knowledge-slide-icon .slide-custom-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 6px;
+    }
   </style>
   <link rel="stylesheet" href="styles/onboarding.css">
   <link rel="stylesheet" href="styles/tutorial.css">
@@ -6978,7 +6984,16 @@
         viên tranh biện cá nhân.</p>
       <div class="auth-actions">
         <button class="auth-button" onclick="goToAuthView('login')">Đăng nhập &rarr;</button>
+        <button class="auth-btn auth-btn-secondary auth-btn-google" onclick="loginWithGoogle()">
+          <img src="data:image/svg+xml;base64,..." alt="Google" width="20" height="20">
+          Đăng nhập bằng Google
+        </button>
+
         <button class="auth-ghost" onclick="goToAuthView('signup')">Tạo tài khoản</button>
+        <button class="auth-btn auth-btn-secondary auth-btn-google" onclick="loginWithGoogle()">
+          <img src="data:image/svg+xml;base64,..." alt="Google" width="20" height="20">
+          Đăng ký bằng Google
+        </button>
         <button class="auth-link-button" onclick="enterGuestMode()">Tiếp tục với chế độ khách &rarr;</button>
       </div>
       <div class="auth-feature-row">
@@ -7102,7 +7117,7 @@
           <div class="auth-divider">hoặc tiếp tục với</div>
           <div class="auth-socials">
             <button class="auth-ghost"
-              onclick="showAuthError('auth-login-error', 'Đăng nhập mạng xã hội chưa được cấu hình cho bản demo trên máy này.')">Google</button>
+              onclick="loginWithGoogle">Google</button>
             <button class="auth-ghost"
               onclick="showAuthError('auth-login-error', 'Đăng nhập mạng xã hội chưa được cấu hình cho bản demo trên máy này.')">Microsoft</button>
           </div>
@@ -11321,6 +11336,28 @@
   <script src="components/knowledge/KnowledgeCarousel.js"></script>
   <script src="scripts/tutorial.js"></script>
   <script src="scripts/onboarding.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <script>
+  // 1. DÁN ĐOẠN FIREBASE CONFIG MÀY COPY Ở BƯỚC 2.1 VÀO ĐÂY
+    const firebaseConfig = {
+    apiKey: "AIzaSyAwSToGwLG9UuXv5GwR7WKwFilv0QT5HkI",
+    authDomain: "ai-debate-trainer-1dbbc.firebaseapp.com",
+    projectId: "ai-debate-trainer-1dbbc",
+    storageBucket: "ai-debate-trainer-1dbbc.firebasestorage.app",
+    messagingSenderId: "582067486106",
+    appId: "1:582067486106:web:c068f96b5f314a17e98e23",
+    measurementId: "G-HJWY9Z12CN"
+    };
+
+  // 2. Khởi tạo Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+  </script>
   <script>
     // ─── INTERACTIVE PARTICLE CONSTELLATION EFFECT ─────────────────────────────
     (function() {
@@ -11494,6 +11531,129 @@
       }
       requestAnimationFrame(loop);
     })();
+
+    function loginWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      
+      auth.signInWithPopup(provider)
+        .then((result) => {
+          const user = result.user;
+          console.log("Đăng nhập thành công!", user.displayName);
+          
+          saveUserToFirestore(user);
+          
+
+          alert(`Chào mừng ${user.displayName} đến với Đấu trường!`);
+
+        })
+        .catch((error) => {
+          console.error("Lỗi đăng nhập Google:", error.message);
+          alert("Lỗi cmnr: " + error.message);
+        });
+    }
+
+    function saveUserToFirestore(user) {
+      const userRef = db.collection("users").doc(user.uid);
+
+      userRef.set({
+        name: user.displayName || "Debater Ẩn danh",
+        email: user.email,
+        photoURL: user.photoURL || "",
+        lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+        // Mày có thể thêm streak_days: 0 ở đây nếu muốn khởi tạo cho user mới
+      }, { merge: true })
+      .then(() => {
+        console.log("Đã đồng bộ data lên Firestore!");
+      })
+      .catch((error) => {
+        console.error("Lỗi lưu Firestore:", error);
+      });
+    }
+
+
+    function loginWithEmail(email, password) {
+      auth.signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          saveUserToFirestore(userCredential.user);
+          // Đăng nhập thành công -> ẩn màn Auth, vào màn Home
+          enterApp("logged-in", "home"); 
+        })
+        .catch((error) => {
+          // Bắn lỗi ra cái hộp đỏ trên UI
+          showAuthError('auth-login-error', 'Sai email hoặc mật khẩu rùi má ơi!');
+        });
+    }
+
+    function registerWithEmail(email, password, displayName) {
+      auth.createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+            
+            // Update cái tên vào Profile của Firebase Auth
+          user.updateProfile({ displayName: displayName }).then(() => {
+              // Lưu lên Firestore
+            saveUserToFirestore(user);
+            enterApp("logged-in", "home"); 
+          });
+        })
+        .catch((error) => {
+          let errorMsg = "Lỗi đăng ký!";
+          if (error.code === 'auth/email-already-in-use') errorMsg = "Email này đã được sử dụng!";
+          showAuthError('auth-signup-error', errorMsg);
+        });
+    }
+
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        console.log("User vẫn đang đăng nhập:", user.email);
+      } else {
+        console.log("Chưa đăng nhập hoặc đã đăng xuất.");
+
+      }
+    });
+
+
+    function logout() {
+      auth.signOut().then(() => {
+        console.log("Đã đăng xuất");
+        alert("Hẹn gặp lại!");
+
+      });
+    }
+    function handleEmailLogin() {
+      const email = document.getElementById("login-email").value;
+      const pass = document.getElementById("login-password").value;
+      
+      if (!email || !pass) {
+        showAuthError('auth-login-error', 'Vui lòng nhập đầy đủ Email và Mật khẩu!');
+        return;
+      }
+      
+      document.getElementById('auth-login-error').classList.remove('active');
+      
+      loginWithEmail(email, pass);
+    }
+
+    function handleEmailSignup() {
+      const name = document.getElementById("signup-name").value; // App mày có ô Tên hiển thị
+      const email = document.getElementById("signup-email").value;
+      const pass = document.getElementById("signup-password").value;
+      
+      if (!name || !email || !pass) {
+        showAuthError('auth-signup-error', 'Vui lòng nhập đầy đủ thông tin!');
+        return;
+      }
+      
+      if (pass.length < 6) {
+        showAuthError('auth-signup-error', 'Mật khẩu phải có ít nhất 6 ký tự!');
+        return;
+      }
+
+      document.getElementById('auth-signup-error').classList.remove('active');
+      
+      // Gọi hàm Firebase (Tao truyền thêm tên vào để mốt lưu lên Firestore)
+      registerWithEmail(email, pass, name); 
+    }
   </script>
 </body>
 
