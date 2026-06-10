@@ -378,11 +378,59 @@ def _choose_topic(
 
 
 def _claim_from_topic(topic_title: str) -> str:
-    clean = topic_title.strip().rstrip("?")
-    lowered = clean.casefold()
-    if lowered.startswith("có nên "):
-        return f"Nên {clean[7:].strip()} vì lựa chọn này có thể tạo ra lợi ích thiết thực và có thể kiểm chứng."
-    return f"Nên ủng hộ quan điểm về '{clean}' vì nó có thể mang lại lợi ích thiết thực cho người học hoặc xã hội."
+    clean = " ".join(str(topic_title or "").strip().split()).rstrip(" ?.!").strip()
+    if not clean:
+        return "Nên triển khai giải pháp này để mang lại lợi ích thiết thực."
+
+    # Pattern 1: "Có nên [action] (không)?" -> "Nên [action]."
+    match = re.match(r"^có nên\s+(.+?)(?:\s+không)?$", clean, flags=re.IGNORECASE)
+    if match:
+        action = match.group(1).strip()
+        return f"Nên {action}."
+
+    # Pattern 2: "[actor] có nên [action] (không)?" -> "[actor] nên [action]."
+    match = re.match(r"^(.+?)\s+có nên\s+(.+?)(?:\s+không)?$", clean, flags=re.IGNORECASE)
+    if match:
+        actor = match.group(1).strip()
+        action = match.group(2).strip()
+        return f"{actor} nên {action}."
+
+    # Pattern 3: "[subject] có phải là [definition] (không)?" -> "[subject] là [definition]."
+    match = re.match(r"^(.+?)\s+có phải là\s+(.+?)(?:\s+không)?$", clean, flags=re.IGNORECASE)
+    if match:
+        subject = match.group(1).strip()
+        definition = match.group(2).strip()
+        return f"{subject} là {definition}."
+
+    # Pattern 4: "[subject] có còn là [definition] (không)?" -> "[subject] vẫn là [definition]."
+    match = re.match(r"^(.+?)\s+có còn là\s+(.+?)(?:\s+không)?$", clean, flags=re.IGNORECASE)
+    if match:
+        subject = match.group(1).strip()
+        definition = match.group(2).strip()
+        return f"{subject} vẫn là {definition}."
+
+    # Pattern 5: "[subject] có làm/gây [effect] (không)?" -> "[subject] làm/gây [effect]."
+    match = re.match(r"^(.+?)\s+có\s+(làm|gây|ảnh hưởng|giúp|tạo|mang lại|dẫn đến)\s+(.+?)(?:\s+không)?$", clean, flags=re.IGNORECASE)
+    if match:
+        subject = match.group(1).strip()
+        verb = match.group(2).strip()
+        effect = match.group(3).strip()
+        return f"{subject} {verb} {effect}."
+
+    # Pattern 6: "[subject] có [adjective] hơn [subject2] (không)?" -> "[subject] [adjective] hơn [subject2]."
+    match = re.match(r"^(.+?)\s+có\s+(\w+)\s+hơn\s+(.+?)(?:\s+không)?$", clean, flags=re.IGNORECASE)
+    if match:
+        subj1 = match.group(1).strip()
+        adj = match.group(2).strip()
+        subj2 = match.group(3).strip()
+        return f"{subj1} {adj} hơn {subj2}."
+
+    # Default fallback: Remove trailing "không" and clean up
+    clean_no_khong = re.sub(r"\s+không$", "", clean, flags=re.IGNORECASE).strip()
+    if clean_no_khong:
+        return f"{clean_no_khong}."
+
+    return f"Nên ủng hộ quan điểm về '{clean}'."
 
 
 def _topic_metadata(topic: dict) -> dict:
@@ -526,7 +574,7 @@ def _build_topic_prompt(mode: str, topic: dict, *, round_number: int | None = No
     if mode == "find_evidence":
         claim = _claim_from_topic(title)
         instruction = "Hãy đưa ra bằng chứng cụ thể để hỗ trợ hoặc phản bác claim này."
-        prompt = f"Chủ đề: {title}\nClaim: {claim}\n\n{instruction}"
+        prompt = claim
         return {
             "mode": mode,
             "prompt_type": "claim_prompt",

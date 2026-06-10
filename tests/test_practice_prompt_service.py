@@ -89,7 +89,7 @@ class PracticePromptServiceTests(unittest.TestCase):
         self.assertEqual(result["mode"], "find_evidence")
         self.assertEqual(result["source"], "topic_bank")
         self.assertEqual(result["prompt_type"], "claim_prompt")
-        self.assertIn("Claim:", result["prompt"])
+        self.assertEqual(result["prompt"], result["claim"])
         self.assertTrue(result["claim"])
         self.assertTrue(result["topic"])
 
