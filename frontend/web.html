@@ -2307,6 +2307,49 @@
         var(--bg);
     }
 
+    /* ── Animated gradient background for auth screens ── */
+    #auth-shell::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: linear-gradient(
+        120deg,
+        rgba(91, 173, 255, 0.22) 0%,
+        rgba(167, 139, 250, 0.18) 25%,
+        rgba(94, 214, 214, 0.16) 50%,
+        rgba(91, 173, 255, 0.20) 75%,
+        rgba(251, 113, 133, 0.14) 100%
+      );
+      background-size: 300% 300%;
+      animation: authGradientShift 8s ease infinite;
+    }
+
+    body[data-theme="dark"] #auth-shell::before {
+      background: linear-gradient(
+        120deg,
+        rgba(59, 130, 246, 0.28) 0%,
+        rgba(139, 92, 246, 0.22) 25%,
+        rgba(32, 231, 209, 0.18) 50%,
+        rgba(59, 130, 246, 0.24) 75%,
+        rgba(251, 113, 133, 0.18) 100%
+      );
+      background-size: 300% 300%;
+      animation: authGradientShift 8s ease infinite;
+    }
+
+    #auth-shell > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes authGradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
     .auth-view {
       display: none;
       width: min(100%, 640px);
