@@ -77,13 +77,13 @@ def sign_up_with_email(
                 },
             }
         )
+        return _auth_response(response)
     except Exception as exc:
         _auth_error(
             exc,
             default_status=400,
             default_message="Unable to register with Supabase Auth.",
         )
-    return _auth_response(response)
 
 
 def sign_in_with_email(email: str, password: str) -> dict:
@@ -91,28 +91,48 @@ def sign_in_with_email(email: str, password: str) -> dict:
         response = get_supabase_public_client().auth.sign_in_with_password(
             {"email": email, "password": password}
         )
+        return _auth_response(response)
     except Exception as exc:
         _auth_error(
             exc,
             default_status=401,
             default_message="Invalid email or password.",
         )
-    return _auth_response(response)
 
 
 def get_user_from_access_token(access_token: str) -> dict:
-    try:
-        response = get_supabase_public_client().auth.get_user(access_token)
-    except Exception as exc:
-        _auth_error(
-            exc,
-            default_status=401,
-            default_message="Invalid or expired token.",
-        )
-    user = getattr(response, "user", None) if response else None
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid or expired token.")
-    return _user_dict(user)
+    """
+    Validate an access token and return the user dict.
+    Retries once with a fresh Supabase client if an HTTP/2
+    ConnectionTerminated error is encountered (common on second request
+    after a long-lived connection is reset by the server).
+    """
+    import time
+    last_exc: Exception | None = None
+    for attempt in range(2):
+        try:
+            # get_supabase_public_client() always returns a fresh client (no cache)
+            response = get_supabase_public_client().auth.get_user(access_token)
+            user = getattr(response, "user", None) if response else None
+            if not user:
+                raise HTTPException(status_code=401, detail="Invalid or expired token.")
+            return _user_dict(user)
+        except HTTPException:
+            raise
+        except Exception as exc:
+            last_exc = exc
+            err_str = str(exc).lower()
+            # Retry only on connection-level errors, not auth errors
+            if any(kw in err_str for kw in ("connectionterminated", "connection", "reset", "eof", "broken pipe", "timeout")):
+                if attempt == 0:
+                    time.sleep(0.3)
+                    continue
+            break
+    _auth_error(
+        last_exc,
+        default_status=401,
+        default_message="Invalid or expired token.",
+    )
 
 
 def sign_out(access_token: str) -> dict:
