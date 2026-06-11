@@ -173,6 +173,7 @@ def _rubric_to_analysis(
         "content_flags": [],
         "raw_text": rubric.get("raw_scoring_text", ""),
         "raw_scoring_text": rubric.get("raw_scoring_text", ""),
+        "model_claim": rubric.get("model_claim"),
         "provider": provider,
         "model": model,
         "error": llm_error,
@@ -180,7 +181,25 @@ def _rubric_to_analysis(
 
 
 def _text_key(value: str | None) -> str:
-    text = unicodedata.normalize("NFD", str(value or "").strip().casefold())
+    val = str(value or "").strip()
+    while True:
+        lowered = val.lower()
+        if lowered.startswith("tình huống:"):
+            val = val[len("tình huống:"):].strip()
+        elif lowered.startswith("tinh huong:"):
+            val = val[len("tinh huong:"):].strip()
+        elif lowered.startswith("chủ đề:"):
+            val = val[len("chủ đề:"):].strip()
+        elif lowered.startswith("chu de:"):
+            val = val[len("chu de:"):].strip()
+        elif lowered.startswith("đề bài:"):
+            val = val[len("đề bài:"):].strip()
+        elif lowered.startswith("de bai:"):
+            val = val[len("de bai:"):].strip()
+        else:
+            break
+            
+    text = unicodedata.normalize("NFD", val.casefold())
     text = "".join(char for char in text if unicodedata.category(char) != "Mn")
     text = re.sub(r"[^\w]+", " ", text)
     return " ".join(text.split())
@@ -277,6 +296,7 @@ def _fallback_practice_prompt(
         "prompt": prompt,
         "instruction": practice_instruction_for_mode(normalized),
         "warning": warning,
+        "suggested_angles": [],
     }
 
 
@@ -349,6 +369,7 @@ def generate_practice_prompt(
                 "prompt": prompt,
                 "instruction": str(parsed.get("instruction") or practice_instruction_for_mode(normalized)).strip(),
                 "warning": None,
+                "suggested_angles": parsed.get("suggested_angles") or [],
             }
         return _fallback_practice_prompt(
             normalized,
