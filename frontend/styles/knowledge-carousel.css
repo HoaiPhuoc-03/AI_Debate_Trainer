@@ -1,3 +1,19 @@
+.slide-custom-img {
+  width: 80px !important;
+  height: 80px !important;
+  object-fit: cover !important;
+
+
+  border-radius: 20px !important;
+
+  border: 2px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2), 0 4px 10px rgba(59, 130, 246, 0.3) !important;
+
+  margin-bottom: 16px !important;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
 .knowledge-carousel-modal {
   width: min(1040px, calc(100vw - 96px));
   height: min(760px, calc(100vh - 96px));
@@ -542,4 +558,34 @@ body[data-theme="dark"] .knowledge-slide {
   .knowledge-slide {
     transition: none !important;
   }
+}
+
+/* ── Dark mode fixes ── */
+body[data-theme="dark"] .knowledge-example,
+body[data-theme="dark"] .knowledge-takeaway {
+  background: color-mix(in srgb, var(--card, #1e2736) 78%, transparent);
+  border-color: color-mix(in srgb, var(--tutorial-border) 50%, transparent);
+}
+
+body[data-theme="dark"] .knowledge-tab-panel {
+  background:
+    radial-gradient(circle at 14% 20%, color-mix(in srgb, var(--arena-cyan, #38d5e8) 10%, transparent), transparent 44%),
+    color-mix(in srgb, var(--card, #1e2736) 84%, transparent);
+  border-color: color-mix(in srgb, var(--arena-violet, #8b7cff) 22%, var(--tutorial-border));
+}
+
+body[data-theme="dark"] .knowledge-tab-example {
+  background: color-mix(in srgb, var(--arena-cyan, #38d5e8) 9%, #0f172a);
+}
+
+body[data-theme="dark"] .knowledge-takeaway {
+  background: color-mix(in srgb, #ffd76a 8%, var(--card, #1e2736));
+}
+
+body[data-theme="dark"] .knowledge-visual-node {
+  background: color-mix(in srgb, var(--card, #1e2736) 82%, transparent);
+}
+
+body[data-theme="dark"] .knowledge-slide-visual {
+  background: color-mix(in srgb, var(--arena-cyan, #38d5e8) 9%, #0f172a);
 }
