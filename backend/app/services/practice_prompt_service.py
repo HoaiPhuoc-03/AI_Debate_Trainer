@@ -180,8 +180,26 @@ def _normalize_mode(mode: str | None) -> str:
     return mode_key if mode_key in SUPPORTED_PROMPT_MODES else "claim_writing"
 
 
-def _key(text: str) -> str:
-    normalized = unicodedata.normalize("NFKD", str(text or "").casefold())
+def _key(text: str | None) -> str:
+    val = str(text or "").strip()
+    while True:
+        lowered = val.lower()
+        if lowered.startswith("tình huống:"):
+            val = val[len("tình huống:"):].strip()
+        elif lowered.startswith("tinh huong:"):
+            val = val[len("tinh huong:"):].strip()
+        elif lowered.startswith("chủ đề:"):
+            val = val[len("chủ đề:"):].strip()
+        elif lowered.startswith("chu de:"):
+            val = val[len("chu de:"):].strip()
+        elif lowered.startswith("đề bài:"):
+            val = val[len("đề bài:"):].strip()
+        elif lowered.startswith("de bai:"):
+            val = val[len("de bai:"):].strip()
+        else:
+            break
+            
+    normalized = unicodedata.normalize("NFKD", val.casefold())
     normalized = "".join(ch for ch in normalized if not unicodedata.combining(ch))
     normalized = normalized.replace("đ", "d").replace("Ä‘", "d")
     return " ".join(re.findall(r"[\w]+", normalized, flags=re.UNICODE))
@@ -295,7 +313,7 @@ def _topic_to_claim_subject(topic_title: str) -> str:
     return topic_to_subject_statement(topic_title)
 
 
-def _sanitize_weak_argument(text: str) -> str:
+def _sanitize_weak_argument(text: str | None) -> str:
     clean = str(text or "").strip()
     clean = re.sub(
         r"^(?:phản biện\s+)?(?:lập|luận)\s*(?:luận|điểm)?\s*yếu\s*:?\s*",
@@ -371,7 +389,23 @@ def _choose_topic(
     if not candidates:
         return None
     previous_keys = _extract_previous_topics(used_prompts, previous_topics)
-    fresh = [topic for topic in candidates if _key(topic.get("title")) not in previous_keys]
+    fresh = []
+    for topic in candidates:
+        t_title = topic.get("title")
+        t_key = _key(t_title)
+        is_used = False
+        for pk in previous_keys:
+            if t_key == pk or t_key in pk or pk in t_key:
+                is_used = True
+                break
+        if not is_used and previous_topics:
+            for pt in previous_topics:
+                if _too_similar(t_title, pt):
+                    is_used = True
+                    break
+        if not is_used:
+            fresh.append(topic)
+
     pool = fresh or candidates
     seed = f"{session_id or ''}:{mode}:{round_number or 0}:{difficulty or ''}:{category or ''}"
     return pool[_stable_index(seed, len(pool))]
@@ -442,8 +476,10 @@ def _build_quick_rebuttal_prompt_from_topic(
     template_data = FALLACY_TEMPLATES[template_index]
     fallacy_hint = str(template_data["fallacy_hint"])
     target_flaws = list(template_data.get("target_flaws") or [fallacy_hint])
+    template = template_data.get("template")
+    template_str = str(template) if template is not None else ""
     weak_argument = _sanitize_weak_argument(
-        template_data["template"].format(
+        template_str.format(
             subject_statement=subject_statement,
             subject_statement_cap=_clean_sentence(subject_statement).rstrip("."),
         )
@@ -461,7 +497,29 @@ def _build_quick_rebuttal_prompt_from_topic(
     }
 
 
-def _finalize_prompt_result(result: dict) -> dict:
+def get_stance_instruction(mode: str, stance: str | None) -> str:
+    normalized_stance = str(stance or "").strip().lower()
+    if mode == "claim_writing":
+        if "support" in normalized_stance or "ủng hộ" in normalized_stance:
+            return "Hãy viết một claim rõ ràng, thể hiện lập trường ỦNG HỘ và có thể tranh luận được."
+        if "oppose" in normalized_stance or "phản đối" in normalized_stance:
+            return "Hãy viết một claim rõ ràng, thể hiện lập trường PHẢN ĐỐI và có thể tranh luận được."
+        return "Hãy viết một claim rõ ràng, thể hiện lập trường ủng hộ hoặc phản đối và có thể tranh luận được."
+    elif mode == "full_argument":
+        if "support" in normalized_stance or "ủng hộ" in normalized_stance:
+            return "Hãy xây dựng một lập luận đầy đủ gồm Claim, Evidence và Reasoning theo lập trường ỦNG HỘ."
+        if "oppose" in normalized_stance or "phản đối" in normalized_stance:
+            return "Hãy xây dựng một lập luận đầy đủ gồm Claim, Evidence và Reasoning theo lập trường PHẢN ĐỐI."
+        return "Hãy xây dựng một lập luận đầy đủ gồm Claim, Evidence và Reasoning theo lập trường ủng hộ hoặc phản đối."
+    # For other modes, default instructions
+    default_instructions = {
+        "find_evidence": "Hãy đưa ra bằng chứng cụ thể để hỗ trợ hoặc phản bác claim này.",
+        "quick_rebuttal": "Hãy chỉ ra lỗ hổng, giả định sai hoặc phản ví dụ.",
+    }
+    return default_instructions.get(mode, "Hãy trả lời đề bài luyện tập.")
+
+
+def _finalize_prompt_result(result: dict, stance: str | None = None) -> dict:
     finalized = dict(result or {})
     mode = canonical_mode(finalized.get("mode"))
     if mode != "free_debate":
@@ -498,22 +556,17 @@ def _finalize_prompt_result(result: dict) -> dict:
         finalized["expected_rebuttal_points"] = list(expected_rebuttal_points)
         finalized["instruction"] = QUICK_REBUTTAL_INSTRUCTION
     else:
-        default_instructions = {
-            "claim_writing": "Hãy viết một claim rõ ràng, thể hiện lập trường ủng hộ hoặc phản đối và có thể tranh luận được.",
-            "find_evidence": "Hãy đưa ra bằng chứng cụ thể để hỗ trợ hoặc phản bác claim này.",
-            "full_argument": "Hãy xây dựng một lập luận đầy đủ gồm Claim, Evidence và Reasoning theo lập trường ủng hộ hoặc phản đối.",
-        }
-        finalized.setdefault("instruction", default_instructions.get(mode, "Hãy trả lời đề bài luyện tập."))
+        finalized["instruction"] = get_stance_instruction(mode, stance)
 
     return finalized
 
 
-def _build_topic_prompt(mode: str, topic: dict, *, round_number: int | None = None) -> dict:
+def _build_topic_prompt(mode: str, topic: dict, *, round_number: int | None = None, stance: str | None = None) -> dict:
     title = str(topic.get("title") or "").strip()
     metadata = _topic_metadata(topic)
     if mode == "claim_writing":
-        instruction = "Hãy viết một claim rõ ràng, thể hiện lập trường ủng hộ hoặc phản đối và có thể tranh luận được."
-        prompt = f"Chủ đề: {title}\n\n{instruction}"
+        instruction = get_stance_instruction(mode, stance)
+        prompt = f"Chủ đề: {title}"
         return {
             "mode": mode,
             "prompt_type": "scenario_prompt",
@@ -526,7 +579,7 @@ def _build_topic_prompt(mode: str, topic: dict, *, round_number: int | None = No
     if mode == "find_evidence":
         claim = _claim_from_topic(title)
         instruction = "Hãy đưa ra bằng chứng cụ thể để hỗ trợ hoặc phản bác claim này."
-        prompt = f"Chủ đề: {title}\nClaim: {claim}\n\n{instruction}"
+        prompt = f"Chủ đề: {title}\nClaim: {claim}"
         return {
             "mode": mode,
             "prompt_type": "claim_prompt",
@@ -545,8 +598,8 @@ def _build_topic_prompt(mode: str, topic: dict, *, round_number: int | None = No
 
         return _build_quick_rebuttal_prompt_from_topic(topic, round_number)
 
-    instruction = "Hãy xây dựng một lập luận đầy đủ gồm Claim, Evidence và Reasoning theo lập trường ủng hộ hoặc phản đối."
-    prompt = f": {title}\n\n{instruction}"
+    instruction = get_stance_instruction(mode, stance)
+    prompt = f"Chủ đề: {title}\n\n{instruction}"
     return {
         "mode": mode,
         "prompt_type": "argument_builder",
@@ -591,6 +644,7 @@ def build_practice_prompt(
     category: str | None = None,
     previous_topics: list[str] | None = None,
     avoid_repeating: bool = True,
+    stance: str | None = None,
 ) -> dict:
     mode_key = canonical_mode(mode)
     used = [
@@ -605,9 +659,22 @@ def build_practice_prompt(
             "prompt": "Hay tiep tuc tranh bien tu do voi lap luan moi co claim, evidence va reasoning ro rang.",
             "source": "free_debate_default",
             "prompt_type": "free_debate_default",
-        })
+        }, stance=stance)
 
     prompt_mode = _normalize_mode(mode_key)
+
+    # Round 1 with user-provided topic -> prioritize the chosen topic directly
+    if int(round_number or 1) == 1 and topic:
+        manual_topic = {
+            "id": "",
+            "title": topic,
+            "category": category or "",
+            "difficulty": difficulty or "",
+        }
+        result = _build_topic_prompt(prompt_mode, manual_topic, round_number=round_number, stance=stance)
+        result["source"] = "provided_topic"
+        return _finalize_prompt_result(result, stance=stance)
+
     candidates = _get_topic_candidates(difficulty=difficulty, category=category, limit=50)
     selected_topic = _choose_topic(
         candidates,
@@ -621,9 +688,9 @@ def build_practice_prompt(
     )
 
     if selected_topic:
-        result = _build_topic_prompt(prompt_mode, selected_topic, round_number=round_number)
+        result = _build_topic_prompt(prompt_mode, selected_topic, round_number=round_number, stance=stance)
         if not any(_too_similar(result["prompt"], used_prompt) for used_prompt in used):
-            return _finalize_prompt_result(result)
+            return _finalize_prompt_result(result, stance=stance)
 
         fresh_topics = [
             candidate
@@ -631,16 +698,16 @@ def build_practice_prompt(
             if candidate.get("id") != selected_topic.get("id")
         ]
         for candidate in fresh_topics:
-            result = _build_topic_prompt(prompt_mode, candidate, round_number=round_number)
+            result = _build_topic_prompt(prompt_mode, candidate, round_number=round_number, stance=stance)
             if not any(_too_similar(result["prompt"], used_prompt) for used_prompt in used):
-                return _finalize_prompt_result(result)
+                return _finalize_prompt_result(result, stance=stance)
 
         if result:
             result["prompt"] = (
                 f"{result['prompt']}\n\nHãy chọn một góc nhìn mới và tránh lặp lại prompt trước trong phiên."
             )
             result["source"] = "topic_bank_variant"
-            return _finalize_prompt_result(result)
+            return _finalize_prompt_result(result, stance=stance)
 
     if topic:
         manual_topic = {
@@ -649,9 +716,9 @@ def build_practice_prompt(
             "category": category or "",
             "difficulty": difficulty or "",
         }
-        result = _build_topic_prompt(prompt_mode, manual_topic, round_number=round_number)
+        result = _build_topic_prompt(prompt_mode, manual_topic, round_number=round_number, stance=stance)
         if not any(_too_similar(result["prompt"], used_prompt) for used_prompt in used):
             result["source"] = "provided_topic"
-            return _finalize_prompt_result(result)
+            return _finalize_prompt_result(result, stance=stance)
 
-    return _finalize_prompt_result(_fallback_prompt(prompt_mode, used, round_number))
+    return _finalize_prompt_result(_fallback_prompt(prompt_mode, used, round_number), stance=stance)
