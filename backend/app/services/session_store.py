@@ -32,14 +32,15 @@ Configuration (add to settings)
                                project id (e.g. Application Default Credentials)
 """
 
+from typing import Any
 from datetime import date, datetime, timedelta, timezone
 from uuid import uuid4
 import json
 import os
 
-import firebase_admin
-from firebase_admin import credentials, firestore
-from google.cloud.firestore_v1 import FieldFilter
+import firebase_admin  # type: ignore[import-untyped]
+from firebase_admin import credentials, firestore  # type: ignore[import-untyped]
+from google.cloud.firestore_v1 import Client as FirestoreClient, FieldFilter  # type: ignore[import-untyped]
 
 from app.core.config import settings
 from app.services.cer_scorer import normalize_cer_to_100
@@ -64,7 +65,7 @@ DEMO_USER_EMAIL = "guest@ai-debate-trainer.local"
 # Firebase initialisation (lazy, safe for repeated calls)
 # ---------------------------------------------------------------------------
 
-def _db() -> firestore.Client:
+def _db() -> FirestoreClient:
     if not firebase_admin._apps:
         raw_json = settings.FIREBASE_CREDENTIALS_JSON
         cred_path = settings.FIREBASE_CREDENTIALS_PATH
@@ -157,7 +158,7 @@ def _skill_label(scores: dict[str, float], pick_highest: bool) -> str:
     if not scores:
         return ""
     picker = max if pick_highest else min
-    key = picker(scores, key=scores.get)
+    key = picker(scores, key=lambda k: scores[k])
     return key.replace("_score", "")
 
 
@@ -199,7 +200,8 @@ def _normalize_difficulty(difficulty: str) -> str:
 def _ensure_demo_user() -> None:
     db = _db()
     ref = db.collection("users").document(DEMO_USER_ID)
-    if not ref.get().exists:
+    doc: Any = ref.get()
+    if not doc.exists:
         ref.set({
             "id": DEMO_USER_ID,
             "email": DEMO_USER_EMAIL,
@@ -269,7 +271,7 @@ def _firebase_get_user_by_email(email: str) -> dict | None:
 
 def _firebase_get_user_by_id(user_id: str) -> dict | None:
     init_db()
-    doc = _db().collection("users").document(user_id).get()
+    doc: Any = _db().collection("users").document(user_id).get()
     return doc.to_dict() if doc.exists else None
 
 
@@ -328,7 +330,10 @@ def _firebase_get_auth_session_by_token(token: str) -> dict | None:
     )
     if not docs:
         return None
-    return _enrich_auth_session(docs[0].to_dict())
+    session_data = docs[0].to_dict()
+    if session_data is None:
+        return None
+    return _enrich_auth_session(session_data)
 
 
 def _firebase_deactivate_auth_session(token: str) -> dict | None:
@@ -344,14 +349,15 @@ def _firebase_deactivate_auth_session(token: str) -> dict | None:
         return None
     doc_ref = docs[0].reference
     doc_ref.update({"is_active": 0})
-    return doc_ref.get().to_dict()
+    updated_doc: Any = doc_ref.get()
+    return updated_doc.to_dict()
 
 
 # ---------------------------------------------------------------------------
 # Debate sessions
 # ---------------------------------------------------------------------------
 
-def _compute_session_avg_score(db: firestore.Client, session_id: str) -> float | None:
+def _compute_session_avg_score(db: FirestoreClient, session_id: str) -> float | None:
     """
     Compute the average CER total across all turns in a session.
     Mirrors the correlated sub-select used in the SQLite UPDATE statements.
@@ -361,7 +367,12 @@ def _compute_session_avg_score(db: firestore.Client, session_id: str) -> float |
         .where(filter=FieldFilter("session_id", "==", session_id))
         .get()
     )
-    turn_ids = [d.to_dict()["turn_id"] for d in turn_docs]
+    turn_docs_raw: Any = turn_docs
+    turn_ids = [
+        d.to_dict()["turn_id"]
+        for d in turn_docs_raw
+        if d is not None and d.to_dict() is not None
+    ]
     if not turn_ids:
         return None
 
@@ -374,7 +385,9 @@ def _compute_session_avg_score(db: firestore.Client, session_id: str) -> float |
             .get()
         )
         if score_docs:
-            totals.append(float(score_docs[0].to_dict().get("total", 0.0)))
+            score_data = score_docs[0].to_dict()
+            if score_data is not None:
+                totals.append(float(score_data.get("total", 0.0)))
 
     return round(sum(totals) / len(totals), 6) if totals else None
 
@@ -434,7 +447,7 @@ def _firebase_create_session(
 
 def _firebase_get_session(session_id: str, user_id: str | None = None) -> dict | None:
     init_db()
-    doc = _db().collection("debate_sessions").document(session_id).get()
+    doc: Any = _db().collection("debate_sessions").document(session_id).get()
     if not doc.exists:
         return None
     data = doc.to_dict()
@@ -447,7 +460,7 @@ def _firebase_end_session(session_id: str, user_id: str | None = None) -> dict |
     init_db()
     db = _db()
     doc_ref = db.collection("debate_sessions").document(session_id)
-    doc = doc_ref.get()
+    doc: Any = doc_ref.get()
     if not doc.exists:
         return None
     data = doc.to_dict()
@@ -462,7 +475,8 @@ def _firebase_end_session(session_id: str, user_id: str | None = None) -> dict |
         "updated_at": now,
         "completed_at": _parse_datetime(data.get("completed_at")) or now,
     })
-    return doc_ref.get().to_dict()
+    updated_doc: Any = doc_ref.get()
+    return updated_doc.to_dict()
 
 
 # ---------------------------------------------------------------------------
@@ -484,6 +498,7 @@ def _firebase_save_debate_turn(
     status: str = "active",
     count_for_completion: bool = True,
     complete_session: bool = True,
+    practice_topic: str | None = None,
 ) -> dict:
     _ = practice_prompt_id
     _firebase_init_db()
@@ -494,9 +509,10 @@ def _firebase_save_debate_turn(
     cer = normalize_cer_to_100(cer)
     flags = content_flags or []
     now = _now()
-    turn_metadata = {
+    turn_metadata: dict[str, Any] = {
         "practice_prompt": practice_prompt,
         "practice_round": practice_round,
+        "practice_topic": practice_topic,
         "status": status,
     }
     if practice_mode == "quick_rebuttal" and mode_scores:
@@ -582,11 +598,13 @@ def _firebase_save_debate_turn(
         "updated_at": now,
     }
     if next_status == "completed":
-        current = session_ref.get().to_dict() or {}
+        current_doc: Any = session_ref.get()
+        current = current_doc.to_dict() or {}
         session_updates["completed_at"] = _parse_datetime(current.get("completed_at")) or now
 
     session_ref.update(session_updates)
-    updated_session = session_ref.get().to_dict()
+    updated_doc: Any = session_ref.get()
+    updated_session = updated_doc.to_dict()
 
     return {
         "turn_id": turn_id,
@@ -606,7 +624,13 @@ def _firebase_get_session_turns(session_id: str) -> list[dict]:
         .order_by("turn_number")
         .get()
     )
-    turns = [d.to_dict() for d in turn_docs]
+    turns_raw: Any = turn_docs
+    turns: list[dict] = []
+    for d in turns_raw:
+        if d is not None:
+            dt = d.to_dict()
+            if dt is not None:
+                turns.append(dt)
     if not turns:
         return []
 
@@ -622,7 +646,9 @@ def _firebase_get_session_turns(session_id: str) -> list[dict]:
             .get()
         )
         if docs:
-            cer_by_turn[tid] = docs[0].to_dict()
+            cer_data = docs[0].to_dict()
+            if cer_data is not None:
+                cer_by_turn[tid] = cer_data
 
     # Fetch feedback_items grouped by turn_id
     # Requires composite index: turn_id ASC, created_at ASC
@@ -639,9 +665,10 @@ def _firebase_get_session_turns(session_id: str) -> list[dict]:
         )
         for fb_doc in fb_docs:
             fb = fb_doc.to_dict()
-            cat = fb.get("category")
-            if cat in feedback_by_turn[tid]:
-                feedback_by_turn[tid][cat].append(fb["message"])
+            if fb is not None:
+                cat = fb.get("category")
+                if cat in feedback_by_turn[tid]:
+                    feedback_by_turn[tid][cat].append(fb["message"])
 
     # Attach cer and feedback to each turn
     for turn in turns:
@@ -707,25 +734,16 @@ def _firebase_get_progress_overview(user_id: str | None = None) -> dict:
     sessions_ref = db.collection("debate_sessions")
     if user_id is not None:
         sessions_ref = sessions_ref.where(filter=FieldFilter("user_id", "==", user_id))
-    sessions = [d.to_dict() for d in sessions_ref.get()]
+    sessions_raw: Any = sessions_ref.get()
+    sessions: list[dict] = []
+    for d in sessions_raw:
+        if d is not None:
+            ds = d.to_dict()
+            if ds is not None:
+                sessions.append(ds)
 
     total_sessions = len(sessions)
     completed_sessions = sum(1 for s in sessions if s.get("status") == "completed")
-
-    def _created_at_sort_key(s: dict) -> datetime:
-        dt = _parse_datetime(s.get("created_at"))
-        return dt or datetime.min.replace(tzinfo=timezone.utc)
-
-    # Recent sessions (up to 5, newest first, non-empty)
-    recent_sessions = sorted(
-        [s for s in sessions if s.get("topic")],
-        key=_created_at_sort_key,
-        reverse=True,
-    )
-
-    now = _now()
-    week_cutoff = now - timedelta(days=7)
-    month_cutoff = now - timedelta(days=30)
 
     # Unique completed calendar days for streak calculation
     completed_days = list({
@@ -736,82 +754,126 @@ def _firebase_get_progress_overview(user_id: str | None = None) -> dict:
 
     # ── aggregate CER scores across all valid turns ────────────────────────
     session_ids = {s["session_id"] for s in sessions}
-    session_modes = {s["session_id"]: s.get("mode", "free_debate") for s in sessions}
     session_meta = {s["session_id"]: s for s in sessions}
-    session_scores = {}
+    
     claim_vals:     list[float] = []
     evidence_vals:  list[float] = []
     reasoning_vals: list[float] = []
     total_vals:     list[float] = []
+    
+    topic_groups = {}
+    now = _now()
+    week_cutoff = now - timedelta(days=7)
+    month_cutoff = now - timedelta(days=30)
+    weekly_scores = []
+    monthly_scores = []
 
-    for sid in session_ids:
-        turn_docs = (
-            db.collection("debate_turns")
-            .where(filter=FieldFilter("session_id", "==", sid))
-            .get()
-        )
-        valid_turn_ids = [
-            d.to_dict()["turn_id"]
-            for d in turn_docs
-            if d.to_dict().get("status") not in ("error", "invalid")
-        ]
-        sess_total_vals = []
-        mode = session_modes.get(sid, "free_debate")
-        for tid in valid_turn_ids:
-            score_docs = (
-                db.collection("cer_scores")
-                .where(filter=FieldFilter("turn_id", "==", tid))
-                .limit(1)
+    # Chunk session_ids to max 30 elements and query debate_turns in bulk
+    session_ids_list = list(session_ids)
+    all_turns: list[dict] = []
+    if session_ids_list:
+        for i in range(0, len(session_ids_list), 30):
+            chunk = session_ids_list[i:i + 30]
+            turn_docs = (
+                db.collection("debate_turns")
+                .where(filter=FieldFilter("session_id", "in", chunk))
                 .get()
             )
-            if score_docs:
-                s = score_docs[0].to_dict()
-                c = _normalize_score_value(float(s.get("claim",     0.0)))
-                e = _normalize_score_value(float(s.get("evidence",  0.0)))
-                r = _normalize_score_value(float(s.get("reasoning", 0.0)))
-                t = _normalize_score_value(float(s.get("total",     0.0)))
-                claim_vals.append(c)
-                evidence_vals.append(e)
-                reasoning_vals.append(r)
-                total_vals.append(t)
-                if mode == "claim_writing":
-                    sess_total_vals.append(c)
-                elif mode == "find_evidence":
-                    sess_total_vals.append(e)
-                elif mode == "quick_rebuttal":
-                    sess_total_vals.append(r)
-                else:
-                    sess_total_vals.append(t)
-        
-        session_scores[sid] = _average(sess_total_vals) if sess_total_vals else 0.0
+            for d in turn_docs:
+                if d is not None:
+                    td = d.to_dict()
+                    if td is not None:
+                        all_turns.append(td)
 
-    recent_topics = [
-        {
-            "topic": s["topic"],
-            "score": session_scores.get(s["session_id"], 0.0),
-            "category": s.get("topic_category") or "Chưa phân loại",
-            "difficulty": s.get("difficulty") or "Trung bình",
-            "mode": s.get("mode") or "free_debate",
-            "completed_at": s.get("completed_at") or s.get("created_at"),
-        }
-        for s in recent_sessions[:5]
-    ]
+    # Filter out invalid turns and extract valid turn_ids
+    valid_turns = []
+    turn_ids = []
+    for turn_data in all_turns:
+        if turn_data.get("status") in ("error", "invalid"):
+            continue
+        valid_turns.append(turn_data)
+        if "turn_id" in turn_data:
+            turn_ids.append(turn_data["turn_id"])
+
+    # Chunk turn_ids to max 30 elements and query cer_scores in bulk
+    scores_by_turn = {}
+    if turn_ids:
+        for i in range(0, len(turn_ids), 30):
+            chunk = turn_ids[i:i + 30]
+            score_docs = (
+                db.collection("cer_scores")
+                .where(filter=FieldFilter("turn_id", "in", chunk))
+                .get()
+            )
+            for d in score_docs:
+                if d is not None:
+                    sd = d.to_dict()
+                    if sd is not None and "turn_id" in sd:
+                        scores_by_turn[sd["turn_id"]] = sd
+
+    for turn_data in valid_turns:
+        sess = session_meta.get(turn_data["session_id"])
+        if not sess:
+            continue
+        turn_id = turn_data["turn_id"]
+        s = scores_by_turn.get(turn_id)
+        if s is not None:
+            c = _normalize_score_value(float(s.get("claim",     0.0)))
+            e = _normalize_score_value(float(s.get("evidence",  0.0)))
+            r = _normalize_score_value(float(s.get("reasoning", 0.0)))
+            t = _normalize_score_value(float(s.get("total",     0.0)))
+            claim_vals.append(c)
+            evidence_vals.append(e)
+            reasoning_vals.append(r)
+            total_vals.append(t)
+            
+            t_name = turn_data.get("practice_topic") or turn_data.get("metadata", {}).get("practice_topic") or sess["topic"]
+            t_name = str(t_name).strip()
+            
+            entry = topic_groups.setdefault(t_name, {
+                "topic": t_name,
+                "scores": [],
+                "category": sess.get("topic_category") or "Chưa phân loại",
+                "difficulty": sess.get("difficulty") or "Trung bình",
+                "mode": turn_data.get("practice_mode") or sess.get("mode") or "free_debate",
+                "timestamp": _parse_datetime(turn_data.get("created_at")) or _parse_datetime(sess.get("created_at")) or datetime.min.replace(tzinfo=timezone.utc)
+            })
+            entry["scores"].append(t)
+            t_stamp = _parse_datetime(turn_data.get("created_at"))
+            if t_stamp and t_stamp > entry["timestamp"]:
+                entry["timestamp"] = t_stamp
+
+    aggregated_topics = []
+    for t_name, data in topic_groups.items():
+        avg_score = _average(data["scores"])
+        aggregated_topics.append({
+            "topic": t_name,
+            "score": avg_score,
+            "category": data["category"],
+            "difficulty": data["difficulty"],
+            "mode": data["mode"],
+            "completed_at": data["timestamp"].isoformat(),
+        })
+        
+        # Add to weekly/monthly metrics
+        stamp = data["timestamp"]
+        if stamp and stamp >= week_cutoff:
+            weekly_scores.append(avg_score)
+        if stamp and stamp >= month_cutoff:
+            monthly_scores.append(avg_score)
+
+    recent_topics = sorted(
+        aggregated_topics,
+        key=lambda item: _parse_datetime(item["completed_at"]) or datetime.min.replace(tzinfo=timezone.utc),
+        reverse=True,
+    )
 
     category_totals: dict[str, dict[str, float]] = {}
-    weekly_scores: list[float] = []
-    monthly_scores: list[float] = []
-    for sid, score in session_scores.items():
-        meta = session_meta.get(sid, {})
-        category = meta.get("topic_category") or "Chưa phân loại"
+    for item in aggregated_topics:
+        category = item["category"]
         entry = category_totals.setdefault(category, {"count": 0, "sum": 0.0})
         entry["count"] += 1
-        entry["sum"] += float(score)
-
-        stamp = _parse_datetime(meta.get("completed_at") or meta.get("updated_at") or meta.get("created_at"))
-        if stamp and stamp >= week_cutoff:
-            weekly_scores.append(float(score))
-        if stamp and stamp >= month_cutoff:
-            monthly_scores.append(float(score))
+        entry["sum"] += float(item["score"])
 
     topic_category_breakdown = [
         {
@@ -839,9 +901,33 @@ def _firebase_get_progress_overview(user_id: str | None = None) -> dict:
         "reasoning_score": _average(reasoning_vals),
     }
 
+    completed_sessions_by_mode = {
+        "free_debate": 0,
+        "claim_writing": 0,
+        "find_evidence": 0,
+        "quick_rebuttal": 0,
+        "full_argument": 0,
+    }
+    for s in sessions:
+        if s.get("status") == "completed":
+            m = str(s.get("mode") or "free_debate").lower().strip().replace("-", "_")
+            if m in ("free_debate", "free"):
+                completed_sessions_by_mode["free_debate"] += 1
+            elif m in ("claim_writing", "claim", "claim_practice"):
+                completed_sessions_by_mode["claim_writing"] += 1
+            elif m in ("find_evidence", "evidence", "evidence_practice"):
+                completed_sessions_by_mode["find_evidence"] += 1
+            elif m in ("quick_rebuttal", "rebuttal", "phan_bien_nhanh"):
+                completed_sessions_by_mode["quick_rebuttal"] += 1
+            elif m in ("full_argument", "argument", "xay_dung_lap_luan"):
+                completed_sessions_by_mode["full_argument"] += 1
+            else:
+                completed_sessions_by_mode["free_debate"] += 1
+
     return {
         "total_sessions":      total_sessions,
         "completed_sessions":  completed_sessions,
+        "completed_sessions_by_mode": completed_sessions_by_mode,
         "avg_claim_score":     scores["claim_score"],
         "avg_evidence_score":  scores["evidence_score"],
         "avg_reasoning_score": scores["reasoning_score"],
@@ -880,7 +966,8 @@ def _firebase_update_session(
     payload["updated_at"] = _now()
     ref = _db().collection("debate_sessions").document(session_id)
     ref.update(payload)
-    return ref.get().to_dict()
+    updated_doc: Any = ref.get()
+    return updated_doc.to_dict()
 
 
 def _firebase_save_practice_prompt(
@@ -932,7 +1019,8 @@ def _firebase_get_used_practice_prompts(
     )
     if mode:
         query = query.where(filter=FieldFilter("mode", "==", mode))
-    rows = [doc.to_dict() for doc in query.get()]
+    docs_raw: Any = query.get()
+    rows = [d.to_dict() for d in docs_raw if d is not None]
     return sorted(rows, key=lambda row: _parse_datetime(row.get("created_at")) or _now())
 
 
@@ -951,7 +1039,7 @@ def _merge_user_memory(memory: dict | None, user_id: str) -> dict:
 
 def _firebase_get_user_memory(user_id: str) -> dict:
     init_db()
-    doc = _db().collection("users").document(user_id).get()
+    doc: Any = _db().collection("users").document(user_id).get()
     raw = doc.to_dict() if doc.exists else {}
     return merge_user_memory((raw or {}).get(USER_MEMORY_FIELD), user_id)
 
@@ -995,7 +1083,7 @@ def _firebase_get_session_memory(
     user_id: str | None = None,
 ) -> dict:
     init_db()
-    doc = _db().collection("session_memories").document(session_id).get()
+    doc: Any = _db().collection("session_memories").document(session_id).get()
     if not doc.exists:
         return {}
     data = doc.to_dict() or {}
