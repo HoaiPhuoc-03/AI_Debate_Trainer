@@ -32,22 +32,22 @@ class DebateTopicCategoriesResponse(BaseModel):
 
 
 class StartSessionRequest(BaseModel):
-    topic: str = Field(..., example="Should phones be allowed in class?")
-    topic_id: str | None = Field(default=None, example="edu_ai_homework")
-    topic_category: str | None = Field(default=None, example="Education")
-    topic_tags: list[str] | None = Field(default=None, example=["AI", "learning"])
-    custom_topic: str | None = Field(default=None, example="Should AI tutors replace homework?")
-    stance: str = Field(..., example="support")
-    difficulty: str | None = Field(default=None, example="intermediate")
-    input_mode: str = Field(default="text", example="text")
-    age_group: str = Field(default="adult", example="adult")
-    debate_level: str = Field(default="intermediate", example="intermediate")
-    coach_model: str = Field(default="socratic_v3", example="socratic_v3")
-    language: str = Field(default="vi", example="vi")
-    mode: str = Field(default="free_debate", example="free_debate")
-    response_time: str | None = Field(default=None, example="90 sec")
-    max_turns: int | None = Field(default=5, ge=1, le=10, example=5)
-    display_name: str | None = Field(default=None, example="Minh Nguyen")
+    topic: str = Field(..., examples=["Should phones be allowed in class?"])
+    topic_id: str | None = Field(default=None, examples=["edu_ai_homework"])
+    topic_category: str | None = Field(default=None, examples=["Education"])
+    topic_tags: list[str] | None = Field(default=None, examples=[["AI", "learning"]])
+    custom_topic: str | None = Field(default=None, examples=["Should AI tutors replace homework?"])
+    stance: str = Field(..., examples=["support"])
+    difficulty: str | None = Field(default=None, examples=["intermediate"])
+    input_mode: str = Field(default="text", examples=["text"])
+    age_group: str = Field(default="adult", examples=["adult"])
+    debate_level: str = Field(default="intermediate", examples=["intermediate"])
+    coach_model: str = Field(default="socratic_v3", examples=["socratic_v3"])
+    language: str = Field(default="vi", examples=["vi"])
+    mode: str = Field(default="free_debate", examples=["free_debate"])
+    response_time: str | None = Field(default=None, examples=["90 sec"])
+    max_turns: int | None = Field(default=5, ge=1, le=10, examples=[5])
+    display_name: str | None = Field(default=None, examples=["Minh Nguyen"])
 
 
 class StartSessionResponse(BaseModel):
@@ -73,23 +73,25 @@ class StartSessionResponse(BaseModel):
 
 class DebateTurnRequest(BaseModel):
     session_id: str
-    user_argument: str = Field(..., example="Phones can support quick research.")
-    practice_mode: str | None = Field(default=None, example="evidence_practice")
-    practice_topic: str | None = Field(default=None, example="Should online learning replace homework?")
-    practice_prompt: str | None = Field(default=None, example="Online learning helps students manage their own time.")
-    practice_fallacy_hint: str | None = Field(default=None, example="dựa vào số đông / thiếu bằng chứng")
+    user_argument: str = Field(..., examples=["Phones can support quick research."])
+    practice_mode: str | None = Field(default=None, examples=["evidence_practice"])
+    practice_topic: str | None = Field(default=None, examples=["Should online learning replace homework?"])
+    practice_prompt: str | None = Field(default=None, examples=["Online learning helps students manage their own time."])
+    practice_fallacy_hint: str | None = Field(default=None, examples=["dựa vào số đông / thiếu bằng chứng"])
     practice_target_flaws: list[str] = Field(default_factory=list)
-    practice_prompt_id: str | None = Field(default=None, example="f3d7c43d-...")
-    practice_round: int | None = Field(default=None, ge=1, example=1)
+    practice_prompt_id: str | None = Field(default=None, examples=["f3d7c43d-..."])
+    practice_round: int | None = Field(default=None, ge=1, examples=[1])
+    practice_stance: str | None = Field(default=None, examples=["support"])
 
 
 class PracticePromptRequest(BaseModel):
-    session_id: str | None = Field(default=None, example="abc123")
-    mode: str = Field(..., example="evidence_practice")
-    topic: str = Field(..., example="Should online learning replace homework?")
-    difficulty: str | None = Field(default=None, example="intermediate")
-    category: str | None = Field(default=None, example="Giáo dục")
-    round: int = Field(default=1, ge=1, example=1)
+    session_id: str | None = Field(default=None, examples=["abc123"])
+    mode: str = Field(..., examples=["evidence_practice"])
+    topic: str = Field(..., examples=["Should online learning replace homework?"])
+    stance: str | None = Field(default=None, examples=["support"])
+    difficulty: str | None = Field(default=None, examples=["intermediate"])
+    category: str | None = Field(default=None, examples=["Giáo vực"])
+    round: int = Field(default=1, ge=1, examples=[1])
     previous_prompts: list[str] = Field(default_factory=list)
     previous_topics: list[str] = Field(default_factory=list)
     avoid_repeating: bool = True
@@ -114,6 +116,7 @@ class PracticePromptResponse(BaseModel):
     target_flaws: list[str] | None = None
     expected_rebuttal_points: list[str] | None = None
     practice_prompt_id: str | None = None
+    suggested_angles: list[str] | None = Field(default_factory=list)
 
 
 class CERScoreResponse(BaseModel):
@@ -182,13 +185,22 @@ class DebateTurnResponse(BaseModel):
     turn_number: int | None = None
     max_turns: int | None = None
     status: str
+    model_claim: str | None = None
 
 
-class DebateTurnResponseV2(DebateTurnResponse):
+class DebateTurnResponseV2(BaseModel):
+    session_id: str
+    user_argument: str
+    ai_rebuttal: str
+    practice_mode: str | None = None
+    is_valid: bool | None = None
     cer: CERScoreResponse
+    cer_breakdown: CERBreakdownResponse | None = None
     feedback: FeedbackResponse
     turn_number: int
     max_turns: int
+    status: str
+    model_claim: str | None = None
     mode_scores: ModeScoresResponse | None = None
 
 
@@ -233,6 +245,7 @@ class SessionSummaryResponse(BaseModel):
 class ProgressOverviewResponse(BaseModel):
     total_sessions: int
     completed_sessions: int
+    completed_sessions_by_mode: dict[str, int] = Field(default_factory=dict)
     avg_claim_score: float
     avg_evidence_score: float
     avg_reasoning_score: float
