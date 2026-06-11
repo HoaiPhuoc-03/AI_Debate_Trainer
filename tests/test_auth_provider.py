@@ -31,6 +31,42 @@ PROFILE = {
 
 
 class AuthProviderTests(unittest.TestCase):
+    def test_auth_config_exposes_active_supabase_public_config(self):
+        with mock.patch.object(settings, "AUTH_PROVIDER", "supabase"), \
+             mock.patch.object(settings, "SUPABASE_URL", "https://project.supabase.co"), \
+             mock.patch.object(settings, "SUPABASE_ANON_KEY", "public-anon-key"):
+            response = TestClient(app).get("/api/v1/auth/config")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {
+            "provider": "supabase",
+            "supabase_url": "https://project.supabase.co",
+            "supabase_anon_key": "public-anon-key",
+        })
+
+    def test_oauth_token_is_verified_and_profile_is_created(self):
+        with mock.patch.object(settings, "AUTH_PROVIDER", "supabase"), \
+             mock.patch.object(
+                 supabase_auth_service,
+                 "get_user_from_access_token",
+                 return_value=AUTH_USER,
+             ) as verify, \
+             mock.patch.object(
+                 SupabaseStore,
+                 "ensure_profile",
+                 return_value=PROFILE,
+             ) as ensure_profile:
+            response = TestClient(app).post(
+                "/api/v1/auth/oauth",
+                json={"access_token": "google-oauth-token"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["access_token"], "google-oauth-token")
+        self.assertEqual(response.json()["user"]["id"], AUTH_USER["id"])
+        verify.assert_called_once_with("google-oauth-token")
+        ensure_profile.assert_called_once()
+
     def test_supabase_auth_requires_bearer_token(self):
         with mock.patch.object(settings, "AUTH_PROVIDER", "supabase"):
             response = TestClient(app).get("/api/v1/auth/me")

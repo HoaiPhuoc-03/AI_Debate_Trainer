@@ -15,6 +15,16 @@ class LoginRequest(BaseModel):
     password: str = Field(..., example="password123")
 
 
+class OAuthTokenRequest(BaseModel):
+    access_token: str
+
+
+class AuthConfigResponse(BaseModel):
+    provider: str
+    supabase_url: str | None = None
+    supabase_anon_key: str | None = None
+
+
 class AuthUserResponse(BaseModel):
     id: str
     email: str

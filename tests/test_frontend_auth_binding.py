@@ -23,6 +23,8 @@ class FrontendAuthBindingTests(unittest.TestCase):
         html = read_frontend()
 
         self.assertIn("/api/v1/auth/login", html)
+        self.assertIn("/api/v1/auth/config", html)
+        self.assertIn("/api/v1/auth/oauth", html)
         self.assertIn("/api/v1/auth/me", html)
         self.assertIn("applyAuthSession(data", html)
         self.assertIn('const AUTH_TOKEN_KEY = "access_token"', html)
@@ -32,6 +34,8 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn("storage.setItem(AUTH_TOKEN_KEY, token)", html)
         self.assertIn("remember-login", html)
         self.assertIn("request.headers.Authorization", html)
+        self.assertNotIn('const SUPABASE_URL = "https://', html)
+        self.assertNotIn('const SUPABASE_ANON_KEY = "eyJ', html)
 
     def test_frontend_logout_clears_auth_state_and_stored_token(self):
         html = read_frontend()

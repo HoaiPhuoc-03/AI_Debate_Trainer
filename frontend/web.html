@@ -8367,6 +8367,10 @@
       updateSessionSummary();
       updateUserTopbar();
       goToView("home");
+      const restoredOAuth = await initializeSupabaseAuth();
+      if (restoredOAuth) {
+        return;
+      }
       if (state.authToken) {
         const restored = await restoreCurrentUser();
         if (restored) {
@@ -8606,6 +8610,13 @@
           await apiRequest("/api/v1/auth/logout", { method: "POST" });
         } catch (error) {
           console.warn("Đăng xuất thất bại:", error);
+        }
+      }
+      if (_supabase) {
+        try {
+          await _supabase.auth.signOut();
+        } catch (error) {
+          console.warn("Không thể xóa phiên Supabase:", error);
         }
       }
       clearAuthState();
@@ -11773,27 +11784,51 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-    // ── Khởi tạo Supabase ──────────────────────────────────────────────────────
-    const SUPABASE_URL = "https://juyrosyatpiifsmpavjt.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1eXJvc3lhdHBpaWZzbXBhdmp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMDk3NTYsImV4cCI6MjA5NjY4NTc1Nn0.yJPxY40tSM1wvGVxqzJLm5mwqhLTYFtViAFbma4rWjg";
-    const API_BASE = "http://localhost:8000/api/v1"; // đổi thành URL backend thật khi deploy
+    let _supabase = null;
 
-    const { createClient } = supabase;
-    const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    async function initializeSupabaseAuth() {
+      try {
+        const config = await apiRequest("/api/v1/auth/config", { skipAuth: true });
+        if (
+          !config.supabase_url
+          || !config.supabase_anon_key
+        ) {
+          return false;
+        }
 
-    // Token hiện tại — dùng khi gọi API FastAPI
-    let currentAccessToken = null;
-    let currentUser = null;
+        _supabase = supabase.createClient(
+          config.supabase_url,
+          config.supabase_anon_key,
+        );
 
-    // ── Lấy token để gọi API backend ──────────────────────────────────────────
-    async function getAuthHeaders() {
-      const { data } = await _supabase.auth.getSession();
-      const token = data?.session?.access_token;
-      return token ? { "Authorization": `Bearer ${token}` } : {};
+        const { data } = await _supabase.auth.getSession();
+        if (data?.session?.user) {
+          await completeSupabaseLogin(data.session);
+          return true;
+        }
+
+        _supabase.auth.onAuthStateChange((event, session) => {
+          if (event === "SIGNED_IN" && session?.user) {
+            completeSupabaseLogin(session).catch(error => {
+              showAuthError("auth-login-error", error.message);
+            });
+          }
+        });
+      } catch (error) {
+        console.warn("Không thể khởi tạo Google OAuth:", error);
+      }
+      return false;
     }
 
     // ── Đăng nhập Google ──────────────────────────────────────────────────────
     async function loginWithGoogle() {
+      if (!_supabase) {
+        showAuthError(
+          "auth-login-error",
+          "Google OAuth chưa được cấu hình trên máy chủ.",
+        );
+        return;
+      }
       const { error } = await _supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
@@ -11806,92 +11841,18 @@
       }
     }
 
-    // ── Đăng ký bằng email ────────────────────────────────────────────────────
-    async function registerWithEmail(email, password, displayName) {
-      const { data, error } = await _supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { full_name: displayName } },
-      });
-      if (error) {
-        let msg = "Lỗi đăng ký!";
-        if (error.message.includes("already registered")) msg = "Email này đã được sử dụng!";
-        showAuthError("auth-signup-error", msg);
-        return;
-      }
-      if (data.session) {
-        await _onLoginSuccess(data.session, data.user);
-      } else {
-        // Supabase gửi email xác nhận
-        showAuthError("auth-signup-error", "Vui lòng kiểm tra email để xác nhận tài khoản!");
-      }
-    }
-
-    // ── Đăng nhập bằng email ──────────────────────────────────────────────────
-    async function loginWithEmail(email, password) {
-      const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        showAuthError("auth-login-error", "Sai email hoặc mật khẩu!");
-        return;
-      }
-      await _onLoginSuccess(data.session, data.user);
-    }
-
     // ── Xử lý sau khi login thành công ────────────────────────────────────────
-    async function _onLoginSuccess(session, user) {
-      currentAccessToken = session.access_token;
-      currentUser = user;
-
-      // Thông báo backend (upsert user vào DB)
-      try {
-        await fetch(`${API_BASE}/auth/google`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ access_token: session.access_token }),
-        });
-      } catch (e) {
-        console.warn("Không thể sync với backend:", e);
-      }
-
-      _updateUserUI(user);
+    async function completeSupabaseLogin(session) {
+      const data = await apiRequest("/api/v1/auth/oauth", {
+        method: "POST",
+        body: { access_token: session.access_token },
+        skipAuth: true,
+      });
+      clearAuthState();
+      applyAuthSession(data, true);
       enterApp("logged-in", "home");
     }
 
-    // ── Cập nhật UI với thông tin user ────────────────────────────────────────
-    function _updateUserUI(user) {
-      const meta = user.user_metadata || {};
-      const name = meta.full_name || meta.name || user.email?.split("@")[0] || "Debater";
-      const avatar = meta.avatar_url || "";
-
-      // Cập nhật tên
-      document.querySelectorAll(".user-display-name, .user-name").forEach(el => {
-        el.textContent = name;
-      });
-      // Cập nhật avatar
-      document.querySelectorAll(".user-avatar, .avatar").forEach(el => {
-        if (avatar && el.tagName === "IMG") el.src = avatar;
-      });
-    }
-
-    // ── Đăng xuất ─────────────────────────────────────────────────────────────
-    async function logout() {
-      await _supabase.auth.signOut();
-      currentAccessToken = null;
-      currentUser = null;
-      location.reload();
-    }
-
-    // ── Tự phát hiện session khi load trang (kể cả sau redirect Google) ───────
-    _supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session && session.user) {
-        currentAccessToken = session.access_token;
-        currentUser = session.user;
-
-        if (event === "SIGNED_IN") {
-          await _onLoginSuccess(session, session.user);
-        }
-      }
-    });
   </script>
 
 

@@ -259,6 +259,28 @@ def login_user(payload) -> dict:
     return _supabase_token_response(result, user)
 
 
+def exchange_oauth_token(access_token: str) -> dict:
+    if _auth_provider() != "supabase":
+        raise HTTPException(
+            status_code=503,
+            detail="OAuth login requires AUTH_PROVIDER=supabase.",
+        )
+
+    token = str(access_token or "").strip()
+    if not token:
+        raise HTTPException(status_code=400, detail="Access token is required.")
+
+    user = get_user_from_token(token)
+    return {
+        "token": token,
+        "access_token": token,
+        "refresh_token": None,
+        "token_type": "bearer",
+        "user": user,
+        "message": None,
+    }
+
+
 def get_user_from_token(token: str) -> dict:
     if _auth_provider() == "firebase":
         return _legacy_get_user_from_token(token)
