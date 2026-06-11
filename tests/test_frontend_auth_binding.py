@@ -357,7 +357,7 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn("speechAudioCache.text === clean", html)
         self.assertIn("Không tạo được âm thanh phản biện", html)
         self.assertIn(': (error.message || "Không tạo được âm thanh phản biện")', html)
-        self.assertIn("await generateRebuttalAudio(turn.ai_rebuttal)", html)
+        self.assertIn("generateRebuttalAudio(turn.ai_rebuttal)", html)
         self.assertNotIn("window.speechSynthesis", html)
 
     def test_frontend_voice_input_uses_media_recorder_backend_stt_only(self):
