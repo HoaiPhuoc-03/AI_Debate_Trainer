@@ -374,7 +374,9 @@ async def _synthesize_with_edge(clean: str) -> dict:
                 audio_chunks: list[bytes] = []
                 async for chunk in communicate.stream():
                     if chunk["type"] == "audio":
-                        audio_chunks.append(chunk["data"])
+                        data = chunk.get("data")
+                        if data:
+                            audio_chunks.append(data)
 
                 audio_bytes = b"".join(audio_chunks)
                 if audio_bytes:
