@@ -9998,17 +9998,21 @@
         const el = document.getElementById(id);
         if (el) el.textContent = value;
       });
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-      localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("currentUser");
-      localStorage.removeItem("ai_debate_trainer.currentUser");
-      sessionStorage.removeItem(AUTH_TOKEN_KEY);
-      sessionStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
-      sessionStorage.removeItem("authToken");
-      sessionStorage.removeItem("currentUser");
-      sessionStorage.removeItem("ai_debate_trainer.currentUser");
-      sessionStorage.removeItem(SIGNUP_DRAFT_KEY);
+      try {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("ai_debate_trainer.currentUser");
+        sessionStorage.removeItem(AUTH_TOKEN_KEY);
+        sessionStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
+        sessionStorage.removeItem("authToken");
+        sessionStorage.removeItem("currentUser");
+        sessionStorage.removeItem("ai_debate_trainer.currentUser");
+        sessionStorage.removeItem(SIGNUP_DRAFT_KEY);
+      } catch (err) {
+        console.warn("Lỗi xoá storage:", err);
+      }
     }
 
     function enterApp(mode = "guest", view = "home") {
@@ -10020,10 +10024,14 @@
         state.currentUser = null;
         state.userName = "Khách";
         state.userEmail = "";
-        localStorage.removeItem(AUTH_TOKEN_KEY);
-        sessionStorage.removeItem(AUTH_TOKEN_KEY);
-        localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
-        sessionStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
+        try {
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+          sessionStorage.removeItem(AUTH_TOKEN_KEY);
+          localStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
+          sessionStorage.removeItem(LEGACY_AUTH_TOKEN_KEY);
+        } catch (err) {
+          console.warn("Lỗi xoá storage trong enterApp:", err);
+        }
       }
       document.getElementById("auth-shell").classList.add("hidden");
       document.getElementById("app-shell").classList.remove("hidden");
@@ -10034,8 +10042,24 @@
     }
 
     function enterGuestMode() {
-      clearAuthState();
-      enterApp("guest", "home");
+      try {
+        clearAuthState();
+        enterApp("guest", "home");
+      } catch (err) {
+        const errorMsg = "Lỗi khi vào chế độ khách: " + err.message;
+        console.error(errorMsg);
+        let errorDiv = document.getElementById("guest-error");
+        if (!errorDiv) {
+          errorDiv = document.createElement("div");
+          errorDiv.id = "guest-error";
+          errorDiv.style.color = "#ff4d4f";
+          errorDiv.style.marginTop = "10px";
+          errorDiv.style.fontSize = "14px";
+          const actions = document.querySelector(".auth-actions");
+          if (actions) actions.appendChild(errorDiv);
+        }
+        errorDiv.textContent = errorMsg;
+      }
     }
 
     function returnToAuth(view = "home") {
@@ -12605,7 +12629,7 @@
         cer.evidence = Math.round(state.latest.cer.evidence || 0);
         cer.reasoning = Math.round(state.latest.cer.reasoning || 0);
         cer.focus = Math.round(state.latest.cer.focus || 0);
-        cer.total = Math.round(state.latest.cer.overall ?? state.latest.cer.total || 0);
+        cer.total = Math.round((state.latest.cer.overall ?? state.latest.cer.total) || 0);
         cer.overall = cer.total;
       }
       const activeMetrics = MODE_METRICS[state.mode] || MODE_METRICS.free_debate;
