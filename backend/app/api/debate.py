@@ -15,6 +15,10 @@ from app.schemas.debate import (
     SessionSummaryResponse,
     StartSessionRequest,
     StartSessionResponse,
+    CERScoreResponse,
+    CERBreakdownResponse,
+    FeedbackResponse,
+    ModeScoresResponse,
 )
 from app.services import ai_service
 from app.services.auth_service import get_current_user, get_debate_user
@@ -34,6 +38,7 @@ from app.services.session_store import (
     end_session,
     get_progress_overview,
     get_session,
+    update_session,
     get_session_summary,
     get_session_turns,
     get_session_memory,
@@ -154,8 +159,14 @@ def create_practice_prompt(
     topic_validation = validate_debate_topic(payload.topic)
     if not topic_validation["is_valid"]:
         raise HTTPException(status_code=400, detail=topic_validation["message"])
-    if payload.session_id and not get_session(payload.session_id, user_id=current_user["id"]):
-        raise HTTPException(status_code=404, detail="Session not found")
+    session = None
+    if payload.session_id:
+        session = get_session(payload.session_id, user_id=current_user["id"])
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+
+    if session and not payload.stance:
+        payload.stance = session.get("stance")
 
     result = build_practice_prompt(
         mode=payload.mode,
@@ -167,6 +178,7 @@ def create_practice_prompt(
         used_prompts=payload.previous_prompts,
         previous_topics=payload.previous_topics,
         avoid_repeating=payload.avoid_repeating,
+        stance=payload.stance,
     )
     saved = save_practice_prompt(
         session_id=payload.session_id,
@@ -186,6 +198,7 @@ def create_practice_prompt(
             "fallacy_hint": result.get("fallacy_hint"),
             "target_flaws": result.get("target_flaws"),
             "expected_rebuttal_points": result.get("expected_rebuttal_points"),
+            "suggested_angles": result.get("suggested_angles"),
         },
     )
     result["practice_prompt_id"] = saved["practice_prompt_id"]
@@ -242,24 +255,32 @@ def debate_turn(
     mode_state = (user_memory.get("mode_state") or {}).get(active_mode, {})
 
     session_stance = normalize_stance(session.get("stance"))
+    if payload.practice_stance:
+        requested_stance = normalize_stance(payload.practice_stance)
+        if requested_stance != session_stance:
+            updated_session = update_session(payload.session_id, {"stance": requested_stance}, user_id=current_user["id"])
+            if updated_session:
+                session = updated_session
+            session_stance = requested_stance
+
     result = ai_service.generate_debate_analysis(
         topic=analysis_topic,
         stance=session_stance,
         difficulty=session["difficulty"],
         user_argument=payload.user_argument,
-        age_group=session.get("age_group"),
-        debate_level=session.get("debate_level"),
-        coach_model=session.get("coach_model"),
-        language=session.get("language"),
+        age_group=session.get("age_group") or "adult",
+        debate_level=session.get("debate_level") or "intermediate",
+        coach_model=session.get("coach_model") or "socratic_v3",
+        language=session.get("language") or "vi",
         input_mode=session.get("input_mode"),
         turn_history=turn_history,
-            mode=session.get("mode", "free_debate"),
-            practice_mode=active_mode,
-            practice_prompt=payload.practice_prompt,
-            practice_fallacy_hint=payload.practice_fallacy_hint,
-            practice_target_flaws=payload.practice_target_flaws,
-            practice_round=payload.practice_round,
-            memory_context={
+        mode=session.get("mode", "free_debate"),
+        practice_mode=active_mode,
+        practice_prompt=payload.practice_prompt,
+        practice_fallacy_hint=payload.practice_fallacy_hint,
+        practice_target_flaws=payload.practice_target_flaws,
+        practice_round=payload.practice_round,
+        memory_context={
             "user_memory": user_memory,
             "mode_state": mode_state,
         },
@@ -283,6 +304,7 @@ def debate_turn(
         status=turn_status,
         count_for_completion=result["ok"],
         complete_session=active_mode not in SINGLE_SKILL_MODES,
+        practice_topic=payload.practice_topic,
     )
     response_status = saved["session"]["status"] if result["ok"] else turn_status
     if result["ok"]:
@@ -324,13 +346,14 @@ def debate_turn(
         ai_rebuttal=result["rebuttal"],
         practice_mode=active_mode,
         is_valid=result.get("is_valid", result["ok"]),
-        cer_breakdown=result.get("cer_breakdown"),
+        cer_breakdown=CERBreakdownResponse(**result["cer_breakdown"]) if result.get("cer_breakdown") else None,
         turn_number=int(saved["turn_number"]),
         max_turns=int(saved["session"].get("max_turns") or session["max_turns"]),
         status=normalize_status(response_status),
-        cer=result["cer"],
-        mode_scores=result.get("mode_scores") if active_mode == "quick_rebuttal" else None,
-        feedback=result["feedback"],
+        cer=CERScoreResponse(**result["cer"]),
+        mode_scores=ModeScoresResponse(**result["mode_scores"]) if (active_mode == "quick_rebuttal" and result.get("mode_scores")) else None,
+        feedback=FeedbackResponse(**result["feedback"]),
+        model_claim=result.get("model_claim"),
     )
 
 
