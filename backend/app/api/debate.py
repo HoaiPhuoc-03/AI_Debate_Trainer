@@ -154,8 +154,11 @@ def create_practice_prompt(
     topic_validation = validate_debate_topic(payload.topic)
     if not topic_validation["is_valid"]:
         raise HTTPException(status_code=400, detail=topic_validation["message"])
-    if payload.session_id and not get_session(payload.session_id, user_id=current_user["id"]):
-        raise HTTPException(status_code=404, detail="Session not found")
+    session = None
+    if payload.session_id:
+        session = get_session(payload.session_id, user_id=current_user["id"])
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
 
     result = build_practice_prompt(
         mode=payload.mode,
@@ -167,6 +170,7 @@ def create_practice_prompt(
         used_prompts=payload.previous_prompts,
         previous_topics=payload.previous_topics,
         avoid_repeating=payload.avoid_repeating,
+        stance=payload.stance or (session or {}).get("stance"),
     )
     saved = save_practice_prompt(
         session_id=payload.session_id,
@@ -186,6 +190,7 @@ def create_practice_prompt(
             "fallacy_hint": result.get("fallacy_hint"),
             "target_flaws": result.get("target_flaws"),
             "expected_rebuttal_points": result.get("expected_rebuttal_points"),
+            "suggested_angles": result.get("suggested_angles"),
         },
     )
     result["practice_prompt_id"] = saved["practice_prompt_id"]
@@ -242,6 +247,8 @@ def debate_turn(
     mode_state = (user_memory.get("mode_state") or {}).get(active_mode, {})
 
     session_stance = normalize_stance(session.get("stance"))
+    if active_mode == "claim_writing" and payload.practice_stance:
+        session_stance = normalize_stance(payload.practice_stance)
     result = ai_service.generate_debate_analysis(
         topic=analysis_topic,
         stance=session_stance,
@@ -283,6 +290,7 @@ def debate_turn(
         status=turn_status,
         count_for_completion=result["ok"],
         complete_session=active_mode not in SINGLE_SKILL_MODES,
+        practice_topic=payload.practice_topic,
     )
     response_status = saved["session"]["status"] if result["ok"] else turn_status
     if result["ok"]:
@@ -334,6 +342,7 @@ def debate_turn(
         fact_check=result.get("fact_check", []),
         evidence_source_links=result.get("evidence_source_links", []),
         better_source_suggestions=result.get("better_source_suggestions", []),
+        model_claim=result.get("model_claim"),
     )
 
 

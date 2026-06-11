@@ -242,6 +242,7 @@ def _json_schema_claim_and_rebuttal(output_language: str) -> str:
         '  "evidence_quote": "<trích nguyên văn nguồn/số liệu từ lập luận, hoặc NONE>",\n'
         '  "checklist": {{"has_clear_position": true/false, "has_bounded_scope": true/false, "has_real_evidence": true/false, "has_causal_chain": true/false}},\n'
         f'  "ai_rebuttal": "<nhận xét/đánh giá CHỈ về chất lượng và độ mạnh của luận điểm (đối với claim_writing) hoặc lập luận (đối với quick_rebuttal) bằng {output_language}, KHÔNG chứa bất kỳ liên kết URL hay link markdown nào>",\n'
+        f'  "model_claim": "<một câu claim mẫu hoàn chỉnh tương ứng với lập trường bằng {output_language}, hoặc NONE>",\n'
         '  "claim_score": <số nguyên>,\n'
         '  "evidence_score": <số nguyên, bắt buộc 0 nếu không có bằng chứng thực>,\n'
         '  "reasoning_score": <số nguyên>,\n'
@@ -287,9 +288,11 @@ NHIỆM VỤ - Phân tích luận điểm và trả về JSON:
 
 TRỌNG TÂM CHẤM: CHỈ tập trung vào claim_score.
   - evidence_score = 0 | reasoning_score = 0 | overall_score = claim_score.
+  - Chấm theo clarity (40 điểm), relevance (30 điểm) và specificity (30 điểm).
+  - BẮT BUỘC trả về một câu luận điểm mẫu hoàn chỉnh trong trường "model_claim".
 
 THANG ĐIỂM & CHỐNG DỒN ĐIỂM:
-  - claim_score (0–100): Rõ lập trường + phạm vi tốt + tranh biện được: 60–90. Mơ hồ: 25–55. Yếu/nhận xét chung: 0–25.
+  - claim_score (0–100): Rõ lập trường + phạm vi tốt + tranh biện được: 60–100. Mơ hồ: 25–59. Yếu/nhận xét chung: 0–25.
   - Lập luận khác nhau PHẢI có điểm khác nhau. KHÔNG dùng số tròn trăm (100) hoặc tận cùng là 0 (ví dụ: 10,20,30...)."""
 
 
@@ -690,6 +693,13 @@ def build_practice_prompt_messages(
             "Tạo đúng 1 luận điểm yếu hoặc lập luận có lỗ hổng logic rõ, ngắn gọn, liên quan chủ đề. "
             "Lập luận yếu phải đủ cụ thể để người học phản biện."
         )
+    elif normalized == "claim_writing":
+        task = (
+            "Hãy tạo đúng 1 tình huống thực tế hoặc chủ đề phụ ngắn gọn (1-2 câu) dựa trên chủ đề phiên được giao. "
+            "Tình huống phải cụ thể, có mâu thuẫn hoặc sự lựa chọn để người học dễ viết claim. "
+            "Tuyệt đối không viết câu claim hộ người học. "
+            "Tạo kèm 2-3 góc nhìn gợi ý ngắn gọn trong suggested_angles."
+        )
     else:
         task = (
             "Tạo đúng 1 chủ đề phụ hoặc tình huống ngắn để người học viết claim. "
@@ -708,6 +718,12 @@ def build_practice_prompt_messages(
         "Return only valid JSON. The prompt must be in Vietnamese."
         if avoid_repeating
         else "Return only valid JSON. The prompt must be in Vietnamese."
+    )
+    response_tail = (
+        f'  "instruction": "{practice_instruction_for_mode(normalized)}",\n'
+        '  "suggested_angles": ["<góc nhìn gợi ý 1>", "<góc nhìn gợi ý 2>", "<góc nhìn gợi ý 3>"]\n'
+        if normalized == "claim_writing"
+        else f'  "instruction": "{practice_instruction_for_mode(normalized)}"\n'
     )
 
     system_prompt = (
@@ -733,7 +749,7 @@ def build_practice_prompt_messages(
         '  "claim": "<chỉ dùng cho evidence_practice, claim mới>",\n'
         '  "weak_argument": "<chỉ dùng cho quick_rebuttal, luận điểm yếu mới>",\n'
         '  "prompt": "<đề bài 1-2 câu, cụ thể, không trùng nguyên văn chủ đề nếu có thể>",\n'
-        f'  "instruction": "{practice_instruction_for_mode(normalized)}"\n'
+        f"{response_tail}"
         "}"
     )
     return [

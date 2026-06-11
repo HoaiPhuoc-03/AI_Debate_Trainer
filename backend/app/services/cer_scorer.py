@@ -14,6 +14,44 @@ INVALID_FEEDBACK = {
     "suggestions": ["Hãy nêu rõ quan điểm, lý do và bằng chứng hỗ trợ cho lập luận."],
 }
 
+CLAIM_STRENGTHS_FALLBACK = [
+    "Luận điểm thể hiện lập trường rõ ràng.",
+    "Câu khẳng định ngắn gọn và tập trung vào chủ đề.",
+]
+CLAIM_WEAKNESSES_FALLBACK = [
+    "Phạm vi của luận điểm có thể được giới hạn cụ thể hơn.",
+    "Cách diễn đạt có thể khách quan và gãy gọn hơn.",
+]
+CLAIM_SUGGESTIONS_FALLBACK = [
+    "Cố gắng xác định rõ đối tượng và phạm vi tác động trong luận điểm.",
+    "Tránh sử dụng các từ ngữ quá chung chung hoặc mang tính chủ quan.",
+]
+
+
+def _filter_claim_feedback(items: list[str], fallback: list[str]) -> list[str]:
+    forbidden = [
+        "bằng chứng",
+        "chứng cứ",
+        "dẫn chứng",
+        "số liệu",
+        "ví dụ",
+        "nguồn dẫn",
+        "trích dẫn",
+        "minh họa",
+        "tài liệu",
+        "evidence",
+        "example",
+        "statistics",
+        "proof",
+    ]
+    filtered = [
+        item
+        for item in items
+        if not any(word in item.casefold() for word in forbidden)
+    ]
+    return filtered or ([fallback[0]] if fallback else [])
+
+
 QUICK_REBUTTAL_INVALID_FEEDBACK = {
     "strengths": [],
     "weaknesses": ["Câu trả lời chưa đủ rõ để xác định bạn đã bắt đúng lỗi trong luận điểm yếu hay chưa."],
@@ -70,6 +108,11 @@ FALLBACK_MODE_SCORES = DEFAULT_MODE_SCORES.copy()
 def _is_quick_rebuttal_mode(mode: str | None) -> bool:
     key = str(mode or "").strip().casefold().replace("-", "_").replace(" ", "_")
     return key in {"quick_rebuttal", "rebuttal", "phan_bien_nhanh"}
+
+
+def _is_claim_writing_mode(mode: str | None) -> bool:
+    key = str(mode or "").strip().casefold().replace("-", "_").replace(" ", "_")
+    return key in {"claim_writing", "claim", "claim_practice"}
 
 
 def _compute_qr_overall(
@@ -169,6 +212,12 @@ def build_quick_rebuttal_compat_cer(mode_scores: dict) -> dict:
 def _feedback_defaults_for_mode(mode: str | None) -> dict[str, list[str]]:
     if _is_quick_rebuttal_mode(mode):
         return QUICK_REBUTTAL_FALLBACK_FEEDBACK
+    if _is_claim_writing_mode(mode):
+        return {
+            "strengths": CLAIM_STRENGTHS_FALLBACK,
+            "weaknesses": CLAIM_WEAKNESSES_FALLBACK,
+            "suggestions": CLAIM_SUGGESTIONS_FALLBACK,
+        }
     return {
         "strengths": [],
         "weaknesses": ["Cần làm rõ hơn bằng chứng và suy luận."],
@@ -276,6 +325,19 @@ def _parse_marker_rubric_output(raw_text: str, mode: str | None = None) -> dict:
     weaknesses = _parse_bullets(_feedback_subsection(feedback_text, "Weaknesses"))
     suggestions = _parse_bullets(_feedback_subsection(feedback_text, "Suggestions"))
     feedback_defaults = _feedback_defaults_for_mode(mode)
+    if _is_claim_writing_mode(mode):
+        strengths = _filter_claim_feedback(
+            strengths or feedback_defaults["strengths"],
+            CLAIM_STRENGTHS_FALLBACK,
+        )
+        weaknesses = _filter_claim_feedback(
+            weaknesses or feedback_defaults["weaknesses"],
+            CLAIM_WEAKNESSES_FALLBACK,
+        )
+        suggestions = _filter_claim_feedback(
+            suggestions or feedback_defaults["suggestions"],
+            CLAIM_SUGGESTIONS_FALLBACK,
+        )
 
     result = {
         "is_valid": True,
@@ -460,6 +522,7 @@ def parse_cer_rubric_output(raw_text: str, mode: str | None = None) -> dict:
 
     rebuttal = str(payload.get("ai_rebuttal") or payload.get("rebuttal") or "").strip()
     quick_rebuttal = _is_quick_rebuttal_mode(mode)
+    claim_mode = _is_claim_writing_mode(mode)
     rebuttal = _remove_chinese_characters(rebuttal)
 
     # Extract fact check items to check if evidence could not be verified on the internet
@@ -486,7 +549,11 @@ def parse_cer_rubric_output(raw_text: str, mode: str | None = None) -> dict:
     evidence_quote = str(payload.get("evidence_quote") or "").strip().upper()
     checklist = payload.get("checklist") or {}
     has_real_evidence = bool(checklist.get("has_real_evidence", True))
-    evidence_gate_zero = False if quick_rebuttal else ((evidence_quote == "NONE") or (not has_real_evidence) or has_unverified)
+    evidence_gate_zero = (
+        False
+        if (quick_rebuttal or claim_mode)
+        else ((evidence_quote == "NONE") or (not has_real_evidence) or has_unverified)
+    )
 
     claim_breakdown = payload.get("claim_breakdown") or {}
     evidence_breakdown = payload.get("evidence_breakdown") or {}
@@ -508,28 +575,28 @@ def parse_cer_rubric_output(raw_text: str, mode: str | None = None) -> dict:
         },
         "evidence": {
             # Gate: zero out all evidence sub-scores when no real evidence was found.
-            "presence": 0.0 if evidence_gate_zero else _bd(evidence_breakdown, "presence", 40.0),
-            "specificity": 0.0 if evidence_gate_zero else _bd(
+            "presence": 0.0 if (evidence_gate_zero or claim_mode) else _bd(evidence_breakdown, "presence", 40.0),
+            "specificity": 0.0 if (evidence_gate_zero or claim_mode) else _bd(
                 evidence_breakdown,
                 "evidence_specificity" if "evidence_specificity" in evidence_breakdown else "specificity",
                 30.0),
-            "relevance": 0.0 if evidence_gate_zero else _bd(
+            "relevance": 0.0 if (evidence_gate_zero or claim_mode) else _bd(
                 evidence_breakdown,
                 "evidence_relevance" if "evidence_relevance" in evidence_breakdown else "relevance",
                 30.0),
         },
         "reasoning": {
-            "logical_connection": _bd(reasoning_breakdown, "logical_connection", 40.0),
-            "causal_explanation": _bd(reasoning_breakdown, "causal_explanation", 40.0),
-            "fallacy_control": _bd(reasoning_breakdown, "fallacy_control", 20.0),
+            "logical_connection": 0.0 if claim_mode else _bd(reasoning_breakdown, "logical_connection", 40.0),
+            "causal_explanation": 0.0 if claim_mode else _bd(reasoning_breakdown, "causal_explanation", 40.0),
+            "fallacy_control": 0.0 if claim_mode else _bd(reasoning_breakdown, "fallacy_control", 20.0),
         },
     }
 
 
     claim = _score_to_100(payload.get("claim_score"))
     # If the evidence gate zeroed the breakdown, the top-level score must also be 0.
-    evidence = 0.0 if evidence_gate_zero else _score_to_100(payload.get("evidence_score"))
-    reasoning = _score_to_100(payload.get("reasoning_score"))
+    evidence = 0.0 if (evidence_gate_zero or claim_mode) else _score_to_100(payload.get("evidence_score"))
+    reasoning = 0.0 if claim_mode else _score_to_100(payload.get("reasoning_score"))
 
     # Only fall back to breakdown summation when the score is genuinely absent
     # (i.e. the key is missing or the value is literally None/empty-string).
@@ -541,15 +608,17 @@ def parse_cer_rubric_output(raw_text: str, mode: str | None = None) -> dict:
 
     if claim_raw is None or str(claim_raw).strip() in ("", "null"):
         claim = _sum_breakdown(breakdown["claim"], {"clarity": 40, "relevance": 30, "specificity": 30})
-    if not evidence_gate_zero and (evidence_raw is None or str(evidence_raw).strip() in ("", "null")):
+    if not (evidence_gate_zero or claim_mode) and (evidence_raw is None or str(evidence_raw).strip() in ("", "null")):
         evidence = _sum_breakdown(breakdown["evidence"], {"presence": 40, "specificity": 30, "relevance": 30})
-    if reasoning_raw is None or str(reasoning_raw).strip() in ("", "null"):
+    if not claim_mode and (reasoning_raw is None or str(reasoning_raw).strip() in ("", "null")):
         reasoning = _sum_breakdown(
             breakdown["reasoning"],
             {"logical_connection": 40, "causal_explanation": 40, "fallacy_control": 20},
         )
     overall_raw = payload.get("overall_score")
-    if quick_rebuttal and overall_raw is not None and str(overall_raw).strip() not in ("", "null"):
+    if claim_mode:
+        overall = claim
+    elif quick_rebuttal and overall_raw is not None and str(overall_raw).strip() not in ("", "null"):
         overall = _score_to_100(overall_raw)
     else:
         overall = _weighted_overall(claim, evidence, reasoning)
@@ -559,6 +628,28 @@ def parse_cer_rubric_output(raw_text: str, mode: str | None = None) -> dict:
     # Extract new mode-specific fields from the LLM response.
     evidence_source_links = [_remove_chinese_characters(link) for link in _clean_list(payload.get("evidence_source_links"), [])]
     better_source_suggestions = [_remove_chinese_characters(s) for s in _clean_list(payload.get("better_source_suggestions"), [])]
+    model_claim = payload.get("model_claim")
+    if model_claim and str(model_claim).strip().upper() == "NONE":
+        model_claim = None
+    elif model_claim:
+        model_claim = str(model_claim).strip()
+
+    strengths = _clean_list(
+        payload.get("strengths", raw_feedback.get("strengths")),
+        feedback_defaults["strengths"],
+    )
+    weaknesses = _clean_list(
+        payload.get("weaknesses", raw_feedback.get("weaknesses")),
+        feedback_defaults["weaknesses"],
+    )
+    suggestions = _clean_list(
+        payload.get("suggestions", raw_feedback.get("suggestions")),
+        feedback_defaults["suggestions"],
+    )
+    if claim_mode:
+        strengths = _filter_claim_feedback(strengths, CLAIM_STRENGTHS_FALLBACK)
+        weaknesses = _filter_claim_feedback(weaknesses, CLAIM_WEAKNESSES_FALLBACK)
+        suggestions = _filter_claim_feedback(suggestions, CLAIM_SUGGESTIONS_FALLBACK)
 
     result = {
         "is_valid": True,
@@ -573,13 +664,14 @@ def parse_cer_rubric_output(raw_text: str, mode: str | None = None) -> dict:
         },
         "cer_breakdown": breakdown,
         "feedback": {
-            "strengths": [_remove_chinese_characters(item) for item in _clean_list(payload.get("strengths", raw_feedback.get("strengths")), feedback_defaults["strengths"])],
-            "weaknesses": [_remove_chinese_characters(item) for item in _clean_list(payload.get("weaknesses", raw_feedback.get("weaknesses")), feedback_defaults["weaknesses"])],
-            "suggestions": [_remove_chinese_characters(item) for item in _clean_list(payload.get("suggestions", raw_feedback.get("suggestions")), feedback_defaults["suggestions"])],
+            "strengths": [_remove_chinese_characters(item) for item in strengths],
+            "weaknesses": [_remove_chinese_characters(item) for item in weaknesses],
+            "suggestions": [_remove_chinese_characters(item) for item in suggestions],
         },
         "fact_check": fact_check,
         "evidence_source_links": evidence_source_links,
         "better_source_suggestions": better_source_suggestions,
+        "model_claim": model_claim,
         "raw_scoring_text": raw_text or "",
         "scoring_error": "",
     }

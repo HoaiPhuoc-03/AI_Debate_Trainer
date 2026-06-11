@@ -182,6 +182,7 @@ def _rubric_to_analysis(
         "content_flags": [],
         "raw_text": rubric.get("raw_scoring_text", ""),
         "raw_scoring_text": rubric.get("raw_scoring_text", ""),
+        "model_claim": rubric.get("model_claim"),
         "provider": provider,
         "model": model,
         "error": llm_error,
@@ -286,6 +287,7 @@ def _fallback_practice_prompt(
         "prompt": prompt,
         "instruction": practice_instruction_for_mode(normalized),
         "warning": warning,
+        "suggested_angles": [],
     }
 
 
@@ -358,6 +360,7 @@ def generate_practice_prompt(
                 "prompt": prompt,
                 "instruction": str(parsed.get("instruction") or practice_instruction_for_mode(normalized)).strip(),
                 "warning": None,
+                "suggested_angles": parsed.get("suggested_angles") or [],
             }
         return _fallback_practice_prompt(
             normalized,

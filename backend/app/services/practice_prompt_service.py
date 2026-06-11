@@ -613,11 +613,26 @@ def _finalize_prompt_result(result: dict) -> dict:
     return finalized
 
 
-def _build_topic_prompt(mode: str, topic: dict, *, round_number: int | None = None) -> dict:
+def _claim_instruction(stance: str | None) -> str:
+    normalized = str(stance or "").strip().casefold()
+    if normalized in {"support", "ủng hộ", "ung_ho", "for"}:
+        return "Hãy viết một claim rõ ràng, thể hiện lập trường ỦNG HỘ và có thể tranh luận được."
+    if normalized in {"oppose", "phản đối", "phan_doi", "against"}:
+        return "Hãy viết một claim rõ ràng, thể hiện lập trường PHẢN ĐỐI và có thể tranh luận được."
+    return "Hãy viết một claim rõ ràng, thể hiện lập trường ủng hộ hoặc phản đối và có thể tranh luận được."
+
+
+def _build_topic_prompt(
+    mode: str,
+    topic: dict,
+    *,
+    round_number: int | None = None,
+    stance: str | None = None,
+) -> dict:
     title = str(topic.get("title") or "").strip()
     metadata = _topic_metadata(topic)
     if mode == "claim_writing":
-        instruction = "Hãy viết một claim rõ ràng, thể hiện lập trường ủng hộ hoặc phản đối và có thể tranh luận được."
+        instruction = _claim_instruction(stance)
         prompt = f"Chủ đề: {title}\n\n{instruction}"
         return {
             "mode": mode,
@@ -696,6 +711,7 @@ def build_practice_prompt(
     category: str | None = None,
     previous_topics: list[str] | None = None,
     avoid_repeating: bool = True,
+    stance: str | None = None,
 ) -> dict:
     mode_key = canonical_mode(mode)
     used = [
@@ -726,7 +742,12 @@ def build_practice_prompt(
     )
 
     if selected_topic:
-        result = _build_topic_prompt(prompt_mode, selected_topic, round_number=round_number)
+        result = _build_topic_prompt(
+            prompt_mode,
+            selected_topic,
+            round_number=round_number,
+            stance=stance,
+        )
         if not any(_too_similar(result["prompt"], used_prompt) for used_prompt in used):
             return _finalize_prompt_result(result)
 
@@ -736,7 +757,12 @@ def build_practice_prompt(
             if candidate.get("id") != selected_topic.get("id")
         ]
         for candidate in fresh_topics:
-            result = _build_topic_prompt(prompt_mode, candidate, round_number=round_number)
+            result = _build_topic_prompt(
+                prompt_mode,
+                candidate,
+                round_number=round_number,
+                stance=stance,
+            )
             if not any(_too_similar(result["prompt"], used_prompt) for used_prompt in used):
                 return _finalize_prompt_result(result)
 
@@ -754,7 +780,12 @@ def build_practice_prompt(
             "category": category or "",
             "difficulty": difficulty or "",
         }
-        result = _build_topic_prompt(prompt_mode, manual_topic, round_number=round_number)
+        result = _build_topic_prompt(
+            prompt_mode,
+            manual_topic,
+            round_number=round_number,
+            stance=stance,
+        )
         if not any(_too_similar(result["prompt"], used_prompt) for used_prompt in used):
             result["source"] = "provided_topic"
             return _finalize_prompt_result(result)

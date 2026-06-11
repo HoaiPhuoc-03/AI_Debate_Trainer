@@ -1,5 +1,6 @@
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
+from typing import Any
 from uuid import uuid4
 
 from app.core.config import settings
@@ -672,14 +673,16 @@ class SupabaseStore:
         status: str = "active",
         count_for_completion: bool = True,
         complete_session: bool = True,
+        practice_topic: str | None = None,
     ) -> dict:
         session_id = session["session_id"]
         user_id = session["user_id"]
         turn_number = self._next_turn_number(session_id)
         is_valid = status not in ("invalid", "error")
-        turn_metadata = {
+        turn_metadata: dict[str, Any] = {
             "practice_prompt": practice_prompt,
             "practice_round": practice_round,
+            "practice_topic": practice_topic,
             "status": status,
         }
         if practice_mode == "quick_rebuttal" and mode_scores:
@@ -857,34 +860,149 @@ class SupabaseStore:
         sessions_response = self._execute(query, "get progress sessions")
         sessions = [self._session_from_row(row) for row in _rows(sessions_response)]
         sessions = [session for session in sessions if session]
+
+        session_ids = [s["session_id"] for s in sessions if s.get("session_id")]
         all_turns = []
-        for session in sessions:
-            all_turns.extend(self.get_session_turns(session["session_id"]))
-        valid_turns = [
-            turn for turn in all_turns if turn.get("status") not in ("error", "invalid")
-        ]
+        scores_by_turn = {}
+
+        if session_ids:
+            # Chunk session_ids to avoid query length limits and query debate_turns in bulk
+            for chunk in [session_ids[i:i + 100] for i in range(0, len(session_ids), 100)]:
+                turns_response = self._execute(
+                    self.client.table("debate_turns")
+                    .select("*")
+                    .in_("session_id", chunk),
+                    "get progress turns"
+                )
+                turns_rows = _rows(turns_response)
+
+                turn_ids = []
+                for row in turns_rows:
+                    meta = dict(row.get("metadata") or {})
+                    status = meta.get("status") or ("active" if row.get("is_valid", True) else "invalid")
+                    if status not in ("error", "invalid"):
+                        tid = str(row.get("id") or row.get("turn_id"))
+                        if tid:
+                            turn_ids.append(tid)
+                            all_turns.append({
+                                "session_id": row.get("session_id"),
+                                "turn_id": tid,
+                                "status": status,
+                                "practice_topic": meta.get("practice_topic"),
+                                "practice_mode": row.get("practice_mode"),
+                                "created_at": row.get("created_at"),
+                                "metadata": meta,
+                            })
+
+                if turn_ids:
+                    # Query corresponding cer_scores in bulk
+                    for t_chunk in [turn_ids[j:j + 100] for j in range(0, len(turn_ids), 100)]:
+                        scores_response = self._execute(
+                            self.client.table("cer_scores")
+                            .select("*")
+                            .in_("turn_id", t_chunk),
+                            "get progress scores"
+                        )
+                        for s_row in _rows(scores_response):
+                            scores_by_turn[str(s_row.get("turn_id"))] = s_row
+
+        # Hydrate all_turns with cer scores
+        valid_turns = []
+        for turn in all_turns:
+            s_row = scores_by_turn.get(turn["turn_id"])
+            if s_row:
+                turn["cer"] = normalize_cer_to_100(
+                    {
+                        "claim": float(s_row.get("claim") or 0.0),
+                        "evidence": float(s_row.get("evidence") or 0.0),
+                        "reasoning": float(s_row.get("reasoning") or 0.0),
+                        "overall": float(s_row.get("overall") or s_row.get("total") or 0.0),
+                        "total": float(s_row.get("total") or 0.0),
+                    }
+                )
+                valid_turns.append(turn)
         scores = {
             "claim_score": _average([turn["cer"]["claim"] for turn in valid_turns]),
             "evidence_score": _average([turn["cer"]["evidence"] for turn in valid_turns]),
             "reasoning_score": _average([turn["cer"]["reasoning"] for turn in valid_turns]),
         }
-        recent = sorted(
-            sessions,
-            key=lambda item: _parse_datetime(item.get("created_at"))
-            or datetime.min.replace(tzinfo=timezone.utc),
+
+        session_map = {s["session_id"]: s for s in sessions}
+        topic_groups = {}
+        for turn in all_turns:
+            sess = session_map.get(turn["session_id"])
+            if not sess:
+                continue
+            # Use CER score if available, else fall back to session average_score
+            s_row = scores_by_turn.get(turn["turn_id"])
+            if s_row:
+                cer = normalize_cer_to_100(
+                    {
+                        "claim": float(s_row.get("claim") or 0.0),
+                        "evidence": float(s_row.get("evidence") or 0.0),
+                        "reasoning": float(s_row.get("reasoning") or 0.0),
+                        "overall": float(s_row.get("overall") or s_row.get("total") or 0.0),
+                        "total": float(s_row.get("total") or 0.0),
+                    }
+                )
+                turn["cer"] = cer
+                valid_turns.append(turn)
+                total_score = float(cer["total"])
+            else:
+                # No CER score for this turn — use session average as proxy
+                total_score = float(sess.get("average_score") or 0.0)
+
+            t_name = turn.get("practice_topic") or turn.get("metadata", {}).get("practice_topic") or sess.get("topic", "")
+            t_name = str(t_name).strip()
+            if not t_name:
+                continue
+
+            entry = topic_groups.setdefault(t_name, {
+                "topic": t_name,
+                "scores": [],
+                "category": sess.get("topic_category") or "Chua phan loai",
+                "difficulty": sess.get("difficulty") or "Trung binh",
+                "mode": turn.get("practice_mode") or sess.get("mode") or "free_debate",
+                "timestamp": _parse_datetime(turn.get("created_at")) or _parse_datetime(sess.get("created_at")) or datetime.min.replace(tzinfo=timezone.utc)
+            })
+            entry["scores"].append(total_score)
+            t_stamp = _parse_datetime(turn.get("created_at"))
+            if t_stamp and t_stamp > entry["timestamp"]:
+                entry["timestamp"] = t_stamp
+
+        # If no turns at all, build topic_groups directly from sessions
+        if not topic_groups and sessions:
+            for sess in sessions:
+                t_name = str(sess.get("topic") or "").strip()
+                if not t_name:
+                    continue
+                entry = topic_groups.setdefault(t_name, {
+                    "topic": t_name,
+                    "scores": [],
+                    "category": sess.get("topic_category") or "Chua phan loai",
+                    "difficulty": sess.get("difficulty") or "Trung binh",
+                    "mode": sess.get("mode") or "free_debate",
+                    "timestamp": _parse_datetime(sess.get("completed_at")) or _parse_datetime(sess.get("created_at")) or datetime.min.replace(tzinfo=timezone.utc)
+                })
+                entry["scores"].append(float(sess.get("average_score") or 0.0))
+
+        aggregated_topics = []
+        for t_name, data in topic_groups.items():
+            avg_score = _average(data["scores"])
+            aggregated_topics.append({
+                "topic": t_name,
+                "score": avg_score,
+                "category": data["category"],
+                "difficulty": data["difficulty"],
+                "mode": data["mode"],
+                "completed_at": data["timestamp"].isoformat(),
+            })
+
+        recent_topics = sorted(
+            aggregated_topics,
+            key=lambda item: _parse_datetime(item["completed_at"]) or datetime.min.replace(tzinfo=timezone.utc),
             reverse=True,
-        )[:5]
-        recent_topics = [
-            {
-                "topic": session["topic"],
-                "score": float(session.get("average_score") or 0.0),
-                "category": session.get("topic_category") or "Chua phan loai",
-                "difficulty": session.get("difficulty") or "Trung binh",
-                "mode": session.get("mode") or "free_debate",
-                "completed_at": session.get("completed_at") or session.get("created_at"),
-            }
-            for session in recent
-        ]
+        )
         categories = {}
         for session in sessions:
             category = session.get("topic_category") or "Chua phan loai"
@@ -924,11 +1042,35 @@ class SupabaseStore:
                 weekly_scores.append(score)
             if stamp and stamp >= now - timedelta(days=30):
                 monthly_scores.append(score)
-        skill_strength = max(scores, key=scores.get).replace("_score", "") if scores else ""
-        skill_weakness = min(scores, key=scores.get).replace("_score", "") if scores else ""
+        completed_sessions_by_mode = {
+            "free_debate": 0,
+            "claim_writing": 0,
+            "find_evidence": 0,
+            "quick_rebuttal": 0,
+            "full_argument": 0,
+        }
+        for session in sessions:
+            if session.get("status") == "completed":
+                m = str(session.get("mode") or "free_debate").lower().strip().replace("-", "_")
+                if m in ("free_debate", "free"):
+                    completed_sessions_by_mode["free_debate"] += 1
+                elif m in ("claim_writing", "claim", "claim_practice"):
+                    completed_sessions_by_mode["claim_writing"] += 1
+                elif m in ("find_evidence", "evidence", "evidence_practice"):
+                    completed_sessions_by_mode["find_evidence"] += 1
+                elif m in ("quick_rebuttal", "rebuttal", "phan_bien_nhanh"):
+                    completed_sessions_by_mode["quick_rebuttal"] += 1
+                elif m in ("full_argument", "argument", "xay_dung_lap_luan"):
+                    completed_sessions_by_mode["full_argument"] += 1
+                else:
+                    completed_sessions_by_mode["free_debate"] += 1
+
+        skill_strength = str(max(scores, key=lambda k: scores.get(k) or 0.0)).replace("_score", "") if scores else ""
+        skill_weakness = str(min(scores, key=lambda k: scores.get(k) or 0.0)).replace("_score", "") if scores else ""
         return {
             "total_sessions": len(sessions),
             "completed_sessions": sum(1 for item in sessions if item.get("status") == "completed"),
+            "completed_sessions_by_mode": completed_sessions_by_mode,
             "avg_claim_score": scores["claim_score"],
             "avg_evidence_score": scores["evidence_score"],
             "avg_reasoning_score": scores["reasoning_score"],

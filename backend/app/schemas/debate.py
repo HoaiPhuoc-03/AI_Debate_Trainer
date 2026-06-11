@@ -81,12 +81,14 @@ class DebateTurnRequest(BaseModel):
     practice_target_flaws: list[str] = Field(default_factory=list)
     practice_prompt_id: str | None = Field(default=None, example="f3d7c43d-...")
     practice_round: int | None = Field(default=None, ge=1, example=1)
+    practice_stance: str | None = Field(default=None, example="support")
 
 
 class PracticePromptRequest(BaseModel):
     session_id: str | None = Field(default=None, example="abc123")
     mode: str = Field(..., example="evidence_practice")
     topic: str = Field(..., example="Should online learning replace homework?")
+    stance: str | None = Field(default=None, example="support")
     difficulty: str | None = Field(default=None, example="intermediate")
     category: str | None = Field(default=None, example="Giáo dục")
     round: int = Field(default=1, ge=1, example=1)
@@ -114,6 +116,7 @@ class PracticePromptResponse(BaseModel):
     target_flaws: list[str] | None = None
     expected_rebuttal_points: list[str] | None = None
     practice_prompt_id: str | None = None
+    suggested_angles: list[str] = Field(default_factory=list)
 
 
 class CERScoreResponse(BaseModel):
@@ -189,6 +192,7 @@ class DebateTurnResponse(BaseModel):
     turn_number: int | None = None
     max_turns: int | None = None
     status: str
+    model_claim: str | None = None
 
 
 class DebateTurnResponseV2(DebateTurnResponse):
@@ -243,6 +247,7 @@ class SessionSummaryResponse(BaseModel):
 class ProgressOverviewResponse(BaseModel):
     total_sessions: int
     completed_sessions: int
+    completed_sessions_by_mode: dict[str, int] = Field(default_factory=dict)
     avg_claim_score: float
     avg_evidence_score: float
     avg_reasoning_score: float
