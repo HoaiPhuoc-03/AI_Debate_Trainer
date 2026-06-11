@@ -377,60 +377,117 @@ def _choose_topic(
     return pool[_stable_index(seed, len(pool))]
 
 
-def _claim_from_topic(topic_title: str) -> str:
+SPECIFIC_CLAIMS_MAPPING = {
+    "edu_ai_homework": "Học sinh sử dụng công cụ AI để làm bài tập sẽ giúp cá nhân hóa quá trình học tập và tự sửa lỗi sai hiệu quả hơn.",
+    "edu_phone_ban": "Cấm điện thoại trong giờ học giúp học sinh tăng mức độ tập trung nghe giảng và giảm thiểu sự xao nhãng bởi mạng xã hội.",
+    "edu_no_homework": "Việc xóa bỏ bài tập về nhà giúp học sinh giảm căng thẳng tinh thần và có thêm thời gian tham gia các hoạt động thể chất.",
+    "edu_grades_measure": "Điểm số không còn là thước đo toàn diện vì nó bỏ qua các kỹ năng mềm quan trọng như tư duy sáng tạo và làm việc nhóm.",
+    "edu_critical_thinking_university": "Bắt buộc học kỹ năng phản biện giúp sinh viên nâng cao năng lực phân tích thông tin đa chiều và tránh bẫy tin giả.",
+    "tech_ai_teacher": "AI nên thay thế giáo viên ở các nhiệm vụ chấm điểm và soạn giáo án để thầy cô có nhiều thời gian tương tác, định hướng tâm lý cho học sinh.",
+    "tech_social_focus": "Mạng xã hội làm giảm khả năng tập trung sâu của người dùng do thói quen tiếp nhận các nội dung ngắn, giật gân liên tục.",
+    "tech_tiktok_time_limit": "Giới hạn thời gian sử dụng TikTok giúp thanh thiếu niên cải thiện chất lượng giấc ngủ và giảm nguy cơ mắc chứng lo âu.",
+    "tech_personal_data_property": "Dữ liệu cá nhân nên được xem là tài sản riêng để người dùng có quyền yêu cầu các công ty công nghệ trả phí khi khai thác thông tin của họ.",
+    "tech_robot_eldercare": "Robot nên được dùng để chăm sóc người cao tuổi nhằm hỗ trợ các công việc thể chất nặng nhọc và theo dõi chỉ số sức khỏe liên tục.",
+    "soc_cyberbullying_penalty": "Phạt nặng hành vi bắt nạt trên mạng sẽ răn đe các đối tượng xấu và giảm tỷ lệ mắc bệnh trầm cảm ở nạn nhân.",
+    "soc_young_independent": "Người trẻ sống tự lập sớm giúp rèn luyện khả năng quản lý tài chính cá nhân và nâng cao tính tự chịu trách nhiệm.",
+    "soc_remote_work": "Làm việc từ xa đem lại hiệu quả cao hơn nhờ giảm thiểu áp lực thời gian di chuyển và cho phép nhân viên tự chủ không gian làm việc.",
+    "soc_public_transport": "Khuyến khích giao thông công cộng giúp giảm ùn tắc giao thông vào giờ cao điểm và giảm thiểu đáng kể lượng khí thải carbon đô thị.",
+    "soc_celeb_role_model": "Người nổi tiếng có trách nhiệm đạo đức phải làm gương vì hành vi của họ có sức ảnh hưởng trực tiếp đến lối sống của giới trẻ.",
+    "eco_personal_finance_school": "Dạy quản lý tài chính cá nhân từ cấp 3 giúp học sinh hình thành thói quen tiết kiệm và tránh được các bẫy nợ nần khi bước vào đại học.",
+    "eco_online_spending": "Mua sắm online làm người trẻ chi tiêu mất kiểm soát do sự tiện lợi của các ví điện tử và các chiến dịch khuyến mãi liên tục.",
+    "eco_green_tax": "Đánh thuế cao sản phẩm gây hại môi trường sẽ thúc đẩy doanh nghiệp chuyển đổi sang công nghệ sản xuất xanh, bền vững hơn.",
+    "eco_startup_university": "Ưu tiên hỗ trợ startup trong đại học giúp thương mại hóa các đề tài nghiên cứu khoa học của sinh viên và giảng viên.",
+    "eco_minimum_wage_yearly": "Tăng lương tối thiểu hằng năm giúp bảo vệ sức mua của người lao động nghèo trước áp lực lạm phát và bão giá.",
+    "eth_ai_writing_cheating": "Dùng AI viết bài luận là gian lận học thuật vì nó làm suy giảm khả năng tự tư duy và diễn đạt ngôn ngữ của chính người học.",
+    "eth_ai_camera_school": "Sử dụng camera AI giám sát học sinh vi phạm nghiêm trọng quyền riêng tư học đường và gây ra áp lực tâm lý căng thẳng.",
+    "eth_public_grades": "Công khai điểm số gây ra sự so sánh tiêu cực và làm tổn thương lòng tự trọng của những học sinh có học lực trung bình hoặc yếu.",
+    "eth_ai_hiring": "AI không nên có quyền quyết định tuyển dụng vì các thuật toán có thể kế thừa và phóng đại các thiên kiến phân biệt đối xử từ dữ liệu cũ.",
+    "eth_cancel_scandal": "Tha thứ cho người nổi tiếng sau scandal giúp khuyến khích họ sửa sai và đóng góp tích cực lại cho cộng đồng.",
+    "pol_student_policy_voice": "Cho học sinh góp ý chính sách giúp các quy định học đường sát với thực tế học tập và nhu cầu phát triển của thế hệ trẻ.",
+    "pol_digital_media_literacy": "Bắt buộc học kỹ năng truyền thông số giúp nâng cao bộ lọc thông tin của công dân trước vấn nạn tin giả và lừa đảo mạng.",
+    "pol_fake_news_control": "Siết chặt quản lý tin giả trên mạng xã hội giúp bảo vệ trật tự an toàn xã hội và ngăn chặn các thông tin sai lệch gây hoang mang dư luận.",
+    "pol_ai_public_service": "Dùng AI trong dịch vụ công giúp chính phủ giải quyết nhanh chóng các thủ tục hành chính lặp đi lặp lại và giảm thiểu phiền hà cho người dân.",
+    "pol_digital_citizenship_school": "Mở rộng giáo dục công dân số giúp học sinh biết cách tự bảo vệ thông tin cá nhân và hành xử văn minh trên không gian mạng.",
+    "env_plastic_bag_ban": "Cấm túi nilon dùng một lần buộc người dân thay đổi thói quen tiêu dùng sang sử dụng các loại túi tự hủy sinh học thân thiện hơn.",
+    "env_school_recycling": "Bắt buộc phân loại rác ở trường học giúp xây dựng ý thức bảo vệ môi trường và giảm chi phí xử lý chất thải sinh hoạt.",
+    "env_gas_car_limit": "Hạn chế xe xăng ở đô thị lớn giúp cải thiện đáng kể chỉ số chất lượng không khí (AQI) và giảm các bệnh về đường hô hấp cho người dân.",
+    "env_consumer_climate": "Người tiêu dùng có trách nhiệm lớn với biến đổi khí hậu vì thói quen mua sắm quá mức của họ đang thúc đẩy các nhà máy sản xuất cạn kiệt tài nguyên.",
+    "env_energy_price_saving": "Tăng giá điện là biện pháp kinh tế trực tiếp thúc đẩy người dân và doanh nghiệp tắt các thiết bị không sử dụng để tiết kiệm chi phí.",
+    "health_sugary_drinks_school": "Giới hạn đồ uống có đường trong căng tin giúp kiểm soát tỷ lệ học sinh bị béo phì và mắc các bệnh răng miệng từ sớm.",
+    "health_mental_health_subject": "Dạy sức khỏe tinh thần chính khóa giúp học sinh biết cách nhận diện căng thẳng, trầm cảm và tự tìm kiếm sự giúp đỡ khi cần thiết.",
+    "health_fast_food_ads": "Cấm quảng cáo đồ ăn nhanh cho trẻ em giúp ngăn chặn thói quen ăn uống không lành mạnh do bị tác động bởi các hình ảnh hấp dẫn trên truyền hình.",
+    "health_sleep_vs_extra_classes": "Ngủ đủ giấc giúp não bộ học sinh tái tạo năng lượng, nâng cao khả năng ghi nhớ và học tập hiệu quả hơn so với việc cố nhồi nhét học thêm.",
+    "health_school_psych_check": "Kiểm tra sức khỏe tâm lý định kỳ giúp phát hiện sớm các dấu hiệu trầm cảm học đường và bạo lực học đường để can thiệp kịp thời.",
+    "culture_online_negative_reviews": "Review tiêu cực trên mạng cần bị kiểm soát khi nó biến tướng thành các hành vi bôi nhọ, tống tiền hoặc triệt hạ doanh nghiệp một cách cố ý.",
+    "culture_movies_youth_behavior": "Phim ảnh có ảnh hưởng mạnh vì giới trẻ có xu hướng bắt chước các hành động bạo lực hoặc lối sống của nhân vật chính trong phim.",
+    "culture_fandom_pressure": "Văn hóa thần tượng gây áp lực tài chính và thời gian lớn cho học sinh do phong trào mua vật phẩm ủng hộ và cày lượt xem cho thần tượng.",
+    "culture_traditional_values_school": "Dạy nhiều về văn hóa truyền thống giúp học sinh giữ gìn bản sắc dân tộc trong thời kỳ hội nhập toàn cầu hóa.",
+    "culture_global_content": "Nội dung giải trí quốc tế lấn lướt làm giới trẻ thờ ơ với nghệ thuật dân gian và các ngày lễ truyền thống trong nước.",
+    "media_influencer_ads": "Influencer phải chịu trách nhiệm pháp lý khi quảng cáo các sản phẩm kém chất lượng, gây thiệt hại sức khỏe hoặc tiền bạc cho người theo dõi.",
+    "media_short_video_harm": "Hạn chế video ngắn có nội dung độc hại giúp bảo vệ trẻ em khỏi các trào lưu nguy hiểm và lệch lạc nhận thức.",
+    "media_fake_news_label": "Gắn nhãn cảnh báo tin giả giúp người đọc cảnh giác hơn và hạn chế việc chia sẻ rộng rãi các thông tin thất thiệt chưa kiểm chứng.",
+    "media_children_fast_news": "Dạy cách kiểm chứng thông tin giúp học sinh không bị dắt mũi bởi tin đồn nhảm và biết cách tìm kiếm các nguồn tin chính thống.",
+    "media_comments_real_name": "Bắt buộc dùng tên thật khi bình luận sẽ giảm thiểu vấn nạn bạo lực ngôn từ và nâng cao văn hóa ứng xử trên mạng xã hội.",
+}
+
+
+def _claim_from_topic(topic_title: str, topic_id: str | None = None) -> str:
+    if topic_id and topic_id in SPECIFIC_CLAIMS_MAPPING:
+        return SPECIFIC_CLAIMS_MAPPING[topic_id]
+
     clean = " ".join(str(topic_title or "").strip().split()).rstrip(" ?.!").strip()
     if not clean:
-        return "Nên triển khai giải pháp này để mang lại lợi ích thiết thực."
+        return "Nên triển khai giải pháp này để mang lại lợi ích thiết thực và phát triển bền vững cho cộng đồng."
 
-    # Pattern 1: "Có nên [action] (không)?" -> "Nên [action]."
+    # Pattern 1: "Có nên [action] (không)?" -> "Nên [action]..."
     match = re.match(r"^có nên\s+(.+?)(?:\s+không)?$", clean, flags=re.IGNORECASE)
     if match:
         action = match.group(1).strip()
-        return f"Nên {action}."
+        return f"Nên {action} vì điều này mang lại nhiều lợi ích thiết thực và phát triển bền vững."
 
-    # Pattern 2: "[actor] có nên [action] (không)?" -> "[actor] nên [action]."
+    # Pattern 2: "[actor] có nên [action] (không)?" -> "[actor] nên [action]..."
     match = re.match(r"^(.+?)\s+có nên\s+(.+?)(?:\s+không)?$", clean, flags=re.IGNORECASE)
     if match:
         actor = match.group(1).strip()
         action = match.group(2).strip()
-        return f"{actor} nên {action}."
+        return f"{actor} nên {action} để cải thiện hiệu quả tổng thể và tối ưu hóa các nguồn lực."
 
-    # Pattern 3: "[subject] có phải là [definition] (không)?" -> "[subject] là [definition]."
+    # Pattern 3: "[subject] có phải là [definition] (không)?" -> "[subject] là [definition]..."
     match = re.match(r"^(.+?)\s+có phải là\s+(.+?)(?:\s+không)?$", clean, flags=re.IGNORECASE)
     if match:
         subject = match.group(1).strip()
         definition = match.group(2).strip()
-        return f"{subject} là {definition}."
+        return f"{subject} là {definition} do tác động trực tiếp đến nhận thức và hành vi."
 
-    # Pattern 4: "[subject] có còn là [definition] (không)?" -> "[subject] vẫn là [definition]."
+    # Pattern 4: "[subject] có còn là [definition] (không)?" -> "[subject] vẫn là [definition]..."
     match = re.match(r"^(.+?)\s+có còn là\s+(.+?)(?:\s+không)?$", clean, flags=re.IGNORECASE)
     if match:
         subject = match.group(1).strip()
         definition = match.group(2).strip()
-        return f"{subject} vẫn là {definition}."
+        return f"{subject} vẫn là {definition} vì nó đóng vai trò cốt lõi định hình giá trị lâu dài."
 
-    # Pattern 5: "[subject] có làm/gây [effect] (không)?" -> "[subject] làm/gây [effect]."
+    # Pattern 5: "[subject] có làm/gây [effect] (không)?" -> "[subject] làm/gây [effect]..."
     match = re.match(r"^(.+?)\s+có\s+(làm|gây|ảnh hưởng|giúp|tạo|mang lại|dẫn đến)\s+(.+?)(?:\s+không)?$", clean, flags=re.IGNORECASE)
     if match:
         subject = match.group(1).strip()
         verb = match.group(2).strip()
         effect = match.group(3).strip()
-        return f"{subject} {verb} {effect}."
+        return f"{subject} {verb} {effect} dưới tác động của sự thay đổi thói quen xã hội."
 
-    # Pattern 6: "[subject] có [adjective] hơn [subject2] (không)?" -> "[subject] [adjective] hơn [subject2]."
-    match = re.match(r"^(.+?)\s+có\s+(\w+)\s+hơn\s+(.+?)(?:\s+không)?$", clean, flags=re.IGNORECASE)
+    # Pattern 6: "[subject] có [adjective] hơn [subject2] (không)?" -> "[subject] [adjective] hơn [subject2]..."
+    match = re.match(r"^(.+?)\s+có\s+(.+?)\s+hơn\s+(.+?)(?:\s+không)?$", clean, flags=re.IGNORECASE)
     if match:
         subj1 = match.group(1).strip()
         adj = match.group(2).strip()
         subj2 = match.group(3).strip()
-        return f"{subj1} {adj} hơn {subj2}."
+        return f"{subj1} {adj} hơn {subj2} nhờ khả năng tiết kiệm chi phí và tăng tính chủ động."
 
     # Default fallback: Remove trailing "không" and clean up
     clean_no_khong = re.sub(r"\s+không$", "", clean, flags=re.IGNORECASE).strip()
     if clean_no_khong:
-        return f"{clean_no_khong}."
+        return f"{clean_no_khong} nhằm hướng tới sự phát triển toàn diện và nâng cao chất lượng cuộc sống."
 
-    return f"Nên ủng hộ quan điểm về '{clean}'."
+    return f"Nên ủng hộ quan điểm về '{clean}' để đạt được hiệu quả tối ưu."
 
 
 def _topic_metadata(topic: dict) -> dict:
@@ -572,7 +629,7 @@ def _build_topic_prompt(mode: str, topic: dict, *, round_number: int | None = No
         }
 
     if mode == "find_evidence":
-        claim = _claim_from_topic(title)
+        claim = _claim_from_topic(title, topic_id=topic.get("id"))
         instruction = "Hãy đưa ra bằng chứng cụ thể để hỗ trợ hoặc phản bác claim này."
         prompt = claim
         return {
