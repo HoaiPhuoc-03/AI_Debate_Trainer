@@ -1,0 +1,32 @@
+{
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    ".venv"
+  ],
+  "venvPath": ".",
+  "venv": ".venv",
+  "extraPaths": [
+    "./backend"
+  ],
+  "reportOptionalSubscript": "none",
+  "reportOptionalMemberAccess": "none",
+  "reportArgumentType": "none",
+  "reportCallIssue": "none",
+  "reportAttributeAccessIssue": "none",
+  "reportReturnType": "none",
+  "reportPossiblyUnboundVariable": "none",
+  "reportTypedDictNotRequiredAccess": "none",
+  "reportGeneralTypeIssues": "none",
+  "reportIncompatibleVariableOverride": "none",
+  "reportMissingModuleSource": "none",
+  "reportMissingImports": "none",
+  "reportUnknownMemberType": "none",
+  "reportUnknownVariableType": "none",
+  "reportUnknownArgumentType": "none",
+  "reportUnknownParameterType": "none",
+  "reportOperatorIssue": "none",
+  "reportIndexIssue": "none",
+  "reportPrivateUsage": "none",
+  "reportUndefinedVariable": "none"
+}
