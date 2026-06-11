@@ -266,7 +266,7 @@ def _fallback_practice_prompt(
     weak_argument = ""
     fallacy_hint = ""
     if normalized == "find_evidence":
-        claim = _claim_from_topic(title)
+        claim = _claim_from_topic(title, topic_id=fallback_topic.get("id"))
         prompt = claim
     elif normalized == "quick_rebuttal":
         weak_argument = f"{title} chắc chắn đúng vì nhiều người hiện nay đều đồng ý và làm theo."

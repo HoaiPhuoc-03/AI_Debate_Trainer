@@ -16,6 +16,7 @@ from app.services.practice_prompt_service import (  # noqa: E402
     _clean_sentence,
     _sanitize_weak_argument,
     _topic_to_claim_subject,
+    _claim_from_topic,
     build_practice_prompt,
     canonical_mode,
     get_quick_rebuttal_prompt_from_bank,
@@ -328,6 +329,44 @@ class PracticePromptServiceTests(unittest.TestCase):
         self.assertTrue(result["fallacy_hint"])
         self.assertTrue(result["target_flaws"])
         self.assertGreaterEqual(sentence_count(result["weak_argument"]), 4)
+
+    def test_claim_from_topic_mapping_and_parsing(self):
+        # 1. Test mapped specific claims
+        claim1 = _claim_from_topic("Học sinh có nên được dùng AI để làm bài tập?", "edu_ai_homework")
+        self.assertEqual(claim1, "Học sinh sử dụng công cụ AI để làm bài tập sẽ giúp cá nhân hóa quá trình học tập và tự sửa lỗi sai hiệu quả hơn.")
+
+        claim2 = _claim_from_topic("Cấm điện thoại trong giờ học có tốt không?", "edu_phone_ban")
+        self.assertEqual(claim2, "Cấm điện thoại trong giờ học giúp học sinh tăng mức độ tập trung nghe giảng và giảm thiểu sự xao nhãng bởi mạng xã hội.")
+
+        # 2. Test dynamic claim parsing for unmapped/custom topics
+        # Pattern 1: Có nên [action] (không)?
+        p1 = _claim_from_topic("Có nên cấm sử dụng đồ nhựa dùng một lần?")
+        self.assertEqual(p1, "Nên cấm sử dụng đồ nhựa dùng một lần vì điều này mang lại nhiều lợi ích thiết thực và phát triển bền vững.")
+
+        # Pattern 2: [actor] có nên [action] (không)?
+        p2 = _claim_from_topic("Văn phòng có nên trồng nhiều cây xanh không?")
+        self.assertEqual(p2, "Văn phòng nên trồng nhiều cây xanh để cải thiện hiệu quả tổng thể và tối ưu hóa các nguồn lực.")
+
+        # Pattern 3: [subject] có phải là [definition] (không)?
+        p3 = _claim_from_topic("Đọc sách có phải là phương pháp học tập tốt?")
+        self.assertEqual(p3, "Đọc sách là phương pháp học tập tốt do tác động trực tiếp đến nhận thức và hành vi.")
+
+        # Pattern 4: [subject] có còn là [definition] (không)?
+        p4 = _claim_from_topic("Thư viện truyền thống có còn là trung tâm học liệu?")
+        self.assertEqual(p4, "Thư viện truyền thống vẫn là trung tâm học liệu vì nó đóng vai trò cốt lõi định hình giá trị lâu dài.")
+
+        # Pattern 5: [subject] có làm/gây [effect] (không)?
+        p5 = _claim_from_topic("Học thêm quá nhiều có gây kiệt sức ở học sinh?")
+        self.assertEqual(p5, "Học thêm quá nhiều gây kiệt sức ở học sinh dưới tác động của sự thay đổi thói quen xã hội.")
+
+        # Pattern 6: [subject] có [adjective] hơn [subject2] (không)?
+        p6 = _claim_from_topic("Làm việc tự do có thú vị hơn làm văn phòng không?")
+        self.assertEqual(p6, "Làm việc tự do thú vị hơn làm văn phòng nhờ khả năng tiết kiệm chi phí và tăng tính chủ động.")
+
+        # Default fallback:
+        p_default = _claim_from_topic("Những lợi ích bất ngờ của việc đi bộ buổi sáng")
+        self.assertEqual(p_default, "Những lợi ích bất ngờ của việc đi bộ buổi sáng nhằm hướng tới sự phát triển toàn diện và nâng cao chất lượng cuộc sống.")
+
 
 
 if __name__ == "__main__":
