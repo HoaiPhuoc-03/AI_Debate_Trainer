@@ -26,6 +26,7 @@ from app.services.prompt_builder import (
     practice_instruction_for_mode,
     practice_prompt_type_for_mode,
 )
+from app.services.practice_prompt_service import _claim_from_topic
 
 
 DEFAULT_FEEDBACK = {
@@ -265,7 +266,7 @@ def _fallback_practice_prompt(
     weak_argument = ""
     fallacy_hint = ""
     if normalized == "find_evidence":
-        claim = f"{title} sẽ mang lại lợi ích rõ rệt nếu được triển khai minh bạch và có hướng dẫn phù hợp."
+        claim = _claim_from_topic(title, topic_id=fallback_topic.get("id"))
         prompt = claim
     elif normalized == "quick_rebuttal":
         weak_argument = f"{title} chắc chắn đúng vì nhiều người hiện nay đều đồng ý và làm theo."

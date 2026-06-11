@@ -9802,8 +9802,7 @@
         : null;
       const prompt = weakArgumentDisplay?.content || rawPrompt;
       const warning = promptData.warning || "";
-      const promptLabel = weakArgumentDisplay?.label
-        || (mode === "claim_writing" ? `${ui.label}:` : ui.label);
+      const promptLabel = weakArgumentDisplay?.label || `${ui.label}:`;
       const aiOutput = document.getElementById("ai-output");
       if (!aiOutput) return;
       aiOutput.className = "";
