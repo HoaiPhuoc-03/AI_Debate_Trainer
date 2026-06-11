@@ -17,6 +17,7 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+
 def _rows(response) -> list[dict]:
     data = getattr(response, "data", None)
     if data is None and isinstance(response, dict):
