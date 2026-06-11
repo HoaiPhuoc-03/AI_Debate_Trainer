@@ -2,17 +2,17 @@ from pydantic import BaseModel, Field
 
 
 class RegisterRequest(BaseModel):
-    email: str = Field(..., example="minh@example.com")
-    password: str = Field(..., example="password123")
-    display_name: str = Field(..., example="Minh Nguyen")
-    age_group: str = Field(default="adult", example="adult")
-    debate_level: str = Field(default="intermediate", example="intermediate")
-    language: str = Field(default="vi", example="vi")
+    email: str = Field(..., examples=["minh@example.com"])
+    password: str = Field(..., examples=["password123"])
+    display_name: str = Field(..., examples=["Minh Nguyen"])
+    age_group: str = Field(default="adult", examples=["adult"])
+    debate_level: str = Field(default="intermediate", examples=["intermediate"])
+    language: str = Field(default="vi", examples=["vi"])
 
 
 class LoginRequest(BaseModel):
-    email: str = Field(..., example="minh@example.com")
-    password: str = Field(..., example="password123")
+    email: str = Field(..., examples=["minh@example.com"])
+    password: str = Field(..., examples=["password123"])
 
 
 class AuthUserResponse(BaseModel):
