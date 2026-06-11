@@ -160,6 +160,7 @@ def _json_schema(output_language: str, mode: str | None = None) -> str:
         f'  "claim_explanation": "<ly do diem claim bang {output_language}>",\n'
         f'  "evidence_explanation": "<ly do diem evidence bang {output_language}>",\n'
         f'  "reasoning_explanation": "<ly do diem reasoning bang {output_language}>",\n'
+        f'  "model_claim": "<viet mot cau claim mau hoan chinh tuong dung voi lap truong hoac NONE>",\n'
         f'  "strengths": ["<diem manh bang {output_language}>"],\n'
         f'  "weaknesses": ["<diem yeu bang {output_language}>"],\n'
         f'  "suggestions": ["<goi y bang {output_language}>"]\n'
@@ -172,36 +173,41 @@ def _json_schema(output_language: str, mode: str | None = None) -> str:
 # ---------------------------------------------------------------------------
 
 def _build_claim_writing_system_prompt(output_language: str, age_group: str, debate_level: str) -> str:
-    return f"""Bạn là huấn luyện viên luyện viết LUẬN ĐIỂM (Claim) bằng {output_language}. KHÔNG dùng tiếng Anh trong nội dung.
+    return f"""Bạn là gia sư dạy viết LUẬN ĐIỂM (Claim) bằng {output_language}. Hãy hướng dẫn ôn hòa, nâng đỡ và khích lệ học viên, tuyệt đối không phản bác hung hăng.
 
 NHIỆM VỤ:
   Người dùng luôn chọn một trong hai lập trường: Ủng hộ hoặc Phản đối.
-  Bạn sẽ ĐÁNH GIÁ luận điểm (claim) mà người dùng viết.
+  Bạn sẽ ĐÁNH GIÁ luận điểm (claim) mà người dùng viết dựa trên lập trường họ chọn.
   Trước khi điền JSON, xác định nội bộ:
   a) Luận điểm có lập trường rõ ràng không?
   b) Phạm vi có cụ thể, giới hạn hợp lý không?
   c) Có kết nối trực tiếp với chủ đề không?
   d) Có mạnh mẽ, có thể tranh biện được không?
 
-TRỌNG TÂM CHẤM: CHỈ tập trung vào claim_score.
+TRỌNG TÂM CHẤM: CHỈ tập trung vào chất lượng của Luận điểm (claim_score).
+  - Yêu cầu AI chấm điểm Claim theo thang 100 dựa trên tổng của 3 tiêu chí cụ thể: clarity (40đ - độ rõ lập trường), relevance (30đ - tính liên quan chủ đề), và specificity (30đ - phạm vi giới hạn cụ thể).
   - evidence_score và reasoning_score đặt = 0 (vì chế độ này KHÔNG yêu cầu bằng chứng hay lập luận).
   - overall_score = claim_score (vì chỉ chấm claim).
+  - CẤM TUYỆT ĐỐI nhận xét hoặc chê bai học viên về việc thiếu Bằng chứng (Evidence), thiếu ví dụ/số liệu, hoặc thiếu Lý lẽ/Lập luận (Reasoning/Explanation/biện pháp/giải pháp/giải thích). Ở chế độ này, người học CHỈ viết duy nhất 1 câu luận điểm (Claim) chứ KHÔNG viết một bài lập luận đầy đủ, nên việc thiếu bằng chứng hay lý lẽ/ví dụ là hiển nhiên và ĐÚNG YÊU CẦU. Bạn chỉ được nhận xét về chất lượng câu luận điểm đó (độ rõ lập trường, phạm vi giới hạn cụ thể, tính liên quan chủ đề). Bất kỳ nhận xét nào đề cập đến các từ như 'bằng chứng', 'chứng cứ', 'số liệu', 'lý lẽ', 'biện pháp', 'giải pháp', 'giải thích', 'ví dụ' đều vi phạm quy định nghiêm trọng.
 
-Viết "ai_rebuttal" — 3–5 câu ĐÁNH GIÁ luận điểm bằng {output_language}:
-  - PHẢI chỉ ra điểm mạnh và điểm yếu CỤ THỂ của luận điểm
-  - PHẢI gợi ý cách viết lại luận điểm tốt hơn
+Viết "ai_rebuttal" — 3–5 câu nhận xét ĐÁNH GIÁ luận điểm bằng {output_language}:
+  - PHẢI đóng vai trò Gia sư ôn hòa, chỉ ra điểm mạnh và điểm yếu CỤ THỂ của luận điểm.
+  - PHẢI gợi ý cách viết lại luận điểm tốt hơn trong phần feedback.
   - Giọng ({age_group}): {_tone_rule(age_group)}
   - Độ sâu ({debate_level}): {_level_rule(debate_level)}
 
+ĐỀ XUẤT CÂU MẪU:
+  - BẮT BUỘC đề xuất một câu luận điểm mẫu hoàn chỉnh tương ứng với lập trường và trả về trong trường "model_claim" của JSON.
+
 THANG ĐIỂM claim_score (0–100):
-  - Lập trường rõ + phạm vi cụ thể + kết nối chủ đề + tranh biện được: 60–90
-  - Có lập trường nhưng mơ hồ, phạm vi quá rộng: 25–55
+  - Lập trường rõ + phạm vi cụ thể + kết nối chủ đề + tranh biện được: 60–100 (trong đó từ 90–100 dành cho câu luận điểm xuất sắc, sắc bén, hoàn hảo)
+  - Có lập trường nhưng mơ hồ, phạm vi quá rộng: 25–59
   - Không có lập trường rõ hoặc chỉ là nhận xét chung: 0–25
 
 CHỐNG DỒN ĐIỂM:
-  - KHÔNG dùng cùng điểm cho các luận điểm khác nhau về chất lượng
+  - KHÔNG dùng cùng điểm cho các luận điểm khác nhau về chất lượng.
   - KHÔNG dùng số tròn trăm (10,20,30...)
-  - Luận điểm khác nhau PHẢI có điểm khác nhau"""
+  - Luận điểm khác nhau PHẢI có điểm khác nhau."""
 
 
 def _build_find_evidence_system_prompt(output_language: str, age_group: str, debate_level: str) -> str:
@@ -236,7 +242,7 @@ Viết "ai_rebuttal" — 3–5 câu ĐÁNH GIÁ bằng chứng bằng {output_la
   - Độ sâu ({debate_level}): {_level_rule(debate_level)}
 
 THANG ĐIỂM evidence_score (0–100):
-  - Nhiều nguồn cụ thể + số liệu + sự kiện: 60–90
+  - Nhiều nguồn cụ thể + số liệu + sự kiện: 60–100 (trong đó từ 90–100 dành cho dẫn chứng vô cùng chuẩn xác, đầy đủ nguồn uy tín)
   - Một nguồn cụ thể: 30–60
   - Không có nguồn thực: 0
 
@@ -378,16 +384,16 @@ CỔNG BẰNG CHỨNG — bắt buộc áp dụng trước khi chấm:
 
 THANG ĐIỂM (chấm theo TỪNG TRƯỜNG HỢP CỤ THỂ):
   claim_score: Chất lượng luận điểm chính (0–100)
-    - Có lập trường rõ + phạm vi cụ thể + kết nối với chủ đề: 50–80
-    - Có lập trường nhưng mơ hồ, không phạm vi: 20–45
+    - Có lập trường rõ + phạm vi cụ thể + kết nối với chủ đề: 50–100 (trong đó từ 85–100 dành cho luận điểm xuất sắc, sắc bén)
+    - Có lập trường nhưng mơ hồ, không phạm vi: 20–49
     - Không có lập trường rõ: 0–20
   evidence_score: Chất lượng bằng chứng (0–100, = 0 nếu không có bằng chứng thực)
-    - Nhiều nguồn cụ thể + số liệu + sự kiện: 60–90
+    - Nhiều nguồn cụ thể + số liệu + sự kiện: 60–100 (trong đó từ 90–100 dành cho dẫn chứng vô cùng chuẩn xác, đầy đủ nguồn uy tín)
     - Một nguồn cụ thể: 30–60
     - Không có nguồn thực: 0
   reasoning_score: Chất lượng suy luận (0–100)
-    - Chuỗi nhân quả rõ + không có lỗi logic: 50–80
-    - Có liên kết logic nhưng có lỗ hổng: 25–50
+    - Chuỗi nhân quả rõ + không có lỗi logic: 50–100 (trong đó từ 85–100 dành cho lập luận vô cùng logic, nhân quả rõ ràng)
+    - Có liên kết logic nhưng có lỗ hổng: 25–49
     - Suy luận yếu hoặc circular: 0–25
 
 CHỐNG DỒN ĐIỂM:
@@ -643,6 +649,13 @@ def build_practice_prompt_messages(
             "Tạo đúng 1 luận điểm yếu hoặc lập luận có lỗ hổng logic rõ, ngắn gọn, liên quan chủ đề. "
             "Lập luận yếu phải đủ cụ thể để người học phản biện."
         )
+    elif normalized == "claim_writing":
+        task = (
+            "Hãy tạo đúng 1 tình huống thực tế hoặc chủ đề phụ ngắn gọn (1-2 câu) dựa trên chủ đề phiên được giao. "
+            "Tình huống phải cụ thể, mang tính thực tế đời sống cao, chứa mâu thuẫn hoặc sự lựa chọn để người học dễ viết claim. "
+            "Tuyệt đối KHÔNG viết câu claim hộ người học. "
+            "Tạo kèm 2-3 góc nhìn gợi ý ngắn gọn (suggested_angles) cho tình huống này bằng tiếng Việt dưới dạng danh sách."
+        )
     else:
         task = (
             "Tạo đúng 1 chủ đề phụ hoặc tình huống ngắn để người học viết claim. "
@@ -686,7 +699,8 @@ def build_practice_prompt_messages(
         '  "claim": "<chỉ dùng cho evidence_practice, claim mới>",\n'
         '  "weak_argument": "<chỉ dùng cho quick_rebuttal, luận điểm yếu mới>",\n'
         '  "prompt": "<đề bài 1-2 câu, cụ thể, không trùng nguyên văn chủ đề nếu có thể>",\n'
-        f'  "instruction": "{practice_instruction_for_mode(normalized)}"\n'
+        f'  "instruction": "{practice_instruction_for_mode(normalized)}",\n'
+        '  "suggested_angles": ["<Góc nhìn gợi ý 1>", "<Góc nhìn gợi ý 2>", "<Góc nhìn gợi ý 3>"]\n'
         "}"
     )
     return [
