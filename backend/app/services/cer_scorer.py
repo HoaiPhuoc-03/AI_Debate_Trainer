@@ -307,6 +307,10 @@ def _proportional_breakdown(score: float, weights: dict[str, float]) -> dict[str
     return {key: round(_clamp(score * weight, 0.0, cap), 1) for key, (weight, cap) in weights.items()}
 
 
+def _claim_writing_overall(clarity: float, relevance: float, specificity: float) -> float:
+    return round(clarity * 0.40 + relevance * 0.30 + specificity * 0.30, 1)
+
+
 def _parse_marker_rubric_output(raw_text: str, mode: str | None = None) -> dict:
     rebuttal = _extract_section(raw_text, "REBUTTAL")
     cer_text = _extract_section(raw_text, "CER")
@@ -320,6 +324,10 @@ def _parse_marker_rubric_output(raw_text: str, mode: str | None = None) -> dict:
     evidence = _parse_marker_score("Evidence", cer_text)
     reasoning = _parse_marker_score("Reasoning", cer_text)
     overall = _parse_marker_score("Overall", cer_text) or _weighted_overall(claim, evidence, reasoning)
+    if _is_claim_writing_mode(mode):
+        evidence = 0.0
+        reasoning = 0.0
+        overall = claim
 
     strengths = _parse_bullets(_feedback_subsection(feedback_text, "Strengths"))
     weaknesses = _parse_bullets(_feedback_subsection(feedback_text, "Weaknesses"))
@@ -339,6 +347,19 @@ def _parse_marker_rubric_output(raw_text: str, mode: str | None = None) -> dict:
             CLAIM_SUGGESTIONS_FALLBACK,
         )
 
+    claim_breakdown = (
+        {"clarity": claim, "relevance": claim, "specificity": claim}
+        if _is_claim_writing_mode(mode)
+        else _proportional_breakdown(
+            claim,
+            {
+                "clarity": (0.4, 40.0),
+                "relevance": (0.3, 30.0),
+                "specificity": (0.3, 30.0),
+            },
+        )
+    )
+
     result = {
         "is_valid": True,
         "status": "success",
@@ -351,14 +372,7 @@ def _parse_marker_rubric_output(raw_text: str, mode: str | None = None) -> dict:
             "total": round(_clamp(overall), 1),
         },
         "cer_breakdown": {
-            "claim": _proportional_breakdown(
-                claim,
-                {
-                    "clarity": (0.4, 40.0),
-                    "relevance": (0.3, 30.0),
-                    "specificity": (0.3, 30.0),
-                },
-            ),
+            "claim": claim_breakdown,
             "evidence": _proportional_breakdown(
                 evidence,
                 {
@@ -567,12 +581,29 @@ def parse_cer_rubric_output(raw_text: str, mode: str | None = None) -> dict:
         val = _score_to_100(raw)
         return round(min(val, cap), 1)
 
-    breakdown = {
-        "claim": {
+    reported_claim = _score_to_100(payload.get("claim_score"))
+
+    if claim_mode:
+        def _claim_metric(key: str) -> float:
+            raw = claim_breakdown.get(key)
+            if raw is None or str(raw).strip() in ("", "null"):
+                return reported_claim
+            return _bd(claim_breakdown, key, 100.0)
+
+        parsed_claim_breakdown = {
+            "clarity": _claim_metric("clarity"),
+            "relevance": _claim_metric("relevance"),
+            "specificity": _claim_metric("specificity"),
+        }
+    else:
+        parsed_claim_breakdown = {
             "clarity": _bd(claim_breakdown, "clarity", 40.0),
             "relevance": _bd(claim_breakdown, "relevance", 30.0),
             "specificity": _bd(claim_breakdown, "specificity", 30.0),
-        },
+        }
+
+    breakdown = {
+        "claim": parsed_claim_breakdown,
         "evidence": {
             # Gate: zero out all evidence sub-scores when no real evidence was found.
             "presence": 0.0 if (evidence_gate_zero or claim_mode) else _bd(evidence_breakdown, "presence", 40.0),
@@ -593,7 +624,7 @@ def parse_cer_rubric_output(raw_text: str, mode: str | None = None) -> dict:
     }
 
 
-    claim = _score_to_100(payload.get("claim_score"))
+    claim = reported_claim
     # If the evidence gate zeroed the breakdown, the top-level score must also be 0.
     evidence = 0.0 if (evidence_gate_zero or claim_mode) else _score_to_100(payload.get("evidence_score"))
     reasoning = 0.0 if claim_mode else _score_to_100(payload.get("reasoning_score"))
@@ -606,7 +637,13 @@ def parse_cer_rubric_output(raw_text: str, mode: str | None = None) -> dict:
     evidence_raw = payload.get("evidence_score")
     reasoning_raw = payload.get("reasoning_score")
 
-    if claim_raw is None or str(claim_raw).strip() in ("", "null"):
+    if claim_mode:
+        claim = _claim_writing_overall(
+            breakdown["claim"]["clarity"],
+            breakdown["claim"]["relevance"],
+            breakdown["claim"]["specificity"],
+        )
+    elif claim_raw is None or str(claim_raw).strip() in ("", "null"):
         claim = _sum_breakdown(breakdown["claim"], {"clarity": 40, "relevance": 30, "specificity": 30})
     if not (evidence_gate_zero or claim_mode) and (evidence_raw is None or str(evidence_raw).strip() in ("", "null")):
         evidence = _sum_breakdown(breakdown["evidence"], {"presence": 40, "specificity": 30, "relevance": 30})

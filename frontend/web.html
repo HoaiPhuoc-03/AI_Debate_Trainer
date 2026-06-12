@@ -9762,6 +9762,7 @@
     let voiceMimeType = "audio/webm";
     let activeSpeechAudio = null;
     let speechAudioCache = { text: "", url: "" };
+    let speechAudioRequestVersion = 0;
     let voiceSourceAudio = { url: "", type: "", size: 0 };
     let lumiAudioUrl = ""; // persisted URL for seekable Lumi player
     let voiceDraftTimerId = null;
@@ -10977,6 +10978,8 @@
         resetUserTurnTimer();
         clearSpeechAudioCache();
         clearVoiceSourceAudio();
+        renderFactCheck([]);
+        renderSourceLinks([], []);
         renderArenaShell();
         goToView("arena");
         if (isSingleSkillPracticeMode()) {
@@ -11510,6 +11513,8 @@
       resetVoiceRecorder();
       clearVoiceSourceAudio();
       clearSpeechAudioCache();
+      renderFactCheck([]);
+      renderSourceLinks([], []);
       hideError("form-error");
       hideOptionalError("voice-error");
       updateCharCount();
@@ -12009,6 +12014,7 @@
     }
 
     function clearSpeechAudioCache() {
+      speechAudioRequestVersion += 1;
       stopAiSpeech();
       if (speechAudioCache.url) URL.revokeObjectURL(speechAudioCache.url);
       speechAudioCache = { text: "", url: "" };
@@ -12057,12 +12063,13 @@
       });
     }
 
-    async function getRebuttalSpeechUrl(text) {
+    async function getRebuttalSpeechUrl(text, requestVersion = speechAudioRequestVersion) {
       const clean = String(text || "").trim();
       if (!clean) return "";
       if (speechAudioCache.text === clean && speechAudioCache.url) return speechAudioCache.url;
       const blob = await synthesizeSpeech(clean);
       if (!blob || !blob.size) throw new Error("Backend không trả về audio TTS.");
+      if (requestVersion !== speechAudioRequestVersion) return "";
       if (lumiAudioUrl) URL.revokeObjectURL(lumiAudioUrl);
       lumiAudioUrl = URL.createObjectURL(blob);
       speechAudioCache = { text: clean, url: lumiAudioUrl };
@@ -12073,16 +12080,19 @@
     async function generateRebuttalAudio(text) {
       const clean = String(text || "").trim();
       if (!clean) return "";
+      const requestVersion = ++speechAudioRequestVersion;
       state.rebuttalAudioState = "loading";
       state.rebuttalAudioMessage = "";
       renderRebuttalAudio();
       try {
-        const audioUrl = await getRebuttalSpeechUrl(clean);
+        const audioUrl = await getRebuttalSpeechUrl(clean, requestVersion);
+        if (requestVersion !== speechAudioRequestVersion) return "";
         state.rebuttalAudioState = "ready";
         state.rebuttalAudioMessage = "";
         renderRebuttalAudio();
         return audioUrl;
       } catch (error) {
+        if (requestVersion !== speechAudioRequestVersion) return "";
         console.warn("Không thể tạo TTS:", error);
         const isRateLimited = /429|rate|limit|quota/i.test(error.message || "");
         state.rebuttalAudioState = "error";
@@ -12265,6 +12275,8 @@
       resetUserTurnTimer();
       clearSpeechAudioCache();
       clearVoiceSourceAudio();
+      renderFactCheck([]);
+      renderSourceLinks([], []);
       state.sessionId = null;
       state.sessionStatus = "active";
       state.roundCount = 0;
@@ -12355,16 +12367,35 @@
         user_argument: data.user_argument || fallbackArgument,
         ai_rebuttal: data.ai_rebuttal || "AI chưa trả về phản biện. Hãy thử lại sau.",
         cer: (() => {
-          const total = toScore(displayCer.overall ?? displayCer.total);
+          const rawClaimBreakdown = cerBreakdown.claim && typeof cerBreakdown.claim === "object"
+            ? cerBreakdown.claim
+            : {};
+          const fallbackClaimScore = toScore(displayCer.claim);
+          const claimBreakdown = activeMode === "claim_writing"
+            ? {
+              clarity: rawClaimBreakdown.clarity ?? fallbackClaimScore,
+              relevance: rawClaimBreakdown.relevance ?? fallbackClaimScore,
+              specificity: rawClaimBreakdown.specificity ?? fallbackClaimScore,
+            }
+            : rawClaimBreakdown;
+          let total = toScore(displayCer.overall ?? displayCer.total);
+          let claim = toScore(displayCer.claim);
+          if (activeMode === "claim_writing") {
+            const clarity = toScore(claimBreakdown.clarity);
+            const relevance = toScore(claimBreakdown.relevance);
+            const specificity = toScore(claimBreakdown.specificity);
+            total = Math.round((clarity * 0.4 + relevance * 0.3 + specificity * 0.3) * 10) / 10;
+            claim = total;
+          }
           return {
-            claim: toScore(displayCer.claim),
+            claim,
             evidence: toScore(displayCer.evidence),
             reasoning: toScore(displayCer.reasoning),
             focus: toScore(displayCer.focus),
             overall: total,
             total,
             cer_breakdown: {
-              claim: cerBreakdown.claim || { clarity: 0, relevance: 0, specificity: 0 },
+              claim: claimBreakdown,
               evidence: cerBreakdown.evidence || { presence: 0, specificity: 0, relevance: 0 },
               reasoning: cerBreakdown.reasoning || { logical_connection: 0, causal_explanation: 0, fallacy_control: 0 },
             }
@@ -12594,7 +12625,7 @@
             key: "clarity",
             label: "Độ rõ lập trường",
             score: clarityScore,
-            max: 40,
+            max: 100,
             tone: "",
             meaning: "Đánh giá mức độ rõ ràng của quan điểm Ủng hộ hoặc Phản đối trong câu luận điểm của bạn, tránh sự mơ hồ hay nước đôi."
           },
@@ -12602,7 +12633,7 @@
             key: "relevance",
             label: "Tính liên quan chủ đề",
             score: relevanceScore,
-            max: 30,
+            max: 100,
             tone: "evidence",
             meaning: "Đánh giá mức độ liên kết trực tiếp giữa câu luận điểm với chủ đề hoặc tình huống tranh luận được giao."
           },
@@ -12610,7 +12641,7 @@
             key: "specificity",
             label: "Phạm vi cụ thể",
             score: specificityScore,
-            max: 30,
+            max: 100,
             tone: "reasoning",
             meaning: "Đánh giá giới hạn và phạm vi của câu luận điểm, đảm bảo luận điểm đủ cụ thể để lập luận, không quá vĩ mô hoặc chung chung."
           }

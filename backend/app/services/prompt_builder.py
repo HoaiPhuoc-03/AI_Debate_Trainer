@@ -234,8 +234,8 @@ def _json_schema_find_evidence(output_language: str) -> str:
     )
 
 
-def _json_schema_claim_and_rebuttal(output_language: str) -> str:
-    """JSON schema for claim_writing and quick_rebuttal modes - NO fact_check or evidence_source_links."""
+def _json_schema_claim_writing(output_language: str) -> str:
+    """JSON schema for claim_writing mode - NO fact_check or evidence_source_links."""
     return (
         '{{\n'
         '  "is_valid": true,\n'
@@ -243,11 +243,11 @@ def _json_schema_claim_and_rebuttal(output_language: str) -> str:
         '  "checklist": {{"has_clear_position": true/false, "has_bounded_scope": true/false, "has_real_evidence": true/false, "has_causal_chain": true/false}},\n'
         f'  "ai_rebuttal": "<nhận xét/đánh giá CHỈ về chất lượng và độ mạnh của luận điểm (đối với claim_writing) hoặc lập luận (đối với quick_rebuttal) bằng {output_language}, KHÔNG chứa bất kỳ liên kết URL hay link markdown nào>",\n'
         f'  "model_claim": "<một câu claim mẫu hoàn chỉnh tương ứng với lập trường bằng {output_language}, hoặc NONE>",\n'
-        '  "claim_score": <số nguyên>,\n'
+        '  "claim_score": <round(clarity*0.40 + relevance*0.30 + specificity*0.30)>,\n'
         '  "evidence_score": <số nguyên, bắt buộc 0 nếu không có bằng chứng thực>,\n'
         '  "reasoning_score": <số nguyên>,\n'
-        '  "overall_score": <overall score>,\n'
-        '  "claim_breakdown": {{"clarity": <0–40>, "relevance": <0–30>, "specificity": <0–30>}},\n'
+        '  "overall_score": <same as claim_score>,\n'
+        '  "claim_breakdown": {{"clarity": <0–100>, "relevance": <0–100>, "specificity": <0–100>}},\n'
         '  "evidence_breakdown": {{"presence": <0–40>, "evidence_specificity": <0–30>, "evidence_relevance": <0–30>}},\n'
         '  "reasoning_breakdown": {{"logical_connection": <0–40>, "causal_explanation": <0–40>, "fallacy_control": <0–20>}},\n'
         f'  "claim_explanation": "<lý do điểm claim bằng {output_language}>",\n'
@@ -267,7 +267,7 @@ def _json_schema_for_mode(mode: str, output_language: str) -> str:
     elif mode == "find_evidence":
         return _json_schema_find_evidence(output_language)
     elif mode == "claim_writing":
-        return _json_schema_claim_and_rebuttal(output_language)
+        return _json_schema_claim_writing(output_language)
     elif mode == "quick_rebuttal":
         return _json_schema(output_language, mode)
     return _json_schema(output_language)
@@ -288,7 +288,8 @@ NHIỆM VỤ - Phân tích luận điểm và trả về JSON:
 
 TRỌNG TÂM CHẤM: CHỈ tập trung vào claim_score.
   - evidence_score = 0 | reasoning_score = 0 | overall_score = claim_score.
-  - Chấm theo clarity (40 điểm), relevance (30 điểm) và specificity (30 điểm).
+  - Chấm riêng clarity, relevance và specificity trên thang 0–100.
+  - BẮT BUỘC tính claim_score = round(clarity × 0.40 + relevance × 0.30 + specificity × 0.30).
   - BẮT BUỘC trả về một câu luận điểm mẫu hoàn chỉnh trong trường "model_claim".
 
 THANG ĐIỂM & CHỐNG DỒN ĐIỂM:

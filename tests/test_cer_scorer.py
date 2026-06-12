@@ -57,6 +57,47 @@ class CERRubricTests(unittest.TestCase):
         self.assertEqual(result["cer"]["overall"], 47.0)
         self.assertTrue(result["feedback"]["weaknesses"])
 
+    def test_claim_writing_uses_100_point_metrics_and_weighted_total(self):
+        raw = """
+{
+  "is_valid": true,
+  "ai_rebuttal": "Luận điểm rõ nhưng phạm vi còn khá rộng.",
+  "claim_score": 12,
+  "evidence_score": 99,
+  "reasoning_score": 99,
+  "overall_score": 12,
+  "claim_breakdown": {"clarity": 80, "relevance": 70, "specificity": 60},
+  "strengths": ["Lập trường rõ."],
+  "weaknesses": ["Phạm vi còn rộng."],
+  "suggestions": ["Giới hạn đối tượng cụ thể hơn."]
+}
+""".strip()
+
+        result = parse_cer_rubric_output(raw, mode="claim_writing")
+
+        self.assertEqual(result["cer_breakdown"]["claim"]["clarity"], 80.0)
+        self.assertEqual(result["cer_breakdown"]["claim"]["relevance"], 70.0)
+        self.assertEqual(result["cer_breakdown"]["claim"]["specificity"], 60.0)
+        self.assertEqual(result["cer"]["claim"], 71.0)
+        self.assertEqual(result["cer"]["overall"], 71.0)
+        self.assertEqual(result["cer"]["evidence"], 0.0)
+        self.assertEqual(result["cer"]["reasoning"], 0.0)
+
+    def test_claim_writing_missing_metric_falls_back_to_reported_claim_score(self):
+        raw = """
+{
+  "is_valid": true,
+  "ai_rebuttal": "Luận điểm đạt mức khá.",
+  "claim_score": 70,
+  "claim_breakdown": {"clarity": 80, "specificity": 60}
+}
+""".strip()
+
+        result = parse_cer_rubric_output(raw, mode="claim_writing")
+
+        self.assertEqual(result["cer_breakdown"]["claim"]["relevance"], 70.0)
+        self.assertEqual(result["cer"]["claim"], 71.0)
+
     def test_quick_rebuttal_parse_error_uses_mode_specific_feedback(self):
         result = parse_cer_rubric_output("not json", mode="quick_rebuttal")
         feedback_text = " ".join(

@@ -245,6 +245,8 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn('state.voiceDraftState = "idle"', reset_body)
         self.assertIn("clearVoiceSourceAudio()", reset_body)
         self.assertIn("clearSpeechAudioCache()", reset_body)
+        self.assertIn("renderFactCheck([])", reset_body)
+        self.assertIn("renderSourceLinks([], [])", reset_body)
         self.assertIn("renderCER(null)", reset_body)
         self.assertIn("renderFeedback(null)", reset_body)
 
@@ -355,10 +357,17 @@ class FrontendAuthBindingTests(unittest.TestCase):
         self.assertIn("/api/v1/speech/tts", html)
         self.assertIn('responseType: "blob"', html)
         self.assertIn("let speechAudioCache = { text: \"\", url: \"\" }", html)
+        self.assertIn("let speechAudioRequestVersion = 0", html)
         self.assertIn("function clearSpeechAudioCache()", html)
-        self.assertIn("function getRebuttalSpeechUrl(text)", html)
+        self.assertIn(
+            "function getRebuttalSpeechUrl(text, requestVersion = speechAudioRequestVersion)",
+            html,
+        )
         self.assertIn("function generateRebuttalAudio(text)", html)
         self.assertIn("speechAudioCache.text === clean", html)
+        self.assertIn("speechAudioRequestVersion += 1", html)
+        self.assertIn("const requestVersion = ++speechAudioRequestVersion", html)
+        self.assertIn("requestVersion !== speechAudioRequestVersion", html)
         self.assertIn("Không tạo được âm thanh phản biện", html)
         self.assertIn(': (error.message || "Không tạo được âm thanh phản biện")', html)
         self.assertIn("await generateRebuttalAudio(turn.ai_rebuttal)", html)
