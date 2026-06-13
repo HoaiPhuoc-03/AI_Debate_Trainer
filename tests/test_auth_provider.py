@@ -31,6 +31,15 @@ PROFILE = {
 
 
 class AuthProviderTests(unittest.TestCase):
+    def test_empty_auth_provider_defaults_to_supabase(self):
+        with mock.patch.object(settings, "AUTH_PROVIDER", ""), \
+             mock.patch.object(settings, "SUPABASE_URL", "https://project.supabase.co"), \
+             mock.patch.object(settings, "SUPABASE_ANON_KEY", "public-anon-key"):
+            response = TestClient(app).get("/api/v1/auth/config")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["provider"], "supabase")
+
     def test_auth_config_exposes_active_supabase_public_config(self):
         with mock.patch.object(settings, "AUTH_PROVIDER", "supabase"), \
              mock.patch.object(settings, "SUPABASE_URL", "https://project.supabase.co"), \

@@ -30,6 +30,12 @@ class StoreProviderTests(unittest.TestCase):
 
         self.assertIsInstance(store, SupabaseStore)
 
+    def test_empty_storage_provider_defaults_to_supabase(self):
+        with mock.patch.object(settings, "STORAGE_PROVIDER", ""):
+            store = get_store()
+
+        self.assertIsInstance(store, SupabaseStore)
+
     def test_unknown_provider_has_clear_error(self):
         with mock.patch.object(settings, "STORAGE_PROVIDER", "unknown"):
             with self.assertRaises(StorageConfigurationError):

@@ -20,7 +20,6 @@ if (-not (Test-Path $VenvPython)) {
     --name "AI Debate Trainer" `
     --add-data "frontend;frontend" `
     --add-data "backend;backend" `
-    --add-data "prompts;prompts" `
     desktop_app.py
 
 Write-Host ""

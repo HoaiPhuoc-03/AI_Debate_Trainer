@@ -47,6 +47,10 @@ EDGE_TTS_RETRY_BASE_SECONDS = 1.5
 INVALID_STT_PROVIDER_ERROR = (
     "VOICE_STT_PROVIDER không hợp lệ. Chỉ hỗ trợ 'groq' hoặc 'elevenlabs'."
 )
+ELEVENLABS_STT_ERROR = (
+    "ElevenLabs Speech-to-Text không phản hồi. "
+    "Vui lòng kiểm tra ELEVENLABS_API_KEY, kết nối mạng hoặc thử lại sau."
+)
 
 
 def normalize_speech_language(language: str | None) -> str:
@@ -62,6 +66,7 @@ def normalize_voice_provider(provider: str | None) -> str:
         "edge-tts": "edge",
         "groq-whisper": "groq",
         "eleven-labs": "elevenlabs",
+        "none": "",
     }
     return aliases.get(normalized, normalized)
 
@@ -256,7 +261,7 @@ def transcribe_audio(
     language: str | None = None,
     session_context: dict | None = None,
 ) -> dict:
-    provider = normalize_voice_provider(settings.VOICE_STT_PROVIDER) or "groq"
+    provider = normalize_voice_provider(settings.VOICE_STT_PROVIDER) or "elevenlabs"
     fallback = normalize_voice_provider(settings.VOICE_STT_FALLBACK)
 
     is_valid, message, error_code = validate_audio_request(audio_bytes, content_type)
@@ -299,7 +304,7 @@ def transcribe_audio(
                 "text": "",
                 "provider": "elevenlabs",
                 "model": settings.ELEVENLABS_STT_MODEL,
-                "error": str(exc),
+                "error": f"{ELEVENLABS_STT_ERROR} Chi tiết: {exc}",
                 "error_code": "PROVIDER_ERROR",
             }
 

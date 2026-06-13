@@ -190,6 +190,87 @@ class SpeechBackendTests(unittest.TestCase):
     @mock.patch("app.services.speech_service.cleanup_voice_transcript")
     @mock.patch("app.services.speech_service.transcribe_groq_audio")
     @mock.patch("app.services.speech_service.transcribe_elevenlabs_audio", new_callable=mock.AsyncMock)
+    def test_empty_stt_provider_uses_elevenlabs_without_groq_fallback(
+        self,
+        mocked_elevenlabs,
+        mocked_groq,
+        mocked_cleanup,
+    ):
+        mocked_elevenlabs.return_value = "Transcript from ElevenLabs."
+        mocked_cleanup.return_value = {
+            "text": "Transcript from ElevenLabs.",
+            "raw_text": "Transcript from ElevenLabs.",
+            "provider": "groq",
+            "model": "llama-test",
+            "error": "",
+        }
+
+        with (
+            mock.patch.object(speech_service.settings, "VOICE_STT_PROVIDER", ""),
+            mock.patch.object(speech_service.settings, "VOICE_STT_FALLBACK", ""),
+        ):
+            result = speech_service.transcribe_audio(
+                b"fake-webm",
+                content_type="audio/webm",
+                language="vi",
+            )
+
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["provider"], "elevenlabs")
+        mocked_elevenlabs.assert_awaited_once()
+        mocked_groq.assert_not_called()
+
+    @mock.patch("app.services.speech_service.transcribe_groq_audio")
+    @mock.patch("app.services.speech_service.transcribe_elevenlabs_audio", new_callable=mock.AsyncMock)
+    def test_elevenlabs_failure_without_fallback_returns_clear_error(
+        self,
+        mocked_elevenlabs,
+        mocked_groq,
+    ):
+        mocked_elevenlabs.side_effect = RuntimeError("ElevenLabs unavailable")
+
+        with (
+            mock.patch.object(speech_service.settings, "VOICE_STT_PROVIDER", "elevenlabs"),
+            mock.patch.object(speech_service.settings, "VOICE_STT_FALLBACK", ""),
+        ):
+            result = speech_service.transcribe_audio(
+                b"fake-webm",
+                content_type="audio/webm",
+                language="vi",
+            )
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["provider"], "elevenlabs")
+        self.assertEqual(result["error_code"], "PROVIDER_ERROR")
+        self.assertIn("ElevenLabs Speech-to-Text không phản hồi", result["error"])
+        mocked_groq.assert_not_called()
+
+    @mock.patch("app.services.speech_service.transcribe_groq_audio")
+    @mock.patch("app.services.speech_service.transcribe_elevenlabs_audio", new_callable=mock.AsyncMock)
+    def test_none_fallback_does_not_call_groq(
+        self,
+        mocked_elevenlabs,
+        mocked_groq,
+    ):
+        mocked_elevenlabs.side_effect = RuntimeError("ElevenLabs unavailable")
+
+        with (
+            mock.patch.object(speech_service.settings, "VOICE_STT_PROVIDER", "elevenlabs"),
+            mock.patch.object(speech_service.settings, "VOICE_STT_FALLBACK", "none"),
+        ):
+            result = speech_service.transcribe_audio(
+                b"fake-webm",
+                content_type="audio/webm",
+                language="vi",
+            )
+
+        self.assertFalse(result["ok"])
+        self.assertEqual(result["error_code"], "PROVIDER_ERROR")
+        mocked_groq.assert_not_called()
+
+    @mock.patch("app.services.speech_service.cleanup_voice_transcript")
+    @mock.patch("app.services.speech_service.transcribe_groq_audio")
+    @mock.patch("app.services.speech_service.transcribe_elevenlabs_audio", new_callable=mock.AsyncMock)
     def test_stt_falls_back_to_groq_when_elevenlabs_fails(
         self,
         mocked_elevenlabs,

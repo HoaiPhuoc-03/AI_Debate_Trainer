@@ -23,7 +23,7 @@ router = APIRouter()
 
 @router.get("/config", response_model=AuthConfigResponse)
 def auth_config():
-    provider = str(settings.AUTH_PROVIDER or "firebase").strip().lower()
+    provider = str(settings.AUTH_PROVIDER or "supabase").strip().lower()
     supabase_enabled = provider == "supabase"
     return {
         "provider": provider,

@@ -15,7 +15,7 @@ class FirebaseStore:
 
 
 def get_store():
-    provider = str(settings.STORAGE_PROVIDER or "firebase").strip().lower()
+    provider = str(settings.STORAGE_PROVIDER or "supabase").strip().lower()
     if provider == "firebase":
         return FirebaseStore()
     if provider == "supabase":

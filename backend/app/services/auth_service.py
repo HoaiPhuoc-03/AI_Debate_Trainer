@@ -180,7 +180,7 @@ def _legacy_get_user_from_token(token: str) -> dict:
 
 
 def _auth_provider() -> str:
-    provider = str(settings.AUTH_PROVIDER or "firebase").strip().lower()
+    provider = str(settings.AUTH_PROVIDER or "supabase").strip().lower()
     if provider not in {"firebase", "supabase"}:
         raise HTTPException(
             status_code=503,

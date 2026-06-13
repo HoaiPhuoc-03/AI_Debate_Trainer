@@ -7,8 +7,8 @@ ENV_PATH = BASE_DIR / ".env"
 load_dotenv(dotenv_path=ENV_PATH)
 
 class Settings:
-    STORAGE_PROVIDER = os.getenv("STORAGE_PROVIDER", "firebase").strip().lower()
-    AUTH_PROVIDER = os.getenv("AUTH_PROVIDER", STORAGE_PROVIDER).strip().lower()
+    STORAGE_PROVIDER = os.getenv("STORAGE_PROVIDER", "supabase").strip().lower()
+    AUTH_PROVIDER = os.getenv("AUTH_PROVIDER", "supabase").strip().lower()
     SUPABASE_URL = os.getenv("SUPABASE_URL", "")
     SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
     SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
@@ -26,9 +26,9 @@ class Settings:
     SPEECH_MAX_AUDIO_BYTES = int(os.getenv("SPEECH_MAX_AUDIO_BYTES", str(8 * 1024 * 1024)))
     SPEECH_TTS_MAX_CHARS = int(os.getenv("SPEECH_TTS_MAX_CHARS", "1200"))
 
-    # Speech-to-Text provider selection. ElevenLabs is primary, Groq is fallback.
+    # ElevenLabs is the default STT provider. Groq Whisper remains opt-in legacy.
     VOICE_STT_PROVIDER = os.getenv("VOICE_STT_PROVIDER", "elevenlabs")
-    VOICE_STT_FALLBACK = os.getenv("VOICE_STT_FALLBACK", "groq")
+    VOICE_STT_FALLBACK = os.getenv("VOICE_STT_FALLBACK", "")
 
     GROQ_STT_BASE_URL = os.getenv(
         "GROQ_STT_BASE_URL",

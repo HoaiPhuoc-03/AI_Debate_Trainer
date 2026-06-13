@@ -1,12 +1,39 @@
+# Environment
+
 .env
 backend/.env
+
+# Python
+
+__pycache__/
+*.pyc
+.pytest_cache/
 .venv/
 venv/
-__pycache__/
-*.db
-*.sqlite
-*.sqlite3
-build/
+
+# Logs
+
+*.log
+startup.log
+backend/startup.log
+
+# Local temp database
+
+.tmp_*.db
+
+# Browser profiles / generated cache
+
+docs/mockups/chrome-app-profile/
+docs/mockups/chrome-cdp-profile2/
+docs/mockups/chrome-profile/
+
+# Build outputs
+
 dist/
+build/
 *.spec
-.vscode/settings.json
+
+# OS
+
+.DS_Store
+Thumbs.db
